@@ -9,6 +9,7 @@
   "PrefixNic": "nic",
   "PrefixNsg": "nsg",
   "PrefixPrivateEndpoint": "pep",
+  "PrefixRsG": "rsg",
   "PrefixStorageAccount": "sa",
   "PrefixUai": "uai",
   "PrefixVnet": "vnt",
