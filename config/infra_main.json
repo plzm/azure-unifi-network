@@ -1,0 +1,43 @@
+{
+  "Location": "eastus2",
+  "LocationShort": "eus2",
+  "Suffix": "main",
+  "Network": {
+    "NSGs": [
+      {
+        "NsgId": "nsg1",
+        "ResourceId": "",
+        "Rules": [
+          {
+            "Name": "A1",
+            "Description": "AA Access",
+            "Priority": 100,
+            "Direction": "Inbound",
+            "Access": "Allow",
+            "Protocol": "*",
+            "SourceAddressPrefix": "75.68.47.183",
+            "SourcePortRange": "*",
+            "DestinationAddressPrefix": "VirtualNetwork",
+            "DestinationPortRange": "*"
+          }
+        ]
+      }
+    ],
+    "VNets": [
+      {
+        "AddressSpace": "10.1.0.0/16",
+        "EnableDdosProtection": false,
+        "Subnets": [
+          {
+            "Name": "subnet01",
+            "AddressSpace": "10.1.0.0/20",
+            "Delegation": "",
+            "ServiceEndpoints": "Microsoft.KeyVault,Microsoft.Sql,Microsoft.Storage",
+            "NsgId": "nsg1",
+            "UdrId": ""
+          }
+        ]
+      }
+    ]
+  }
+}
