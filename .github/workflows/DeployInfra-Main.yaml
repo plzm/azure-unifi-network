@@ -303,28 +303,28 @@ jobs:
           Write-Debug -Debug:$true -Message "$output"
 
 
-      #- name: Deploy Network
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    $ErrorActionPreference = "Stop"
+      - name: Deploy Network
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
 
-      #    . ./scripts/infra/Utility.ps1
-      #    . ./scripts/infra/Observability.ps1
-      #    . ./scripts/infra/Network.ps1
+          . ./scripts/infra/Utility.ps1
+          . ./scripts/infra/Observability.ps1
+          . ./scripts/infra/Network.ps1
 
-      #    $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-      #    Write-Debug -Debug:$true -Message "Deploy Network"
-      #    Deploy-Network `
-      #      -ConfigConstants $configConstants `
-      #      -ConfigMain $configMain `
-      #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -LogAnalyticsWorkspaceName "${{ env.AA_LAW_NAME }}" `
-      #      -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
-      #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+          Write-Debug -Debug:$true -Message "Deploy Network"
+          Deploy-Network `
+            -ConfigConstants $configConstants `
+            -ConfigMain $configMain `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -LogAnalyticsWorkspaceName "${{ env.AA_LAW_NAME }}" `
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
+            -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
 
       #- name: Deploy Private DNS zones
