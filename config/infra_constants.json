@@ -19,6 +19,7 @@
   "PrefixUai": "uai",
   "PrefixVirtualMachine": "vm",
   "PrefixVnet": "vnt",
+  "PrincipalIdAppServicesRp": "13e036a3-a614-4e0a-b05b-b33b0c1beb01",
   "PrincipalIdDiagnosticServicesTrustedStorageAccess": "dc59f5b7-6210-4357-9640-80c1875000f3",
   "PrivateDnsZoneNameAutomation": "privatelink.agentsvc.azure-automation.net",
   "PrivateDnsZoneNameKeyVault": "privatelink.vaultcore.azure.net",
