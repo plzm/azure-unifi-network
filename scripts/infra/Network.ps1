@@ -708,6 +708,44 @@ function Get-SubnetResourceIds()
   return $result
 }
 
+
+function Get-SubnetResourceIdForPrivateEndpoint()
+{
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory = $true)]
+    [object]
+    $ConfigConstants,
+    [Parameter(Mandatory = $true)]
+    [object]
+    $ConfigMain,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $SubscriptionId,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $ResourceGroupName
+  )
+
+  Write-Debug -Debug:$true -Message "Get Subnet Resource ID for Private Endpoint"
+
+  $result = ""
+
+  $subnetResourceIds = Get-SubnetResourceIds -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $SubscriptionId -ResourceGroupName "$ResourceGroupName"
+
+  if ($subnetResourceIds -is [Array])
+  {
+    $result = $subnetResourceIds[0]
+  }
+  else
+  {
+    $result = $subnetResourceIds
+  }
+
+  return $result
+}
+
 # -------------------------------
 
 function Get-MyCurrentPublicIpAddress()

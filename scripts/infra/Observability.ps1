@@ -179,3 +179,95 @@ function Deploy-ConnectLawToAmpls() {
 
   return $output
 }
+
+function Deploy-DataCollectionEndpoint() {
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory = $true)]
+    [string]
+    $SubscriptionId,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $Location,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $TemplateUri,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $DataCollectionEndpointName,
+    [Parameter(Mandatory = $false)]
+    [string]
+    $PublicNetworkAccess = "Disabled",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $Tags = ""
+  )
+
+  Write-Debug -Debug:$true -Message "Deploy Data Collection Endpoint $DataCollectionEndpointName"
+
+  $output = az deployment group create --verbose `
+    --subscription "$SubscriptionId" `
+    -n "$WorkspaceName" `
+    -g "$ResourceGroupName" `
+    --template-uri "$TemplateUri" `
+    --parameters `
+    location="$Location" `
+    dataCollectionEndpointName="$DataCollectionEndpointName" `
+    publicNetworkAccess="$PublicNetworkAccess" `
+    tags=$Tags `
+    | ConvertFrom-Json
+
+  return $output
+}
+
+function Deploy-DataCollectionRule() {
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory = $true)]
+    [string]
+    $SubscriptionId,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $Location,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $TemplateUri,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $DataCollectionRuleName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $LogAnalyticsWorkspaceName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $LogAnalyticsWorkspaceResourceId,
+    [Parameter(Mandatory = $false)]
+    [string]
+    $Tags = ""
+  )
+
+  Write-Debug -Debug:$true -Message "Deploy Data Collection Endpoint $DataCollectionRuleName"
+
+  $output = az deployment group create --verbose `
+    --subscription "$SubscriptionId" `
+    -n "$DataCollectionRuleName" `
+    -g "$ResourceGroupName" `
+    --template-uri "$TemplateUri" `
+    --parameters `
+    location="$Location" `
+    dataCollectionRuleName="$DataCollectionRuleName" `
+    logAnalyticsWorkspaceName="$LogAnalyticsWorkspaceName" `
+    logAnalyticsWorkspaceResourceId="$LogAnalyticsWorkspaceResourceId" `
+    tags=$Tags `
+    | ConvertFrom-Json
+
+  return $output
+}

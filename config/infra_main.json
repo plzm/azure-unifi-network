@@ -39,5 +39,10 @@
         ]
       }
     ]
+  },
+  "Observability": {
+    "DataCollectionEndpoint": {
+      "PublicNetworkAccess": "Disabled"
+    }
   }
 }
