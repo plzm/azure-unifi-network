@@ -28,11 +28,11 @@ function Deploy-Network()
 
   Write-Debug -Debug:$true -Message "Deploy Network"
 
-  $nsgIndex = 1
+  $nsgIndex = $ConfigConstants.SeqNumNsg
 
   foreach ($nsg in $ConfigMain.Network.NSGs)
   {
-    $nsgName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNsg -Sequence ($nsgIndex.ToString().PadLeft(2, "0"))
+    $nsgName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNsg -Sequence ($nsgIndex.ToString().PadLeft(3, "0"))
     $nsgResourceId = "/subscriptions/" + $SubscriptionId + "/resourceGroups/" + $ResourceGroupName + "/providers/Microsoft.Network/networkSecurityGroups/" + $nsgName
     $nsg.ResourceId = $nsgResourceId
 
@@ -90,11 +90,11 @@ function Deploy-Network()
   }
 
 
-  $vnetIndex = 1
+  $vnetIndex = $ConfigConstants.SeqNumVnet
 
   foreach ($vnet in $ConfigMain.Network.VNets)
   {
-    $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVnet -Sequence ($vnetIndex.ToString().PadLeft(2, "0"))
+    $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVnet -Sequence ($vnetIndex.ToString().PadLeft(3, "0"))
     $vnetResourceId = "/subscriptions/" + $SubscriptionId + "/resourceGroups/" + $ResourceGroupName + "/providers/Microsoft.Network/virtualNetworks/" + $vnetName
 
     $output = Deploy-VNet `
