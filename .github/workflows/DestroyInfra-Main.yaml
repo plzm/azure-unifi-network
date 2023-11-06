@@ -84,27 +84,25 @@ jobs:
  
           Write-Debug -Debug:$true -Message "$output"
 
-      #- name: Delete Resource Groups
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    $ErrorActionPreference = "Stop"
+      - name: Delete Resource Groups
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
 
-      #    . ./scripts/infra/Utility.ps1
+          . ./scripts/infra/Utility.ps1
 
-      #    $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-      #    $rgNameMain = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Suffix $configMain.Suffix
+          $rgExists = $null
 
-      #    $rgExists = $null
-
-      #    [bool]::TryParse("$(az group exists -g $rgNameMain)", [ref]$rgExists) | Out-Null
-      #    if ($rgExists)
-      #    {
-      #      az group delete -y `
-      #        --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #        -n $rgNameMain
-      #    }
+          [bool]::TryParse("$(az group exists -g ${{ env.AA_RG_NAME_MAIN }})", [ref]$rgExists) | Out-Null
+          if ($rgExists)
+          {
+            az group delete -y `
+              --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -n ${{ env.AA_RG_NAME_MAIN }}
+          }
 
 ...
