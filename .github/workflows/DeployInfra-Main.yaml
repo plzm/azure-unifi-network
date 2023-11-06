@@ -137,14 +137,13 @@ jobs:
 
           $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           $rgNameMain = "${{ env.AA_RG_NAME_MAIN }}"
-          $tags = ${{ env.AA_TAGS_FOR_CLI }}
 
           Write-Debug -Debug:$true -Message "Create RG $rgNameMain"
           $output = az group create `
             --subscription "$subscriptionId" `
             -l $configMain.Location `
             -n "$rgNameMain" `
-            --tags $tags `
+            --tags ${{ env.AA_TAGS_FOR_CLI }} `
             | ConvertFrom-Json
 
 
