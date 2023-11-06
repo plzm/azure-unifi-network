@@ -327,115 +327,115 @@ jobs:
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
 
-      #- name: Deploy Private DNS zones
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    $ErrorActionPreference = "Stop"
+      - name: Deploy Private DNS zones
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
 
-      #    . ./scripts/infra/Utility.ps1
-      #    . ./scripts/infra/Network.ps1
+          . ./scripts/infra/Utility.ps1
+          . ./scripts/infra/Network.ps1
 
-      #    $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-      #    Write-Debug -Debug:$true -Message "Deploy private DNS zones"
-      #    Deploy-PrivateDnsZones `
-      #      -ConfigConstants $configConstants `
-      #      -ConfigMain $configMain `
-      #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
-
-
-      #- name: Deploy Azure Monitor Private Link Scope
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    $ErrorActionPreference = "Stop"
-
-      #    . ./scripts/infra/Utility.ps1
-      #    . ./scripts/infra/Observability.ps1
-      #    . ./scripts/infra/Network.ps1
-
-      #    $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-
-      #    $privateLinkScopeName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixAmpls -Sequence $configConstants.SeqNumAmpls
-      #    $privateLinkScopeResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "microsoft.insights" -ResourceTypeName "privatelinkscopes" -ResourceName $privateLinkScopeName
-
-      #    $privateEndpointName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixPrivateEndpoint -Sequence $configConstants.SeqNumAmpls
-
-      #    $privateLinkScopeNicName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixNic -Sequence $configConstants.SeqNumAmpls
-      #    $privateLinkScopeNicResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $privateLinkScopeNicName
-
-      #    Write-Debug -Debug:$true -Message "Deploy AMPLS"
-      #    $output = Deploy-Ampls `
-      #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.private-link-scope.json") `
-      #      -PrivateLinkScopeName $privateLinkScopeName `
-      #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
-
-      #    Write-Debug -Debug:$true -Message "$output"
-
-      #    Write-Debug -Debug:$true -Message "Deploy AMPLS-LAW connection"
-      #    $output = Deploy-ConnectLawToAmpls `
-      #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
-      #      -PrivateLinkScopeName $privateLinkScopeName `
-      #      -ScopedResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
-      #      -ScopedResourceName "${{ env.AA_LAW_NAME }}"
-
-      #    Write-Debug -Debug:$true -Message "$output"
-
-      #    Write-Debug -Debug:$true -Message "Deploy AMPLS Private Endpoint and NIC"
-      #    $output = Deploy-PrivateEndpointAndNic `
-      #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -Location $configMain.Location `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.json") `
-      #      -ProtectedWorkloadResourceId "$privateLinkScopeResourceId" `
-      #      -ProtectedWorkloadSubResource "azuremonitor" `
-      #      -PrivateEndpointName $privateEndpointName `
-      #      -NetworkInterfaceName $privateLinkScopeNicName `
-      #      -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT }} `
-      #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
-
-      #    Write-Debug -Debug:$true -Message "$output"
-
-      #    Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
-      #    $output = Deploy-DiagnosticsSetting `
-      #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -TemplateUri ($configConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-      #      -ResourceId $privateLinkScopeNicResourceId `
-      #      -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
-      #      -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
-      #      -SendLogs $false `
-      #      -SendMetrics $true
-
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "Deploy private DNS zones"
+          Deploy-PrivateDnsZones `
+            -ConfigConstants $configConstants `
+            -ConfigMain $configMain `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
 
-      #    # Private Endpoint DNS Zone Group
-      #    Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group"
-      #    $privateDnsZoneResourceId = Get-ResourceId `
-      #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
-      #      -ResourceProviderName "Microsoft.Network" `
-      #      -ResourceTypeName "privateDnsZones" `
-      #      -ResourceName $configConstants.PrivateDnsZoneNameMonitor
+      - name: Deploy Azure Monitor Private Link Scope
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
 
-      #    Deploy-PrivateEndpointPrivateDnsZoneGroup `
-      #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
-      #      -PrivateEndpointName $privateEndpointName `
-      #      -PrivateDnsZoneName $configConstants.PrivateDnsZoneNameMonitor `
-      #      -PrivateDnsZoneGroupName "default" `
-      #      -PrivateDnsZoneResourceId $privateDnsZoneResourceId
+          . ./scripts/infra/Utility.ps1
+          . ./scripts/infra/Observability.ps1
+          . ./scripts/infra/Network.ps1
+
+          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+
+          $privateLinkScopeName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixAmpls -Sequence $configConstants.SeqNumAmpls
+          $privateLinkScopeResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "microsoft.insights" -ResourceTypeName "privatelinkscopes" -ResourceName $privateLinkScopeName
+
+          $privateEndpointName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixPrivateEndpoint -Sequence $configConstants.SeqNumAmpls
+
+          $privateLinkScopeNicName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixNic -Sequence $configConstants.SeqNumAmpls
+          $privateLinkScopeNicResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $privateLinkScopeNicName
+
+          Write-Debug -Debug:$true -Message "Deploy AMPLS"
+          $output = Deploy-Ampls `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.private-link-scope.json") `
+            -PrivateLinkScopeName $privateLinkScopeName `
+            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+          Write-Debug -Debug:$true -Message "$output"
+
+          Write-Debug -Debug:$true -Message "Deploy AMPLS-LAW connection"
+          $output = Deploy-ConnectLawToAmpls `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
+            -PrivateLinkScopeName $privateLinkScopeName `
+            -ScopedResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
+            -ScopedResourceName "${{ env.AA_LAW_NAME }}"
+
+          Write-Debug -Debug:$true -Message "$output"
+
+          Write-Debug -Debug:$true -Message "Deploy AMPLS Private Endpoint and NIC"
+          $output = Deploy-PrivateEndpointAndNic `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -Location $configMain.Location `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.json") `
+            -ProtectedWorkloadResourceId "$privateLinkScopeResourceId" `
+            -ProtectedWorkloadSubResource "azuremonitor" `
+            -PrivateEndpointName $privateEndpointName `
+            -NetworkInterfaceName $privateLinkScopeNicName `
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT }} `
+            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+          Write-Debug -Debug:$true -Message "$output"
+
+          Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
+          $output = Deploy-DiagnosticsSetting `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($configConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+            -ResourceId $privateLinkScopeNicResourceId `
+            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
+            -SendLogs $false `
+            -SendMetrics $true
+
+          Write-Debug -Debug:$true -Message "$output"
+
+
+          # Private Endpoint DNS Zone Group
+          Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group"
+          $privateDnsZoneResourceId = Get-ResourceId `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
+            -ResourceProviderName "Microsoft.Network" `
+            -ResourceTypeName "privateDnsZones" `
+            -ResourceName $configConstants.PrivateDnsZoneNameMonitor
+
+          Deploy-PrivateEndpointPrivateDnsZoneGroup `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
+            -PrivateEndpointName $privateEndpointName `
+            -PrivateDnsZoneName $configConstants.PrivateDnsZoneNameMonitor `
+            -PrivateDnsZoneGroupName "default" `
+            -PrivateDnsZoneResourceId $privateDnsZoneResourceId
 
 
       #- name: Deploy Key Vault
