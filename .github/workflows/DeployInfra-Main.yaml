@@ -568,7 +568,7 @@ jobs:
           $output = Deploy-PrivateEndpointAndNic `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $configMain.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_SU_CORE }} `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.json") `
             -ProtectedWorkloadResourceId "${{ env.AA_KEYVAULT_RESOURCE_ID}}" `
             -ProtectedWorkloadSubResource "vault" `
@@ -583,7 +583,7 @@ jobs:
           Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
           $output = Deploy-DiagnosticsSetting `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_SU_CORE }} `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($configConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId $keyVaultNicResourceId `
             -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
@@ -604,7 +604,7 @@ jobs:
 
           Deploy-PrivateEndpointPrivateDnsZoneGroup `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_SU_CORE }} `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
             -PrivateEndpointName $privateEndpointName `
             -PrivateDnsZoneName $configConstants.PrivateDnsZoneNameKeyVault `
