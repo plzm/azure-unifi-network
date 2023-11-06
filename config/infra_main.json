@@ -40,6 +40,9 @@
       }
     ]
   },
+  "Storage": {
+    "SkuName": "Standard_LRS"
+  },
   "Observability": {
     "DataCollectionEndpoint": {
       "PublicNetworkAccess": "Disabled"

@@ -648,7 +648,7 @@ jobs:
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($configConstants.TemplateUriPrefix + "storage.account.json") `
             -StorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME }}" `
-            -SkuName $configMainTemplate.Storage.SkuName `
+            -SkuName $configMain.Storage.SkuName `
             -AllowedSubnetResourceIdsCsv "$subnetResourceIdsCsv" `
             -AllowedIpAddressRangesCsv "" `
             -DefaultAction "Deny" `
