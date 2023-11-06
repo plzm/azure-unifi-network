@@ -281,7 +281,7 @@ jobs:
           Write-Debug -Debug:$true -Message "Deploy LAW ${{ env.AA_LAW_NAME }}"
           $output = Deploy-LogAnalyticsWorkspace `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configGlobal.Location `
+            -Location $configMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.log-analytics-workspace.json") `
             -WorkspaceName "${{ env.AA_LAW_NAME }}" `
