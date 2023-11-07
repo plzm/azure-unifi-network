@@ -23,21 +23,27 @@
         ]
       }
     ],
-    "VNets": [
-      {
-        "AddressSpace": "10.1.0.0/16",
-        "EnableDdosProtection": false,
-        "Subnets": [
-          {
-            "Name": "subnet01",
-            "AddressSpace": "10.1.0.0/20",
-            "Delegation": "",
-            "ServiceEndpoints": "Microsoft.KeyVault,Microsoft.Sql,Microsoft.Storage",
-            "NsgId": "nsg1",
-            "UdrId": ""
-          }
-        ]
-      }
-    ]
+    "VNet": {
+      "AddressSpace": "10.1.0.0/16",
+      "EnableDdosProtection": false,
+      "Subnets": [
+        {
+          "Name": "subnet01",
+          "AddressSpace": "10.1.0.0/20",
+          "Delegation": "",
+          "ServiceEndpoints": "Microsoft.ContainerRegistry,Microsoft.KeyVault,Microsoft.Sql,Microsoft.Storage",
+          "NsgId": "nsg1",
+          "UdrId": ""
+        }
+      ]
+    }
+  },
+  "Storage": {
+    "SkuName": "Standard_LRS"
+  },
+  "Observability": {
+    "DataCollectionEndpoint": {
+      "PublicNetworkAccess": "Disabled"
+    }
   }
 }

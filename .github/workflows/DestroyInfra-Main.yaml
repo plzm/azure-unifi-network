@@ -73,12 +73,10 @@ jobs:
           $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $rgNameMain = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Suffix $configMain.Suffix
-
           $uaiName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixUai -Sequence $configConstants.SeqNumUai
 
           Write-Debug -Debug:$true -Message "Get UAI $uaiName"
-          $uai = "$(az identity show -g $rgNameMain -n $uaiName)" | ConvertFrom-Json
+          $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
 
           $output = Remove-RoleAssignmentsSub `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
@@ -97,16 +95,14 @@ jobs:
           $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $rgNameMain = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Suffix $configMain.Suffix
-
           $rgExists = $null
 
-          [bool]::TryParse("$(az group exists -g $rgNameMain)", [ref]$rgExists) | Out-Null
+          [bool]::TryParse("$(az group exists -g ${{ env.AA_RG_NAME_MAIN }})", [ref]$rgExists) | Out-Null
           if ($rgExists)
           {
             az group delete -y `
               --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-              -n $rgNameMain
+              -n ${{ env.AA_RG_NAME_MAIN }}
           }
 
 ...
