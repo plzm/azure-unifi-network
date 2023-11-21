@@ -1,0 +1,25 @@
+{
+  "Id": "00",
+  "Location": "eastus2",
+  "LocationShort": "eus2",
+  "Network": {
+    "NSGs": [
+      {
+        "Rules": [
+          {
+            "Name": "",
+            "Description": "",
+            "Priority": 0,
+            "Direction": "Inbound",
+            "Access": "Allow",
+            "Protocol": "*",
+            "SourceAddressPrefix": "75.68.47.183",
+            "SourcePortRange": "*",
+            "DestinationAddressPrefix": "VirtualNetwork",
+            "DestinationPortRange": "80,443,8443,3478,8080,8880,8843"
+          }
+        ]
+      }
+    ]
+  }
+}

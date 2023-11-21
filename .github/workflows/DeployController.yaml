@@ -1,0 +1,112 @@
+---
+  name: Deploy Controller
+  
+  on: 
+    workflow_dispatch:
+  
+  jobs:
+    deploy-controller:
+      name: Deploy Controller
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v3
+  
+        - name: Set Azure CLI extensions to auto-install
+          if: success()
+          run: |
+            $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
+  
+            Write-Debug -Debug:$true -Message "$output"
+          shell: pwsh
+  
+        - name: Azure login
+          if: success()
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+            enable-AzPSSession: true
+
+        - name: Set Config File Paths to Environment
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+
+            Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
+            Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
+            Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
+
+        - name: Set Variables and write to Environment
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Network.ps1
+
+            $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $configController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+            $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+            # Tags
+            Set-EnvVarTags -ConfigConstants $configConstants -ConfigMain $configMain
+
+            # Resource Groups
+            $rgNameMain = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixRsg -Suffix $configMain.Suffix
+
+            Set-EnvVar2 -VarName "AA_RG_NAME_MAIN" -VarValue "$rgNameMain"
+
+            # User Assigned Identity
+            $uaiName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixUai -Sequence $configConstants.SeqNumUai
+            $uaiResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.ManagedIdentity" -ResourceTypeName "userAssignedIdentities" -ResourceName $uaiName
+
+            Set-EnvVar2 -VarName "AA_UAI_NAME" -VarValue "$uaiName"
+            Set-EnvVar2 -VarName "AA_UAI_RESOURCE_ID" -VarValue "$uaiResourceId"
+
+            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName" | ConvertFrom-Json
+            Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID" -VarValue $uai.clientId
+            Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID" -VarValue $uai.principalId
+  
+            # Log Analytics
+            $workspaceName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixLogAnalytics -Sequence $configConstants.SeqNumLogAnalytics
+            $workspaceResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "microsoft.operationalinsights" -ResourceTypeName "workspaces" -ResourceName $workspaceName
+
+            Set-EnvVar2 -VarName "AA_LAW_NAME" -VarValue "$workspaceName"
+            Set-EnvVar2 -VarName "AA_LAW_RESOURCE_ID" -VarValue "$workspaceResourceId"
+
+            # Network
+            $vnet = $configMain.Network.VNet
+            $vnetName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixVNet -Sequence $configConstants.SeqNumVnet
+            $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
+          
+            Write-Debug -Debug:$true -Message "Get first subnet resource id for private endpoints"
+            $subnetResourceIdForPrivateEndpoint = Get-SubnetResourceIdForPrivateEndpoint -ConfigConstants $configConstants -ConfigMain $configMain -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain"
+            Set-EnvVar2 -VarName "AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT" -VarValue $subnetResourceIdForPrivateEndpoint
+
+            # Key Vault
+            $keyVaultName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixKeyVault -Sequence $configConstants.SeqNumKeyVault
+            $keyVaultResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.KeyVault" -ResourceTypeName "vaults" -ResourceName $keyVaultName
+
+            Set-EnvVar2 -VarName "AA_KEYVAULT_NAME" -VarValue "$keyVaultName"
+            Set-EnvVar2 -VarName "AA_KEYVAULT_RESOURCE_ID" -VarValue "$keyVaultResourceId"
+
+
+
+
+
+
+        - name: Azure logout
+          if: always()
+          uses: azure/CLI@v1
+          with:
+            inlineScript: |
+              az logout
+              az cache purge
+              az account clear
+...
