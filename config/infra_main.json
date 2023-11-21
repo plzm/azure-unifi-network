@@ -9,8 +9,8 @@
         "ResourceId": "",
         "Rules": [
           {
-            "Name": "A1",
-            "Description": "AA Access",
+            "Name": "AAAccess",
+            "Description": "ALFAADIN Access",
             "Priority": 100,
             "Direction": "Inbound",
             "Access": "Allow",
@@ -19,6 +19,18 @@
             "SourcePortRange": "*",
             "DestinationAddressPrefix": "VirtualNetwork",
             "DestinationPortRange": "*"
+          },
+          {
+            "Name": "GuestPortalAccess",
+            "Description": "Guest Portal Access",
+            "Priority": 101,
+            "Direction": "Inbound",
+            "Access": "Allow",
+            "Protocol": "*",
+            "SourceAddressPrefix": "*",
+            "SourcePortRange": "*",
+            "DestinationAddressPrefix": "VirtualNetwork",
+            "DestinationPortRange": "8843"
           }
         ]
       }
