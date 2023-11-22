@@ -14,7 +14,8 @@
           "SourceAddressPrefix": "75.68.47.183",
           "SourcePortRange": "*",
           "DestinationAddressPrefix": "VirtualNetwork",
-          "DestinationPortRange": "80,443,8443,3478,8080,8880,8843"
+          "DestinationPortRange": "",
+          "DestinationPortRanges": "80,443,8443,3478,8080,8880,8843"
         }
       ]
     }

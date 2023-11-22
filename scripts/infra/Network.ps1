@@ -228,9 +228,12 @@ function Deploy-NSGRule() {
     [Parameter(Mandatory = $true)]
     [string]
     $DestinationAddressPrefix,
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]
-    $DestinationPortRange
+    $DestinationPortRange = "",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $DestinationPortRanges = ""
   )
 
   Write-Debug -Debug:$debug -Message "Deploy NSG Rule $NSGRuleName"
@@ -252,6 +255,7 @@ function Deploy-NSGRule() {
     sourcePortRange="$SourcePortRange" `
     destinationAddressPrefix="$DestinationAddressPrefix" `
     destinationPortRange="$DestinationPortRange" `
+    destinationPortRanges="$DestinationPortRanges" `
     | ConvertFrom-Json
   
   return $output

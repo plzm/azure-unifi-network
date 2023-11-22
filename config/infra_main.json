@@ -15,7 +15,8 @@
           "SourceAddressPrefix": "75.68.47.183",
           "SourcePortRange": "*",
           "DestinationAddressPrefix": "VirtualNetwork",
-          "DestinationPortRange": "*"
+          "DestinationPortRange": "*",
+          "DestinationPortRanges": ""
         },
         {
           "Name": "GuestPortalAccess",
@@ -27,7 +28,8 @@
           "SourceAddressPrefix": "*",
           "SourcePortRange": "*",
           "DestinationAddressPrefix": "VirtualNetwork",
-          "DestinationPortRange": "8843"
+          "DestinationPortRange": "8843",
+          "DestinationPortRanges": ""
         }
       ]
     },
