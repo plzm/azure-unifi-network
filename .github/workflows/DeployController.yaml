@@ -128,7 +128,7 @@
             $output = Deploy-NSGRule `
               -SubscriptionID "$subscriptionId" `
               -Location $ConfigController.Location `
-              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
               -NSGName ${{ env.AA_NSG_NAME }} `
               -NSGRuleName $nsgRuleName `
