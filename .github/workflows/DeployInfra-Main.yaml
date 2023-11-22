@@ -89,6 +89,18 @@ jobs:
           Set-EnvVar2 -VarName "AA_LAW_RESOURCE_ID" -VarValue "$workspaceResourceId"
 
           # Network
+          $nsg = $ConfigMain.Network.NSG
+          $nsgName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNsg -Sequence $ConfigConstants.SeqNumNsg
+          $nsgResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkSecurityGroups" -ResourceName $nsgName
+          Set-EnvVar2 -VarName "AA_NSG_NAME" -VarValue "$nsgName"
+          Set-EnvVar2 -VarName "AA_NSG_RESOURCE_ID" -VarValue "$nsgResourceId"
+
+          $vnet = $ConfigMain.Network.VNet
+          $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
+          $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
+          Set-EnvVar2 -VarName "AA_VNET_NAME" -VarValue "$vnetName"
+          Set-EnvVar2 -VarName "AA_VNET_RESOURCE_ID" -VarValue "$vnetResourceId"
+
           Write-Debug -Debug:$true -Message "Get first subnet resource id for private endpoints"
           $subnetResourceIdForPrivateEndpoint = Get-SubnetResourceIdForPrivateEndpoint -ConfigConstants $configConstants -ConfigMain $configMain -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain"
           Set-EnvVar2 -VarName "AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT" -VarValue $subnetResourceIdForPrivateEndpoint
@@ -117,6 +129,10 @@ jobs:
           # AA_UAI_PRINCIPAL_ID - set below
           # AA_LAW_NAME
           # AA_LAW_RESOURCE_ID
+          # AA_NSG_NAME
+          # AA_NSG_RESOURCE_ID
+          # AA_VNET_NAME
+          # AA_VNET_RESOURCE_ID
           # AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT
           # AA_KEYVAULT_NAME
           # AA_KEYVAULT_RESOURCE_ID
@@ -322,6 +338,10 @@ jobs:
             -ConfigMain $configMain `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGResourceId ${{ env.AA_NSG_RESOURCE_ID }} `
+            -VNetName ${{ env.AA_VNET_NAME }} `
+            -VNetResourceId ${{ env.AA_VNET_RESOURCE_ID }} `
             -LogAnalyticsWorkspaceName "${{ env.AA_LAW_NAME }}" `
             -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}

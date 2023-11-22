@@ -17,6 +17,18 @@ function Deploy-Network()
     [Parameter(Mandatory = $true)]
     [string]
     $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $NSGName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $NSGResourceId,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VNetName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VNetResourceId,
     [Parameter(Mandatory = $false)]
     [string]
     $LogAnalyticsWorkspaceName = "",
@@ -30,78 +42,65 @@ function Deploy-Network()
 
   Write-Debug -Debug:$debug -Message "Deploy Network"
 
-  $nsgIndex = $ConfigConstants.SeedNumNsg
+  $nsg = $ConfigMain.Network.NSG
 
-  foreach ($nsg in $ConfigMain.Network.NSGs)
+  $output = Deploy-NSG `
+    -SubscriptionID "$SubscriptionId" `
+    -Location $ConfigMain.Location `
+    -ResourceGroupName $ResourceGroupName `
+    -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.json") `
+    -NSGName $NSGName `
+    -Tags $Tags
+
+  Write-Debug -Debug:$debug -Message "$output"
+
+  if ($LogAnalyticsWorkspaceName -and $LogAnalyticsWorkspaceResourceId)
   {
-    $nsgName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNsg -Sequence $nsgIndex
-    $nsgResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkSecurityGroups" -ResourceName $nsgName
-    $nsg.ResourceId = $nsgResourceId
+    $output = Deploy-DiagnosticsSetting `
+      -SubscriptionID "$SubscriptionId" `
+      -ResourceGroupName $ResourceGroupName `
+      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+      -ResourceId $NSGResourceId `
+      -DiagnosticsSettingName ("diag-" + "$LogAnalyticsWorkspaceName") `
+      -LogAnalyticsWorkspaceResourceId $LogAnalyticsWorkspaceResourceId `
+      -SendLogs $true `
+      -SendMetrics $false
+    
+    Write-Debug -Debug:$debug -Message "$output"
+  }
 
-    Write-Debug -Debug:$debug -Message ("NSG Resource ID string: " + $nsgResourceId)
-    Write-Debug -Debug:$debug -Message ("NSG object Resource ID: " + $nsg.ResourceId)
-
-    $output = Deploy-NSG `
+  foreach ($nsgRule in $nsg.Rules)
+  {
+    $output = Deploy-NSGRule `
       -SubscriptionID "$SubscriptionId" `
       -Location $ConfigMain.Location `
       -ResourceGroupName $ResourceGroupName `
-      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.json") `
-      -NSGName $nsgName `
-      -Tags $Tags
+      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
+      -NSGName $NSGName `
+      -NSGRuleName $nsgRule.Name `
+      -Description $nsgRule.Description `
+      -Priority $nsgRule.Priority `
+      -Direction $nsgRule.Direction `
+      -Access $nsgRule.Access `
+      -Protocol $nsgRule.Protocol `
+      -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
+      -SourcePortRange $nsgRule.SourcePortRange `
+      -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
+      -DestinationPortRange $nsgRule.DestinationPortRange
 
     Write-Debug -Debug:$debug -Message "$output"
-
-    if ($LogAnalyticsWorkspaceName -and $LogAnalyticsWorkspaceResourceId)
-    {
-      $output = Deploy-DiagnosticsSetting `
-        -SubscriptionID "$SubscriptionId" `
-        -ResourceGroupName $ResourceGroupName `
-        -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-        -ResourceId $nsgResourceId `
-        -DiagnosticsSettingName ("diag-" + "$LogAnalyticsWorkspaceName") `
-        -LogAnalyticsWorkspaceResourceId $LogAnalyticsWorkspaceResourceId `
-        -SendLogs $true `
-        -SendMetrics $false
-      
-      Write-Debug -Debug:$debug -Message "$output"
-    }
-
-    foreach ($nsgRule in $nsg.Rules)
-    {
-      $output = Deploy-NSGRule `
-        -SubscriptionID "$SubscriptionId" `
-        -Location $ConfigMain.Location `
-        -ResourceGroupName $ResourceGroupName `
-        -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
-        -NSGName $nsgName `
-        -NSGRuleName $nsgRule.Name `
-        -Description $nsgRule.Description `
-        -Priority $nsgRule.Priority `
-        -Direction $nsgRule.Direction `
-        -Access $nsgRule.Access `
-        -Protocol $nsgRule.Protocol `
-        -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
-        -SourcePortRange $nsgRule.SourcePortRange `
-        -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
-        -DestinationPortRange $nsgRule.DestinationPortRange
-
-      Write-Debug -Debug:$debug -Message "$output"
-    }
-
-    $nsgIndex++
   }
 
 
+
   $vnet = $ConfigMain.Network.VNet
-  $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
-  $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
 
   $output = Deploy-VNet `
     -SubscriptionID "$SubscriptionId" `
     -Location $ConfigMain.Location `
     -ResourceGroupName $ResourceGroupName `
     -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.vnet.json") `
-    -VNetName $vnetName `
+    -VNetName $VNetName `
     -VNetPrefix $vnet.AddressSpace `
     -EnableDdosProtection $vnet.EnableDdosProtection `
     -Tags $Tags
@@ -114,7 +113,7 @@ function Deploy-Network()
       -SubscriptionID "$SubscriptionId" `
       -ResourceGroupName $ResourceGroupName `
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-      -ResourceId $vnetResourceId `
+      -ResourceId $VNetResourceId `
       -DiagnosticsSettingName ("diag-" + "$LogAnalyticsWorkspaceName") `
       -LogAnalyticsWorkspaceResourceId $LogAnalyticsWorkspaceResourceId `
       -SendLogs $true `
@@ -127,17 +126,14 @@ function Deploy-Network()
   {
     Write-Debug -Debug:$debug -Message $subnet.Name
 
-    $nsg = $nsgs | Where-Object {$_.NsgId -eq $subnet.NsgId}
-    Write-Debug -Debug:$debug -Message ("NSG Resource ID: " + $nsg.ResourceId)
-
     $output = Deploy-Subnet `
       -SubscriptionID "$SubscriptionId" `
       -ResourceGroupName $ResourceGroupName `
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.vnet.subnet.json") `
-      -VNetName $vnetName `
+      -VNetName $VNetName `
       -SubnetName $subnet.Name `
       -SubnetPrefix $subnet.AddressSpace `
-      -NsgResourceId $nsg.ResourceId `
+      -NsgResourceId $NSGResourceId `
       -RouteTableResourceId "" `
       -DelegationService $subnet.Delegation `
       -ServiceEndpoints $subnet.ServiceEndpoints
@@ -337,7 +333,7 @@ function Deploy-Subnet() {
     $SubnetPrefix,
     [Parameter(Mandatory = $false)]
     [string]
-    $NsgResourceId = "",
+    $NSGResourceId = "",
     [Parameter(Mandatory = $false)]
     [string]
     $RouteTableResourceId = "",
@@ -360,7 +356,7 @@ function Deploy-Subnet() {
     vnetName="$VNetName" `
     subnetName="$SubnetName" `
     subnetPrefix="$SubnetPrefix" `
-    nsgResourceId="$NsgResourceId" `
+    nsgResourceId="$NSGResourceId" `
     routeTableResourceId="$RouteTableResourceId" `
     delegationService="$DelegationService" `
     serviceEndpoints="$ServiceEndpoints" `
@@ -549,8 +545,8 @@ function Deploy-PrivateDnsZones()
    | Where-Object { $_.StartsWith("PrivateDnsZoneName") }
 
 
-  $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
-  $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
+  $VNetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
+  $VNetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $VNetName
 
   foreach ($privateDnsZonePropName in $privateDnsZonePropNames)
   {
@@ -570,7 +566,7 @@ function Deploy-PrivateDnsZones()
       -ResourceGroupName $ResourceGroupName `
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-dns-zone.vnet-link.json") `
       -DnsZoneName $zoneName `
-      -VNetResourceId $vnetResourceId `
+      -VNetResourceId $VNetResourceId `
       -Tags $Tags
 
     Write-Debug -Debug:$debug -Message "$output"
@@ -680,12 +676,12 @@ function Get-SubnetResourceIds()
   $result = [System.Collections.ArrayList]@()
 
   $vnet = $ConfigMain.Network.VNet
-  $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
-  $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
+  $VNetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
+  $VNetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $VNetName
 
   foreach ($subnet in $vnet.Subnets)
   {
-    $subnetResourceId = Get-ChildResourceId -ParentResourceId $vnetResourceId -ChildResourceTypeName "subnets" -ChildResourceName $subnet.Name
+    $subnetResourceId = Get-ChildResourceId -ParentResourceId $VNetResourceId -ChildResourceTypeName "subnets" -ChildResourceName $subnet.Name
 
     $result.Add($subnetResourceId) | Out-Null
   }
