@@ -1,0 +1,158 @@
+---
+  name: Deploy Controller
+  
+  on: 
+    workflow_dispatch:
+  
+  jobs:
+    deploy-controller:
+      name: Deploy Controller
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v3
+  
+        - name: Set Azure CLI extensions to auto-install
+          if: success()
+          run: |
+            $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
+  
+            Write-Debug -Debug:$true -Message "$output"
+          shell: pwsh
+  
+        - name: Azure login
+          if: success()
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+            enable-AzPSSession: true
+
+        - name: Set Config File Paths to Environment
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+
+            Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
+            Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
+            Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
+
+        - name: Set Variables and write to Environment
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Network.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+            $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+            # Tags
+            Set-EnvVarTags -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain
+
+            # Resource Groups
+            $rgNameMain = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixRsg -Suffix $ConfigMain.Suffix
+            $rgNameController = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixRsg -Sequence $ConfigController.IdForNaming
+
+            Set-EnvVar2 -VarName "AA_RG_NAME_MAIN" -VarValue "$rgNameMain"
+            Set-EnvVar2 -VarName "AA_RG_NAME_CONTROLLER" -VarValue "$rgNameController"
+
+            # User Assigned Identity
+            $uaiName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixUai -Sequence $ConfigConstants.SeqNumUai
+            $uaiResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.ManagedIdentity" -ResourceTypeName "userAssignedIdentities" -ResourceName $uaiName
+
+            Set-EnvVar2 -VarName "AA_UAI_NAME" -VarValue "$uaiName"
+            Set-EnvVar2 -VarName "AA_UAI_RESOURCE_ID" -VarValue "$uaiResourceId"
+
+            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName" | ConvertFrom-Json
+            Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID" -VarValue $uai.clientId
+            Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID" -VarValue $uai.principalId
+  
+            # Log Analytics
+            $workspaceName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixLogAnalytics -Sequence $ConfigConstants.SeqNumLogAnalytics
+            $workspaceResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "microsoft.operationalinsights" -ResourceTypeName "workspaces" -ResourceName $workspaceName
+
+            Set-EnvVar2 -VarName "AA_LAW_NAME" -VarValue "$workspaceName"
+            Set-EnvVar2 -VarName "AA_LAW_RESOURCE_ID" -VarValue "$workspaceResourceId"
+
+            # Network
+            $nsg = $ConfigMain.Network.NSG
+            $nsgName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNsg -Sequence $ConfigConstants.SeqNumNsg
+            $nsgResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkSecurityGroups" -ResourceName $nsgName
+            Set-EnvVar2 -VarName "AA_NSG_NAME" -VarValue "$nsgName"
+            Set-EnvVar2 -VarName "AA_NSG_RESOURCE_ID" -VarValue "$nsgResourceId"
+  
+            $vnet = $ConfigMain.Network.VNet
+            $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
+            $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
+            Set-EnvVar2 -VarName "AA_VNET_NAME" -VarValue "$vnetName"
+            Set-EnvVar2 -VarName "AA_VNET_RESOURCE_ID" -VarValue "$vnetResourceId"
+  
+            Write-Debug -Debug:$true -Message "Get first subnet resource id for private endpoints"
+            $subnetResourceIdForPrivateEndpoint = Get-SubnetResourceIdForPrivateEndpoint -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain"
+            Set-EnvVar2 -VarName "AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT" -VarValue $subnetResourceIdForPrivateEndpoint
+
+            # Key Vault
+            $keyVaultName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixKeyVault -Sequence $ConfigConstants.SeqNumKeyVault
+            $keyVaultResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.KeyVault" -ResourceTypeName "vaults" -ResourceName $keyVaultName
+
+            Set-EnvVar2 -VarName "AA_KEYVAULT_NAME" -VarValue "$keyVaultName"
+            Set-EnvVar2 -VarName "AA_KEYVAULT_RESOURCE_ID" -VarValue "$keyVaultResourceId"
+
+
+        - name: Add NSG rule
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Network.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+            $nsgRule = $ConfigController.Network.NSGRule
+
+            $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            $nsgRuleName = $ConfigController.IdForNaming
+
+            $output = Deploy-NSGRule `
+              -SubscriptionID "$subscriptionId" `
+              -Location $ConfigController.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
+              -NSGName ${{ env.AA_NSG_NAME }} `
+              -NSGRuleName $nsgRuleName `
+              -Description $nsgRule.Description `
+              -Priority ($ConfigConstants.NsgPriorityBase + $nsgRule.Id) `
+              -Direction $nsgRule.Direction `
+              -Access $nsgRule.Access `
+              -Protocol $nsgRule.Protocol `
+              -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
+              -SourcePortRange $nsgRule.SourcePortRange `
+              -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
+              -DestinationPortRange $nsgRule.DestinationPortRange
+    
+            Write-Debug -Debug:$debug -Message "$output"
+
+
+
+
+        - name: Azure logout
+          if: always()
+          uses: azure/CLI@v1
+          with:
+            inlineScript: |
+              az logout
+              az cache purge
+              az account clear
+...
