@@ -71,7 +71,7 @@
             Set-EnvVar2 -VarName "AA_UAI_NAME" -VarValue "$uaiName"
             Set-EnvVar2 -VarName "AA_UAI_RESOURCE_ID" -VarValue "$uaiResourceId"
 
-            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
+            $uai = "$(az identity show -g $rgNameMain -n $uaiName)" | ConvertFrom-Json
             Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID" -VarValue $uai.clientId
             Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID" -VarValue $uai.principalId
   
