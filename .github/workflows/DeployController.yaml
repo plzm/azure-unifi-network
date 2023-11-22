@@ -120,7 +120,7 @@
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-            $nsgRule = $ConfigController.Network.NSGRule
+            $nsgRule = $ConfigController.Network.NSG.Rules[0]
 
             $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
             $nsgRuleName = $ConfigController.IdForNaming
