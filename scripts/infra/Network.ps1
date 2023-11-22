@@ -255,7 +255,7 @@ function Deploy-NSGRule() {
     sourcePortRange="$SourcePortRange" `
     destinationAddressPrefix="$DestinationAddressPrefix" `
     destinationPortRange="$DestinationPortRange" `
-    destinationPortRanges="$DestinationPortRanges" `
+    destinationPortRanges="`"$DestinationPortRanges'"" `
     | ConvertFrom-Json
   
   return $output
