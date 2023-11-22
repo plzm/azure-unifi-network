@@ -12,13 +12,13 @@
         - name: Checkout repository
           uses: actions/checkout@v3
   
-        - name: Set Azure CLI extensions to auto-install
-          if: success()
-          run: |
-            $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
+        #- name: Set Azure CLI extensions to auto-install
+        #  if: success()
+        #  run: |
+        #    $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
   
-            Write-Debug -Debug:$true -Message "$output"
-          shell: pwsh
+        #    Write-Debug -Debug:$true -Message "$output"
+        #  shell: pwsh
   
         - name: Azure login
           if: success()
