@@ -73,7 +73,6 @@ function Deploy-Network()
   {
     $output = Deploy-NSGRule `
       -SubscriptionID "$SubscriptionId" `
-      -Location $ConfigMain.Location `
       -ResourceGroupName $ResourceGroupName `
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
       -NSGName $NSGName `
@@ -189,9 +188,6 @@ function Deploy-NSGRule() {
     [Parameter(Mandatory = $true)]
     [string]
     $SubscriptionId,
-    [Parameter(Mandatory = $true)]
-    [string]
-    $Location,
     [Parameter(Mandatory = $true)]
     [string]
     $ResourceGroupName,
