@@ -12,13 +12,13 @@
         - name: Checkout repository
           uses: actions/checkout@v3
   
-        #- name: Set Azure CLI extensions to auto-install
-        #  if: success()
-        #  run: |
-        #    $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
+        - name: Set Azure CLI extensions to auto-install
+          if: success()
+          run: |
+            $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
   
-        #    Write-Debug -Debug:$true -Message "$output"
-        #  shell: pwsh
+            Write-Debug -Debug:$true -Message "$output"
+          shell: pwsh
   
         - name: Azure login
           if: success()
@@ -127,20 +127,19 @@
 
             $output = Deploy-NSGRule `
               -SubscriptionID "$subscriptionId" `
-              -Location $ConfigController.Location `
               -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
               -NSGName ${{ env.AA_NSG_NAME }} `
               -NSGRuleName $nsgRuleName `
               -Description $nsgRule.Description `
-              -Priority ($ConfigConstants.NsgPriorityBase + $nsgRule.Id) `
+              -Priority ($ConfigConstants.NsgPriorityBase + $ConfigController.Id) `
               -Direction $nsgRule.Direction `
               -Access $nsgRule.Access `
               -Protocol $nsgRule.Protocol `
               -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
               -SourcePortRange $nsgRule.SourcePortRange `
               -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
-              -DestinationPortRanges "$nsgRule.DestinationPortRanges"
+              -DestinationPortRanges $nsgRule.DestinationPortRanges
     
             Write-Debug -Debug:$debug -Message "$output"
 
