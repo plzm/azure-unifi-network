@@ -59,21 +59,21 @@ jobs:
           . ./scripts/infra/Utility.ps1
           . ./scripts/infra/Network.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
           $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           # Tags
-          Set-EnvVarTags -ConfigConstants $configConstants -ConfigMain $configMain
+          Set-EnvVarTags -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain
 
           # Resource Groups
-          $rgNameMain = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixRsg -Suffix $configMain.Suffix
+          $rgNameMain = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixRsg -Suffix $ConfigMain.Suffix
 
           Set-EnvVar2 -VarName "AA_RG_NAME_MAIN" -VarValue "$rgNameMain"
 
           # User Assigned Identity
-          $uaiName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixUai -Sequence $configConstants.SeqNumUai
+          $uaiName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixUai -Sequence $ConfigConstants.SeqNumUai
           $uaiResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.ManagedIdentity" -ResourceTypeName "userAssignedIdentities" -ResourceName $uaiName
 
           Set-EnvVar2 -VarName "AA_UAI_NAME" -VarValue "$uaiName"
@@ -82,7 +82,7 @@ jobs:
           # AA_UAI_CLIENT_ID, AA_UAI_PRINCIPAL_ID
 
           # Log Analytics
-          $workspaceName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixLogAnalytics -Sequence $configConstants.SeqNumLogAnalytics
+          $workspaceName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixLogAnalytics -Sequence $ConfigConstants.SeqNumLogAnalytics
           $workspaceResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "microsoft.operationalinsights" -ResourceTypeName "workspaces" -ResourceName $workspaceName
 
           Set-EnvVar2 -VarName "AA_LAW_NAME" -VarValue "$workspaceName"
@@ -91,29 +91,29 @@ jobs:
           # Network
           $nsg = $ConfigMain.Network.NSG
           $nsgName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNsg -Sequence $ConfigConstants.SeqNumNsg
-          $nsgResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkSecurityGroups" -ResourceName $nsgName
+          $nsgResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkSecurityGroups" -ResourceName $nsgName
           Set-EnvVar2 -VarName "AA_NSG_NAME" -VarValue "$nsgName"
           Set-EnvVar2 -VarName "AA_NSG_RESOURCE_ID" -VarValue "$nsgResourceId"
 
           $vnet = $ConfigMain.Network.VNet
           $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
-          $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
+          $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
           Set-EnvVar2 -VarName "AA_VNET_NAME" -VarValue "$vnetName"
           Set-EnvVar2 -VarName "AA_VNET_RESOURCE_ID" -VarValue "$vnetResourceId"
 
           Write-Debug -Debug:$true -Message "Get first subnet resource id for private endpoints"
-          $subnetResourceIdForPrivateEndpoint = Get-SubnetResourceIdForPrivateEndpoint -ConfigConstants $configConstants -ConfigMain $configMain -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain"
+          $subnetResourceIdForPrivateEndpoint = Get-SubnetResourceIdForPrivateEndpoint -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain"
           Set-EnvVar2 -VarName "AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT" -VarValue $subnetResourceIdForPrivateEndpoint
 
           # Key Vault
-          $keyVaultName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixKeyVault -Sequence $configConstants.SeqNumKeyVault
+          $keyVaultName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixKeyVault -Sequence $ConfigConstants.SeqNumKeyVault
           $keyVaultResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.KeyVault" -ResourceTypeName "vaults" -ResourceName $keyVaultName
 
           Set-EnvVar2 -VarName "AA_KEYVAULT_NAME" -VarValue "$keyVaultName"
           Set-EnvVar2 -VarName "AA_KEYVAULT_RESOURCE_ID" -VarValue "$keyVaultResourceId"
 
           # Storage
-          $storageAccountName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixStorageAccount -Sequence $configConstants.SeqNumStorage -IncludeDelimiter $false
+          $storageAccountName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixStorageAccount -Sequence $ConfigConstants.SeqNumStorage -IncludeDelimiter $false
           $storageAccountResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Storage" -ResourceTypeName "storageAccounts" -ResourceName $storageAccountName
 
           Set-EnvVar2 -VarName "AA_STORAGE_ACCOUNT_NAME" -VarValue "$storageAccountName"
@@ -148,8 +148,8 @@ jobs:
 
           . ./scripts/infra/Utility.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
           $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           $rgNameMain = "${{ env.AA_RG_NAME_MAIN }}"
@@ -157,7 +157,7 @@ jobs:
           Write-Debug -Debug:$true -Message "Create RG $rgNameMain"
           $output = az group create `
             --subscription "$subscriptionId" `
-            -l $configMain.Location `
+            -l $ConfigMain.Location `
             -n "$rgNameMain" `
             --tags ${{ env.AA_TAGS_FOR_CLI }} `
             | ConvertFrom-Json
@@ -172,15 +172,15 @@ jobs:
           . ./scripts/infra/Utility.ps1
           . ./scripts/infra/Security.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
           Write-Debug -Debug:$true -Message "Deploy UAI ${{ env.AA_UAI_NAME }}"
           $output = Deploy-UAI `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
             -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
             -UAIName "${{ env.AA_UAI_NAME }}" `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
@@ -206,78 +206,78 @@ jobs:
           . ./scripts/infra/Utility.ps1
           . ./scripts/infra/Security.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Certificates Officer"
           $output = Deploy-RoleAssignmentSub `
-            -Location $configMain.Location `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $configConstants.RoleDefinitionIdKeyVaultCertificatesOfficer `
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultCertificatesOfficer `
             -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Crypto Officer"
           $output = Deploy-RoleAssignmentSub `
-            -Location $configMain.Location `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $configConstants.RoleDefinitionIdKeyVaultCryptoOfficer `
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultCryptoOfficer `
             -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Secrets Officer"
           $output = Deploy-RoleAssignmentSub `
-            -Location $configMain.Location `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $configConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
             -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Monitoring Metrics Publisher"
           $output = Deploy-RoleAssignmentSub `
-            -Location $configMain.Location `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $configConstants.RoleDefinitionIdMonitoringMetricsPublisher `
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdMonitoringMetricsPublisher `
             -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Storage Blob Data Contributor"
           $output = Deploy-RoleAssignmentSub `
-            -Location $configMain.Location `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $configConstants.RoleDefinitionIdStorageBlobDataContributor `
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdStorageBlobDataContributor `
             -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Storage Blob Queue Contributor"
           $output = Deploy-RoleAssignmentSub `
-            -Location $configMain.Location `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $configConstants.RoleDefinitionIdStorageQueueDataContributor `
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdStorageQueueDataContributor `
             -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | App Services RP App Reg | Key Vault Secrets User"
           $output = Deploy-RoleAssignmentSub `
-            -Location $configMain.Location `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $configConstants.RoleDefinitionIdKeyVaultSecretsUser `
-            -PrincipalId $configConstants.PrincipalIdAppServicesRp
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsUser `
+            -PrincipalId $ConfigConstants.PrincipalIdAppServicesRp
 
           Write-Debug -Debug:$true -Message "$output"
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | Diagnostic Services Trusted Storage Access | Storage Blob Data Contributor"
           $output = Deploy-RoleAssignmentSub `
-            -Location $configMain.Location `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $configConstants.RoleDefinitionIdKeyVaultSecretsUser `
-            -PrincipalId $configConstants.PrincipalIdDiagnosticServicesTrustedStorageAccess
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsUser `
+            -PrincipalId $ConfigConstants.PrincipalIdDiagnosticServicesTrustedStorageAccess
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -291,15 +291,15 @@ jobs:
           . ./scripts/infra/Utility.ps1
           . ./scripts/infra/Observability.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
           Write-Debug -Debug:$true -Message "Deploy LAW ${{ env.AA_LAW_NAME }}"
           $output = Deploy-LogAnalyticsWorkspace `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.log-analytics-workspace.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.log-analytics-workspace.json") `
             -WorkspaceName "${{ env.AA_LAW_NAME }}" `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
@@ -309,7 +309,7 @@ jobs:
           $output = Deploy-DiagnosticsSetting `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
             -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
             -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
@@ -329,13 +329,13 @@ jobs:
           . ./scripts/infra/Observability.ps1
           . ./scripts/infra/Network.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
           Write-Debug -Debug:$true -Message "Deploy Network"
           Deploy-Network `
-            -ConfigConstants $configConstants `
-            -ConfigMain $configMain `
+            -ConfigConstants $ConfigConstants `
+            -ConfigMain $ConfigMain `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -NSGName ${{ env.AA_NSG_NAME }} `
@@ -356,13 +356,13 @@ jobs:
           . ./scripts/infra/Utility.ps1
           . ./scripts/infra/Network.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
           Write-Debug -Debug:$true -Message "Deploy private DNS zones"
           Deploy-PrivateDnsZones `
-            -ConfigConstants $configConstants `
-            -ConfigMain $configMain `
+            -ConfigConstants $ConfigConstants `
+            -ConfigMain $ConfigMain `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
@@ -378,22 +378,22 @@ jobs:
           . ./scripts/infra/Observability.ps1
           . ./scripts/infra/Network.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $privateLinkScopeName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixAmpls -Sequence $configConstants.SeqNumAmpls
+          $privateLinkScopeName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixAmpls -Sequence $ConfigConstants.SeqNumAmpls
           $privateLinkScopeResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "microsoft.insights" -ResourceTypeName "privatelinkscopes" -ResourceName $privateLinkScopeName
 
-          $privateEndpointName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixPrivateEndpoint -Sequence $configConstants.SeqNumAmpls
+          $privateEndpointName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumAmpls
 
-          $privateLinkScopeNicName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixNic -Sequence $configConstants.SeqNumAmpls
+          $privateLinkScopeNicName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumAmpls
           $privateLinkScopeNicResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $privateLinkScopeNicName
 
           Write-Debug -Debug:$true -Message "Deploy AMPLS"
           $output = Deploy-Ampls `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.private-link-scope.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.json") `
             -PrivateLinkScopeName $privateLinkScopeName `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
@@ -403,7 +403,7 @@ jobs:
           $output = Deploy-ConnectLawToAmpls `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
             -PrivateLinkScopeName $privateLinkScopeName `
             -ScopedResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
             -ScopedResourceName "${{ env.AA_LAW_NAME }}"
@@ -413,9 +413,9 @@ jobs:
           Write-Debug -Debug:$true -Message "Deploy AMPLS Private Endpoint and NIC"
           $output = Deploy-PrivateEndpointAndNic `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
             -ProtectedWorkloadResourceId "$privateLinkScopeResourceId" `
             -ProtectedWorkloadSubResource "azuremonitor" `
             -PrivateEndpointName $privateEndpointName `
@@ -429,7 +429,7 @@ jobs:
           $output = Deploy-DiagnosticsSetting `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId $privateLinkScopeNicResourceId `
             -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
             -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
@@ -446,14 +446,14 @@ jobs:
             -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
             -ResourceProviderName "Microsoft.Network" `
             -ResourceTypeName "privateDnsZones" `
-            -ResourceName $configConstants.PrivateDnsZoneNameMonitor
+            -ResourceName $ConfigConstants.PrivateDnsZoneNameMonitor
 
           Deploy-PrivateEndpointPrivateDnsZoneGroup `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
             -PrivateEndpointName $privateEndpointName `
-            -PrivateDnsZoneName $configConstants.PrivateDnsZoneNameMonitor `
+            -PrivateDnsZoneName $ConfigConstants.PrivateDnsZoneNameMonitor `
             -PrivateDnsZoneGroupName "default" `
             -PrivateDnsZoneResourceId $privateDnsZoneResourceId
 
@@ -468,26 +468,26 @@ jobs:
           . ./scripts/infra/Observability.ps1
           . ./scripts/infra/Network.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $dataCollectionEndpointName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixDataCollectionEndpoint -Sequence $configConstants.SeqNumDataCollectionEndpoint
+          $dataCollectionEndpointName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixDataCollectionEndpoint -Sequence $ConfigConstants.SeqNumDataCollectionEndpoint
           $dataCollectionEndpointResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Insights" -ResourceTypeName "dataCollectionEndpoints" -ResourceName $dataCollectionEndpointName
 
-          $dataCollectionRuleLinuxName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixDataCollectionRule -Suffix $configConstants.SuffixAmplsDataCollectionRuleLinux
+          $dataCollectionRuleLinuxName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixDataCollectionRule -Suffix $ConfigConstants.SuffixAmplsDataCollectionRuleLinux
           $dataCollectionRuleLinuxResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Insights" -ResourceTypeName "dataCollectionRules" -ResourceName $dataCollectionRuleLinuxName
 
-          $dataCollectionRuleWindowsName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixDataCollectionRule -Suffix $configConstants.SuffixAmplsDataCollectionRuleWindows
+          $dataCollectionRuleWindowsName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixDataCollectionRule -Suffix $ConfigConstants.SuffixAmplsDataCollectionRuleWindows
           $dataCollectionRuleWindowsResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Insights" -ResourceTypeName "dataCollectionRules" -ResourceName $dataCollectionRuleWindowsName
 
           Write-Debug -Debug:$true -Message "Deploy Data Collection Endpoint"
           $output = Deploy-DataCollectionEndpoint `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.data-collection-endpoint.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-endpoint.json") `
             -DataCollectionEndpointName "$dataCollectionEndpointName" `
-            -PublicNetworkAccess $configMain.Observability.DataCollectionEndpoint.PublicNetworkAccess `
+            -PublicNetworkAccess $ConfigMain.Observability.DataCollectionEndpoint.PublicNetworkAccess `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -495,9 +495,9 @@ jobs:
           Write-Debug -Debug:$true -Message "Deploy Data Collection Rule - Linux"
           $output = Deploy-DataCollectionRule `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.data-collection-rule.linux.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule.linux.json") `
             -DataCollectionRuleName "$dataCollectionRuleLinuxName" `
             -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME }} `
             -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID }} `
@@ -508,9 +508,9 @@ jobs:
           Write-Debug -Debug:$true -Message "Deploy Data Collection Rule - Windows"
           $output = Deploy-DataCollectionRule `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "monitor.data-collection-rule.windows.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule.windows.json") `
             -DataCollectionRuleName "$dataCollectionRuleWindowsName" `
             -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME }} `
             -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID }} `
@@ -530,31 +530,31 @@ jobs:
           . ./scripts/infra/Observability.ps1
           . ./scripts/infra/KeyVault.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
           Write-Debug -Debug:$true -Message "Get subnets for Key Vault network access rules"
           $subnetResourceIds = Get-SubnetResourceIds `
-            -ConfigConstants $configConstants `
-            -ConfigMain $configMain `
+            -ConfigConstants $ConfigConstants `
+            -ConfigMain $ConfigMain `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }}
 
           $subnetResourceIdsCsv = $($subnetResourceIds -join ",")
           Write-Debug -Debug:$true -Message "$subnetResourceIdsCsv"
 
-          $privateEndpointName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixPrivateEndpoint -Sequence $configConstants.SeqNumKeyVault
+          $privateEndpointName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumKeyVault
 
-          $keyVaultNicName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixNic -Sequence $configConstants.SeqNumKeyVault
+          $keyVaultNicName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumKeyVault
           $keyVaultNicResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $keyVaultNicName
 
           Write-Debug -Debug:$true -Message "Deploy Key Vault"
           $output = Deploy-KeyVault `
             -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "key-vault.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "key-vault.json") `
             -KeyVaultName "${{ env.AA_KEYVAULT_NAME }}" `
             -EnabledForDeployment $false `
             -EnabledForDiskEncryption $false `
@@ -575,7 +575,7 @@ jobs:
           $output = Deploy-DiagnosticsSetting `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId "${{ env.AA_KEYVAULT_RESOURCE_ID}}" `
             -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
             -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
@@ -587,9 +587,9 @@ jobs:
           Write-Debug -Debug:$true -Message "Deploy Private Endpoint and NIC"
           $output = Deploy-PrivateEndpointAndNic `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
             -ProtectedWorkloadResourceId "${{ env.AA_KEYVAULT_RESOURCE_ID}}" `
             -ProtectedWorkloadSubResource "vault" `
             -PrivateEndpointName $privateEndpointName `
@@ -604,7 +604,7 @@ jobs:
           $output = Deploy-DiagnosticsSetting `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId $keyVaultNicResourceId `
             -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
             -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
@@ -620,14 +620,14 @@ jobs:
             -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
             -ResourceProviderName "Microsoft.Network" `
             -ResourceTypeName "privateDnsZones" `
-            -ResourceName $configConstants.PrivateDnsZoneNameKeyVault
+            -ResourceName $ConfigConstants.PrivateDnsZoneNameKeyVault
 
           Deploy-PrivateEndpointPrivateDnsZoneGroup `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
             -PrivateEndpointName $privateEndpointName `
-            -PrivateDnsZoneName $configConstants.PrivateDnsZoneNameKeyVault `
+            -PrivateDnsZoneName $ConfigConstants.PrivateDnsZoneNameKeyVault `
             -PrivateDnsZoneGroupName "default" `
             -PrivateDnsZoneResourceId $privateDnsZoneResourceId
 
@@ -643,13 +643,13 @@ jobs:
           . ./scripts/infra/Observability.ps1
           . ./scripts/infra/Storage.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
           Write-Debug -Debug:$true -Message "Get subnets for Storage Account network access rules"
           $subnetResourceIds = Get-SubnetResourceIds `
-            -ConfigConstants $configConstants `
-            -ConfigMain $configMain `
+            -ConfigConstants $ConfigConstants `
+            -ConfigMain $ConfigMain `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }}
 
@@ -657,18 +657,18 @@ jobs:
           Write-Debug -Debug:$true -Message "$subnetResourceIdsCsv"
 
           # Blob
-          $privateEndpointNameBlob = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixPrivateEndpoint -Sequence $configConstants.SeqNumStorage -Suffix "blob"
-          $storageAccountNicNameBlob = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixNic -Sequence $configConstants.SeqNumStorage -Suffix "blob"
+          $privateEndpointNameBlob = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumStorage -Suffix "blob"
+          $storageAccountNicNameBlob = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumStorage -Suffix "blob"
           $storageAccountNicResourceIdBlob = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $storageAccountNicNameBlob
 
           Write-Debug -Debug:$true -Message "Deploy Storage Account"
           $output = Deploy-StorageAccount `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "storage.account.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "storage.account.json") `
             -StorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME }}" `
-            -SkuName $configMain.Storage.SkuName `
+            -SkuName $ConfigMain.Storage.SkuName `
             -AllowedSubnetResourceIdsCsv "$subnetResourceIdsCsv" `
             -AllowedIpAddressRangesCsv "" `
             -DefaultAction "Deny" `
@@ -681,7 +681,7 @@ jobs:
           $output = Deploy-StorageDiagnosticsSetting `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "storage.diagnostic-settings.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "storage.diagnostic-settings.json") `
             -ResourceId "${{ env.AA_STORAGE_ACCOUNT_RESOURCE_ID }}" `
             -DiagnosticsSettingName ("diag-" + "${{ env.AA_STORAGE_ACCOUNT_NAME }}") `
             -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}"
@@ -692,9 +692,9 @@ jobs:
           Write-Debug -Debug:$true -Message "Deploy Private Endpoint and NIC"
           $output = Deploy-PrivateEndpointAndNic `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $configMain.Location `
+            -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
             -ProtectedWorkloadResourceId "${{ env.AA_STORAGE_ACCOUNT_RESOURCE_ID }}" `
             -ProtectedWorkloadSubResource "blob" `
             -PrivateEndpointName $privateEndpointNameBlob `
@@ -709,7 +709,7 @@ jobs:
           $output = Deploy-DiagnosticsSetting `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId $storageAccountNicResourceIdBlob `
             -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
             -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
@@ -726,14 +726,14 @@ jobs:
             -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
             -ResourceProviderName "Microsoft.Network" `
             -ResourceTypeName "privateDnsZones" `
-            -ResourceName $configConstants.PrivateDnsZoneNameStorageBlob
+            -ResourceName $ConfigConstants.PrivateDnsZoneNameStorageBlob
 
           Deploy-PrivateEndpointPrivateDnsZoneGroup `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($configConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
             -PrivateEndpointName $privateEndpointNameBlob `
-            -PrivateDnsZoneName $configConstants.PrivateDnsZoneNameStorageBlob `
+            -PrivateDnsZoneName $ConfigConstants.PrivateDnsZoneNameStorageBlob `
             -PrivateDnsZoneGroupName "default" `
             -PrivateDnsZoneResourceId $privateDnsZoneResourceId
 

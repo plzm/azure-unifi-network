@@ -73,7 +73,6 @@ function Deploy-Network()
   {
     $output = Deploy-NSGRule `
       -SubscriptionID "$SubscriptionId" `
-      -Location $ConfigMain.Location `
       -ResourceGroupName $ResourceGroupName `
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
       -NSGName $NSGName `
@@ -191,9 +190,6 @@ function Deploy-NSGRule() {
     $SubscriptionId,
     [Parameter(Mandatory = $true)]
     [string]
-    $Location,
-    [Parameter(Mandatory = $true)]
-    [string]
     $ResourceGroupName,
     [Parameter(Mandatory = $true)]
     [string]
@@ -228,9 +224,12 @@ function Deploy-NSGRule() {
     [Parameter(Mandatory = $true)]
     [string]
     $DestinationAddressPrefix,
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]
-    $DestinationPortRange
+    $DestinationPortRange = "",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $DestinationPortRanges = ""
   )
 
   Write-Debug -Debug:$debug -Message "Deploy NSG Rule $NSGRuleName"
@@ -252,6 +251,7 @@ function Deploy-NSGRule() {
     sourcePortRange="$SourcePortRange" `
     destinationAddressPrefix="$DestinationAddressPrefix" `
     destinationPortRange="$DestinationPortRange" `
+    destinationPortRanges="$DestinationPortRanges" `
     | ConvertFrom-Json
   
   return $output

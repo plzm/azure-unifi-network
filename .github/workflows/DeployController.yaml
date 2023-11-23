@@ -71,7 +71,7 @@
             Set-EnvVar2 -VarName "AA_UAI_NAME" -VarValue "$uaiName"
             Set-EnvVar2 -VarName "AA_UAI_RESOURCE_ID" -VarValue "$uaiResourceId"
 
-            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName" | ConvertFrom-Json
+            $uai = "$(az identity show -g $rgNameMain -n $uaiName)" | ConvertFrom-Json
             Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID" -VarValue $uai.clientId
             Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID" -VarValue $uai.principalId
   
@@ -85,13 +85,13 @@
             # Network
             $nsg = $ConfigMain.Network.NSG
             $nsgName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNsg -Sequence $ConfigConstants.SeqNumNsg
-            $nsgResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkSecurityGroups" -ResourceName $nsgName
+            $nsgResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkSecurityGroups" -ResourceName $nsgName
             Set-EnvVar2 -VarName "AA_NSG_NAME" -VarValue "$nsgName"
             Set-EnvVar2 -VarName "AA_NSG_RESOURCE_ID" -VarValue "$nsgResourceId"
   
             $vnet = $ConfigMain.Network.VNet
             $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
-            $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
+            $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
             Set-EnvVar2 -VarName "AA_VNET_NAME" -VarValue "$vnetName"
             Set-EnvVar2 -VarName "AA_VNET_RESOURCE_ID" -VarValue "$vnetResourceId"
   
@@ -120,27 +120,26 @@
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-            $nsgRule = $ConfigController.Network.NSGRule
+            $nsgRule = $ConfigController.Network.NSG.Rules[0]
 
             $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
             $nsgRuleName = $ConfigController.IdForNaming
 
             $output = Deploy-NSGRule `
               -SubscriptionID "$subscriptionId" `
-              -Location $ConfigController.Location `
-              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
               -NSGName ${{ env.AA_NSG_NAME }} `
               -NSGRuleName $nsgRuleName `
               -Description $nsgRule.Description `
-              -Priority ($ConfigConstants.NsgPriorityBase + $nsgRule.Id) `
+              -Priority ($ConfigConstants.NsgPriorityBase + $ConfigController.Id) `
               -Direction $nsgRule.Direction `
               -Access $nsgRule.Access `
               -Protocol $nsgRule.Protocol `
               -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
               -SourcePortRange $nsgRule.SourcePortRange `
               -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
-              -DestinationPortRange $nsgRule.DestinationPortRange
+              -DestinationPortRanges $nsgRule.DestinationPortRanges
     
             Write-Debug -Debug:$debug -Message "$output"
 
