@@ -216,17 +216,14 @@
             $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-
             $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-
-            $vmName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVm -Sequence $ConfigController.
 
             $output = Deploy-Vm `
               -SubscriptionID "$SubscriptionId" `
               -Location $ConfigController.Location `
               -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
-              -VmName $vmName `
+              -VmName ${{ env.AA_VM_NAME_CONTROLLER }}
 
 
 

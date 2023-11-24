@@ -55,7 +55,7 @@ function Set-VariablesMain()
   Set-EnvVar2 -VarName "AA_AMPLS_RESOURCE_ID_MAIN" -VarValue "$privateLinkScopeResourceId"
 
   # Log Analytics
-  $workspaceName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixLogAnalytics -Sequence $ConfigConstants.SeqNumberLogAnalytics
+  $workspaceName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixLogAnalytics -Sequence $ConfigConstants.SeqNumLogAnalytics
   $workspaceResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "microsoft.operationalinsights" -ResourceTypeName "workspaces" -ResourceName $workspaceName
 
   Set-EnvVar2 -VarName "AA_LAW_NAME_MAIN" -VarValue "$workspaceName"
@@ -81,8 +81,8 @@ function Set-VariablesMain()
   # AA_RG_NAME_MAIN
   # AA_UAI_NAME_MAIN
   # AA_UAI_RESOURCE_ID_MAIN
-  # AA_UAI_CLIENT_ID_MAIN - set below
-  # AA_UAI_PRINCIPAL_ID_MAIN - set below
+  # AA_UAI_CLIENT_ID_MAIN - set later
+  # AA_UAI_PRINCIPAL_ID_MAIN - set later
   # AA_AMPLS_NAME_MAIN
   # AA_AMPLS_RESOURCE_ID_MAIN
   # AA_LAW_NAME_MAIN
@@ -121,7 +121,6 @@ function Set-VariablesController()
   $rgNameController = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixRsg -Sequence $ConfigController.IdForNaming
   Set-EnvVar2 -VarName "AA_RG_NAME_CONTROLLER" -VarValue "$rgNameController"
 
-
   # User Assigned Identity
   $uaiNameController = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixUai -Sequence $ConfigController.IdForNaming
   $uaiResourceIdController = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameController" -ResourceProviderName "Microsoft.ManagedIdentity" -ResourceTypeName "userAssignedIdentities" -ResourceName $uaiNameController
@@ -131,5 +130,20 @@ function Set-VariablesController()
   # In separate step after UAI provisioned
   # AA_UAI_CLIENT_ID_CONTROLLER, AA_UAI_PRINCIPAL_ID_CONTROLLER
 
+  # Controller VM
+  $vmName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixKeyVault -Sequence $ConfigController.IdForNaming
+  $vmResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameController" -ResourceProviderName "Microsoft.Compute" -ResourceTypeName "virtualMachines" -ResourceName $vmName
+
+  Set-EnvVar2 -VarName "AA_VM_NAME_CONTROLLER" -VarValue "$vmName"
+  Set-EnvVar2 -VarName "AA_VM_RESOURCE_ID_CONTROLLER" -VarValue "$vmResourceId"
+
+  # Env vars listed here for convenience
+  # AA_RG_NAME_CONTROLLER
+  # AA_UAI_NAME_CONTROLLER
+  # AA_UAI_RESOURCE_ID_CONTROLLER
+  # AA_UAI_CLIENT_ID_CONTROLLER - set later
+  # AA_UAI_PRINCIPAL_ID_CONTROLLER - set later
+  # AA_VM_NAME_CONTROLLER
+  # AA_VM_RESOURCE_ID_CONTROLLER
 
 }

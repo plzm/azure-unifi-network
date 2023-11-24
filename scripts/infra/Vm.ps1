@@ -17,7 +17,28 @@ function Deploy-Vm()
     $TemplateUri,
     [Parameter(Mandatory = $true)]
     [string]
-    $VmName
+    $VmName,
+    [Parameter(Mandatory = $false)]
+    [bool]
+    $AssignSystemIdentity = $false,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $UaiResourceId,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VmSize,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VmPublisher,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VmOffer,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VmSku,
+    [Parameter(Mandatory = $false)]
+    [bool]
+    $ProvisionVmAgent = $true
   )
 
   Write-Debug -Debug:$true -Message "Deploy VM $VmName"
@@ -28,19 +49,30 @@ function Deploy-Vm()
     -g "$ResourceGroupName" `
     --template-uri "$TemplateUri" `
     --parameters `
-    location="$Location" `
-    keyVaultName="$KeyVaultName" `
-    enabledForDeployment="$EnabledForDeployment" `
-    enabledForDiskEncryption="$EnabledForDiskEncryption" `
-    enabledForTemplateDeployment="$EnabledForTemplateDeployment" `
-    enableSoftDelete="$EnableSoftDelete" `
-    softDeleteRetentionInDays="$SoftDeleteRetentionInDays" `
-    enableRbacAuthorization="$EnableRbacAuthorization" `
-    publicNetworkAccess="$PublicNetworkAccess" `
-    defaultAction="$DefaultAction" `
-    allowedIpAddressRanges="$AllowedIpAddressRangesCsv" `
-    allowedSubnetResourceIds="$AllowedSubnetResourceIdsCsv" `
-    tags=$Tags `
+      location="$Location" `
+      assignSystemIdentity=$AssignSystemIdentity `
+      userAssignedIdentityResourceId="$UaiResourceId" `
+      virtualMachineName="$VmName" `
+      virtualMachineSize="$VmSize" `
+      publisher="$VmPublisher" `
+      offer="$VmOffer" `
+      sku="$VmSku" `
+      provisionVmAgent=$ProvisionVmAgent `
+      adminUsername="" `
+      adminSshPublicKey="" `
+      virtualMachineTimeZone="" `
+      osDiskName="" `
+      osDiskStorageType="" `
+      osDiskSizeInGB="" `
+      vmAutoShutdownTime="" `
+      enableAutoShutdownNotification="" `
+      autoShutdownNotificationWebhookURL="" `
+      autoShutdownNotificationMinutesBefore="" `
+      resourceGroupNameNetworkInterface="$RG_NAME_VM_PROD" `
+      networkInterfaceResourceId="" `
+      enableBootDiagnostics=$true `
+      bootDiagnosticsStorageAccountName="" `
+      tags=$Tags `
     | ConvertFrom-Json
 
   return $output

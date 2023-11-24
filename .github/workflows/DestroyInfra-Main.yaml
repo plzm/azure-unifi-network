@@ -71,7 +71,7 @@ jobs:
           $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $uaiName = ${{ env.AA_UAI_NAME_MAIN }}
+          $uaiName = "${{ env.AA_UAI_NAME_MAIN }}"
           Write-Debug -Debug:$true -Message "Get UAI $uaiName"
           $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
 
@@ -100,7 +100,7 @@ jobs:
           {
             az group delete -y `
               --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-              -n ${{ env.AA_RG_NAME_MAIN }}
+              -n "${{ env.AA_RG_NAME_MAIN }}"
           }
 
 ...
