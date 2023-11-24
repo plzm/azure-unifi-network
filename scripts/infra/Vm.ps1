@@ -38,7 +38,47 @@ function Deploy-Vm()
     $VmSku,
     [Parameter(Mandatory = $false)]
     [bool]
-    $ProvisionVmAgent = $true
+    $ProvisionVmAgent = $true,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VmAdminUsername,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VmAdminSshPublicKey,
+    [Parameter(Mandatory = $false)]
+    [string]
+    $VmTimeZone = "",
+    [Parameter(Mandatory = $true)]
+    [string]
+    $OsDiskName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $OsDiskStorageType,
+    [Parameter(Mandatory = $false)]
+    [int]
+    $OsDiskSizeInGB = 32,
+    [Parameter(Mandatory = $false)]
+    [string]
+    $VmAutoShutdownTime = "9999",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $EnableAutoShutdownNotification = "Disabled",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $AutoShutdownNotificationWebhookURL = "",
+    [Parameter(Mandatory = $false)]
+    [int]
+    $AutoShutdownNotificationMinutesBefore = 15,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $NetworkInterfaceResourceId,
+    [Parameter(Mandatory = $false)]
+    [bool]
+    $EnableBootDiagnostics = $true,
+    [Parameter(Mandatory = $false)]
+    [string]
+    $BootDiagnosticsStorageAccountName = ""
+
   )
 
   Write-Debug -Debug:$true -Message "Deploy VM $VmName"
@@ -58,24 +98,21 @@ function Deploy-Vm()
       offer="$VmOffer" `
       sku="$VmSku" `
       provisionVmAgent=$ProvisionVmAgent `
-      adminUsername="" `
-      adminSshPublicKey="" `
-      virtualMachineTimeZone="" `
-      osDiskName="" `
-      osDiskStorageType="" `
-      osDiskSizeInGB="" `
-      vmAutoShutdownTime="" `
-      enableAutoShutdownNotification="" `
-      autoShutdownNotificationWebhookURL="" `
-      autoShutdownNotificationMinutesBefore="" `
-      resourceGroupNameNetworkInterface="$RG_NAME_VM_PROD" `
-      networkInterfaceResourceId="" `
-      enableBootDiagnostics=$true `
-      bootDiagnosticsStorageAccountName="" `
+      adminUsername="$VmAdminUsername" `
+      adminSshPublicKey="$VmAdminSshPublicKey" `
+      virtualMachineTimeZone="$VmTimeZone" `
+      osDiskName="$OsDiskName" `
+      osDiskStorageType="$OsDiskStorageType" `
+      osDiskSizeInGB="$OsDiskSizeInGB" `
+      vmAutoShutdownTime="$VmAutoShutdownTime" `
+      enableAutoShutdownNotification="$EnableAutoShutdownNotification" `
+      autoShutdownNotificationWebhookURL="$AutoShutdownNotificationWebhookURL" `
+      autoShutdownNotificationMinutesBefore="$AutoShutdownNotificationMinutesBefore" `
+      networkInterfaceResourceId="$NetworkInterfaceResourceId" `
+      enableBootDiagnostics=$EnableBootDiagnostics `
+      bootDiagnosticsStorageAccountName="$BootDiagnosticsStorageAccountName" `
       tags=$Tags `
     | ConvertFrom-Json
 
   return $output
-}
-
 }

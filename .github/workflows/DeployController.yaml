@@ -218,12 +218,14 @@
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
             $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
+            $osDiskName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
+
             $output = Deploy-Vm `
               -SubscriptionID "$SubscriptionId" `
               -Location $ConfigController.Location `
               -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
-              -VmName ${{ env.AA_VM_NAME_CONTROLLER }}
+              -VmName ${{ env.AA_VM_NAME_CONTROLLER }} `
 
 
 

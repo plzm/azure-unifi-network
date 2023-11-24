@@ -131,7 +131,7 @@ function Set-VariablesController()
   # AA_UAI_CLIENT_ID_CONTROLLER, AA_UAI_PRINCIPAL_ID_CONTROLLER
 
   # Controller VM
-  $vmName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixKeyVault -Sequence $ConfigController.IdForNaming
+  $vmName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVirtualMachine -Sequence $ConfigController.IdForNaming
   $vmResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameController" -ResourceProviderName "Microsoft.Compute" -ResourceTypeName "virtualMachines" -ResourceName $vmName
 
   Set-EnvVar2 -VarName "AA_VM_NAME_CONTROLLER" -VarValue "$vmName"
