@@ -1,9 +1,9 @@
 ---
   name: Deploy Controller
-  
-  on: 
+
+  on:
     workflow_dispatch:
-  
+
   jobs:
     deploy-controller:
       name: Deploy Controller
@@ -11,15 +11,15 @@
       steps:
         - name: Checkout repository
           uses: actions/checkout@v3
-  
+
         - name: Set Azure CLI extensions to auto-install
           if: success()
           run: |
             $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
-  
+
             Write-Debug -Debug:$true -Message "$output"
           shell: pwsh
-  
+
         - name: Azure login
           if: success()
           uses: azure/login@v1
@@ -39,7 +39,8 @@
             Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
             Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
 
-        - name: Set Variables and write to Environment
+
+        - name: Set Variables and write to Environment - Main
           if: success()
           shell: pwsh
           run: |
@@ -47,64 +48,40 @@
 
             . ./scripts/infra/Utility.ps1
             . ./scripts/infra/Network.ps1
+            . ./scripts/infra/Variables.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+            Set-VariablesMain `
+              -ConfigConstants $ConfigConstants `
+              -ConfigMain $ConfigMain `
+              -SubscriptionId $SubscriptionId
+
+
+        - name: Set Variables and write to Environment - Controller
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Network.ps1
+            . ./scripts/infra/Variables.ps1
 
             $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-            $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-            # Tags
-            Set-EnvVarTags -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain
+            Set-VariablesController `
+              -ConfigConstants $ConfigConstants `
+              -ConfigMain $ConfigMain `
+              -ConfigController $ConfigController `
+              -SubscriptionId $SubscriptionId
 
-            # Resource Groups
-            $rgNameMain = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixRsg -Suffix $ConfigMain.Suffix
-            $rgNameController = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixRsg -Sequence $ConfigController.IdForNaming
-
-            Set-EnvVar2 -VarName "AA_RG_NAME_MAIN" -VarValue "$rgNameMain"
-            Set-EnvVar2 -VarName "AA_RG_NAME_CONTROLLER" -VarValue "$rgNameController"
-
-            # User Assigned Identity
-            $uaiName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixUai -Sequence $ConfigConstants.SeqNumUai
-            $uaiResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.ManagedIdentity" -ResourceTypeName "userAssignedIdentities" -ResourceName $uaiName
-
-            Set-EnvVar2 -VarName "AA_UAI_NAME" -VarValue "$uaiName"
-            Set-EnvVar2 -VarName "AA_UAI_RESOURCE_ID" -VarValue "$uaiResourceId"
-
-            $uai = "$(az identity show -g $rgNameMain -n $uaiName)" | ConvertFrom-Json
-            Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID" -VarValue $uai.clientId
-            Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID" -VarValue $uai.principalId
-  
-            # Log Analytics
-            $workspaceName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixLogAnalytics -Sequence $ConfigConstants.SeqNumLogAnalytics
-            $workspaceResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "microsoft.operationalinsights" -ResourceTypeName "workspaces" -ResourceName $workspaceName
-
-            Set-EnvVar2 -VarName "AA_LAW_NAME" -VarValue "$workspaceName"
-            Set-EnvVar2 -VarName "AA_LAW_RESOURCE_ID" -VarValue "$workspaceResourceId"
-
-            # Network
-            $nsg = $ConfigMain.Network.NSG
-            $nsgName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNsg -Sequence $ConfigConstants.SeqNumNsg
-            $nsgResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkSecurityGroups" -ResourceName $nsgName
-            Set-EnvVar2 -VarName "AA_NSG_NAME" -VarValue "$nsgName"
-            Set-EnvVar2 -VarName "AA_NSG_RESOURCE_ID" -VarValue "$nsgResourceId"
-  
-            $vnet = $ConfigMain.Network.VNet
-            $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
-            $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
-            Set-EnvVar2 -VarName "AA_VNET_NAME" -VarValue "$vnetName"
-            Set-EnvVar2 -VarName "AA_VNET_RESOURCE_ID" -VarValue "$vnetResourceId"
-  
-            Write-Debug -Debug:$true -Message "Get first subnet resource id for private endpoints"
-            $subnetResourceIdForPrivateEndpoint = Get-SubnetResourceIdForPrivateEndpoint -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain"
-            Set-EnvVar2 -VarName "AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT" -VarValue $subnetResourceIdForPrivateEndpoint
-
-            # Key Vault
-            $keyVaultName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixKeyVault -Sequence $ConfigConstants.SeqNumKeyVault
-            $keyVaultResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.KeyVault" -ResourceTypeName "vaults" -ResourceName $keyVaultName
-
-            Set-EnvVar2 -VarName "AA_KEYVAULT_NAME" -VarValue "$keyVaultName"
-            Set-EnvVar2 -VarName "AA_KEYVAULT_RESOURCE_ID" -VarValue "$keyVaultResourceId"
 
 
         - name: Add NSG rule
@@ -122,11 +99,11 @@
 
             $nsgRule = $ConfigController.Network.NSG.Rules[0]
 
-            $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
             $nsgRuleName = $ConfigController.IdForNaming
 
             $output = Deploy-NSGRule `
-              -SubscriptionID "$subscriptionId" `
+              -SubscriptionID "$SubscriptionId" `
               -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
               -NSGName ${{ env.AA_NSG_NAME }} `
@@ -140,9 +117,116 @@
               -SourcePortRange $nsgRule.SourcePortRange `
               -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
               -DestinationPortRanges $nsgRule.DestinationPortRanges
-    
+
             Write-Debug -Debug:$debug -Message "$output"
 
+
+        - name: Create Resource Group
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            $rgNameController = "${{ env.AA_RG_NAME_CONTROLLER }}"
+
+            Write-Debug -Debug:$true -Message "Create RG $rgNameController"
+            $output = az group create `
+              --subscription "$SubscriptionId" `
+              -l $ConfigController.Location `
+              -n "$rgNameController" `
+              --tags ${{ env.AA_TAGS_FOR_CLI }} `
+              | ConvertFrom-Json
+
+
+        - name: Deploy User Assigned Identity
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Security.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+            Write-Debug -Debug:$true -Message "Deploy UAI ${{ env.AA_UAI_NAME_CONTROLLER }}"
+            $output = Deploy-UAI `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -Location $ConfigMain.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
+              -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
+              -UAIName "${{ env.AA_UAI_NAME_CONTROLLER }}" `
+              -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+            Write-Debug -Debug:$true -Message "$output"
+
+            Write-Debug -Debug:$true -Message "Sleep to allow UAI deploy to complete"
+            Start-Sleep -s 60
+
+            Write-Debug -Debug:$true -Message "Get UAI ${{ env.AA_UAI_NAME_CONTROLLER }}"
+            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_UAI_NAME_CONTROLLER }})" | ConvertFrom-Json
+
+            Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID_CONTROLLER" -VarValue $uai.clientId
+            Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID_CONTROLLER" -VarValue $uai.principalId
+
+
+        - name: Deploy Role Assignments
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Security.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+
+            Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Monitoring Metrics Publisher"
+            $output = Deploy-RoleAssignmentSub `
+              -Location $ConfigMain.Location `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+              -RoleDefinitionId $ConfigConstants.RoleDefinitionIdMonitoringMetricsPublisher `
+              -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_CONTROLLER }}"
+
+            Write-Debug -Debug:$true -Message "$output"
+
+
+        - name: Deploy Controller VM
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Vm.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+            $vmName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVm -Sequence $ConfigController.
+
+            $output = Deploy-Vm `
+              -SubscriptionID "$SubscriptionId" `
+              -Location $ConfigController.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
+              -VmName $vmName `
 
 
 

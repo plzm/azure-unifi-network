@@ -38,28 +38,26 @@ jobs:
           Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
           Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
 
-      - name: Set Variables and write to Environment
+
+      - name: Set Variables and write to Environment - Main
         if: success()
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
 
           . ./scripts/infra/Utility.ps1
+          . ./scripts/infra/Network.ps1
+          . ./scripts/infra/Variables.ps1
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          # Resource Groups
-          $rgNameMain = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixRsg -Suffix $configMain.Suffix
+          Set-VariablesMain `
+            -ConfigConstants $ConfigConstants `
+            -ConfigMain $ConfigMain `
+            -SubscriptionId $SubscriptionId
 
-          Set-EnvVar2 -VarName "AA_RG_NAME_MAIN" -VarValue "$rgNameMain"
-
-          # User Assigned Identity
-          $uaiName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixUai -Sequence $configConstants.SeqNumUai
-          $uaiResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.ManagedIdentity" -ResourceTypeName "userAssignedIdentities" -ResourceName $uaiName
-
-          Set-EnvVar2 -VarName "AA_UAI_NAME" -VarValue "$uaiName"
-          Set-EnvVar2 -VarName "AA_UAI_RESOURCE_ID" -VarValue "$uaiResourceId"
 
       - name: Delete UAI Role Assignments
         if: success()
@@ -73,8 +71,7 @@ jobs:
           $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $uaiName = Get-ResourceName -ConfigConstants $configConstants -ConfigMain $configMain -Prefix $configConstants.PrefixUai -Sequence $configConstants.SeqNumUai
-
+          $uaiName = ${{ env.AA_UAI_NAME_MAIN }}
           Write-Debug -Debug:$true -Message "Get UAI $uaiName"
           $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
 
@@ -83,6 +80,7 @@ jobs:
             -PrincipalId $uai.principalId
  
           Write-Debug -Debug:$true -Message "$output"
+
 
       - name: Delete Resource Groups
         if: success()

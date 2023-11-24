@@ -530,6 +530,9 @@ function Deploy-PrivateDnsZones()
     [Parameter(Mandatory = $true)]
     [string]
     $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VNetName,
     [Parameter(Mandatory = $false)]
     [string]
     $Tags = ""
@@ -545,7 +548,6 @@ function Deploy-PrivateDnsZones()
    | Where-Object { $_.StartsWith("PrivateDnsZoneName") }
 
 
-  $VNetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
   $VNetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $VNetName
 
   foreach ($privateDnsZonePropName in $privateDnsZonePropNames)
@@ -668,7 +670,10 @@ function Get-SubnetResourceIds()
     $SubscriptionId,
     [Parameter(Mandatory = $true)]
     [string]
-    $ResourceGroupName
+    $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VNetName
   )
 
   Write-Debug -Debug:$debug -Message "Get Subnet Resource IDs"
@@ -676,7 +681,6 @@ function Get-SubnetResourceIds()
   $result = [System.Collections.ArrayList]@()
 
   $vnet = $ConfigMain.Network.VNet
-  $VNetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
   $VNetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $VNetName
 
   foreach ($subnet in $vnet.Subnets)
@@ -706,14 +710,17 @@ function Get-SubnetResourceIdForPrivateEndpoint()
     $SubscriptionId,
     [Parameter(Mandatory = $true)]
     [string]
-    $ResourceGroupName
+    $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VNetName
   )
 
   Write-Debug -Debug:$debug -Message "Get Subnet Resource ID for Private Endpoint"
 
   $result = ""
 
-  $subnetResourceIds = Get-SubnetResourceIds -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $SubscriptionId -ResourceGroupName "$ResourceGroupName"
+  $subnetResourceIds = Get-SubnetResourceIds -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $SubscriptionId -ResourceGroupName "$ResourceGroupName" -VNetName $VNetName
 
   if ($subnetResourceIds -is [Array])
   {
