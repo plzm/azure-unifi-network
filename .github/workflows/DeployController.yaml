@@ -75,13 +75,11 @@
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
             $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-
             Set-VariablesController `
               -ConfigConstants $ConfigConstants `
               -ConfigMain $ConfigMain `
               -ConfigController $ConfigController `
               -SubscriptionId $SubscriptionId
-
 
 
         - name: Add NSG rule
@@ -204,29 +202,189 @@
             Write-Debug -Debug:$true -Message "$output"
 
 
-        - name: Deploy Controller VM
+        - name: Open Key Vault access for GitHub runner
           if: success()
           shell: pwsh
           run: |
             $ErrorActionPreference = "Stop"
 
             . ./scripts/infra/Utility.ps1
-            . ./scripts/infra/Vm.ps1
+            . ./scripts/infra/Network.ps1
+            . ./scripts/infra/KeyVault.ps1
 
             $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-            $osDiskName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
+            Write-Debug -Debug:$true -Message "Enable Key Vault public network access with default action Deny since we will explicitly add runner IP"
+            Set-KeyVaultNetworkSettings `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -PublicNetworkAccess "Enabled" `
+              -DefaultAction "Deny"
+  
+            Write-Debug -Debug:$true -Message "Add runner IP to KV network rules"
+            New-KeyVaultNetworkRuleForIpAddressOrRange `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
 
-            $output = Deploy-Vm `
-              -SubscriptionID "$SubscriptionId" `
-              -Location $ConfigController.Location `
-              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
-              -VmName ${{ env.AA_VM_NAME_CONTROLLER }} `
 
+        - name: Create SSH Key and write to Key Vault
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Network.ps1
+            . ./scripts/infra/KeyVault.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+
+
+        - name: Close Key Vault access from GitHub runner
+          if: always()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Network.ps1
+            . ./scripts/infra/KeyVault.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+            Write-Debug -Debug:$true -Message "Remove runner IP from KV network rules"
+            Remove-KeyVaultNetworkRuleForIpAddressOrRange `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
+  
+            Write-Debug -Debug:$true -Message "Disable Key Vault public network access with default action Deny"
+            Set-KeyVaultNetworkSettings `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -PublicNetworkAccess "Disabled" `
+              -DefaultAction "Deny"
+  
+
+        #- name: Deploy Controller VM and PIP and NIC
+        #  if: success()
+        #  shell: pwsh
+        #  run: |
+        #    $ErrorActionPreference = "Stop"
+
+        #    . ./scripts/infra/Utility.ps1
+        #    . ./scripts/infra/Network.ps1
+        #    . ./scripts/infra/Vm.ps1
+
+        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+        #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+        #    $osDiskName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
+
+        #    # Deploy PIP
+        #    $output = Deploy-Pip `
+        #      -SubscriptionID "$SubscriptionId" `
+        #      -Location $ConfigController.Location `
+        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.public-ip.json") `
+        #      -PublicIpAddressName ${{ env.AA_PIP_NAME_CONTROLLER }} `
+        #      -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
+        #      -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
+        #      -HostName ${{ env.AA_VM_HOSTNAME_CONTROLLER}} `
+        #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+        #    $output = Deploy-DiagnosticsSetting `
+        #      -SubscriptionID "$SubscriptionId" `
+        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+        #      -ResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER }} `
+        #      -DiagnosticsSettingName ("diag-" + ${{ env.AA_VM_PIP_NAME_CONTROLLER }}) `
+        #      -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
+        #      -SendLogs $true `
+        #      -SendMetrics $true
+
+        #    Write-Debug -Debug:$debug -Message "$output"
+
+
+        #    # Deploy NIC
+        #    $output = Deploy-Nic `
+        #      -SubscriptionID "$SubscriptionId" `
+        #      -Location $ConfigController.Location `
+        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.network-interface.json") `
+        #      -NicName ${{ env.AA_VM_NIC_NAME_CONTROLLER }} `
+        #      -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN}} `
+        #      -EnableAcceleratedNetworking $ConfigController.Network.Nic.EnableAcceleratedNetworking `
+        #      -PublicIpResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER}} `
+        #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+        #    $output = Deploy-DiagnosticsSetting `
+        #      -SubscriptionID "$SubscriptionId" `
+        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+        #      -ResourceId ${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }} `
+        #      -DiagnosticsSettingName ("diag-" + ${{ env.AA_VM_NIC_NAME_CONTROLLER }}) `
+        #      -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
+        #      -SendLogs $false `
+        #      -SendMetrics $true
+
+        #    Write-Debug -Debug:$debug -Message "$output"
+
+
+        #    # Deploy VM
+
+        #    $output = Deploy-Vm `
+        #      -SubscriptionID "$SubscriptionId" `
+        #      -Location $ConfigController.Location `
+        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
+        #      -VmName ${{ env.AA_VM_NAME_CONTROLLER }} `
+        #      -AssignSystemIdentity $false `
+        #      -UaiResourceId "${{ env.AA_UAI_RESOURCE_ID_CONTROLLER }}" `
+        #      -VmSize $ConfigController.Vm.Size `
+        #      -VmPublisher $ConfigController.Vm.Publisher `
+        #      -VmOffer $ConfigController.Vm.Offer `
+        #      -VmSku $ConfigController.Vm.Sku `
+        #      -ProvisionVmAgent $true `
+        #      -VmAdminUsername "" `
+        #      -VmAdminSshPublicKey "" `
+        #      -VmTimeZone "" `
+        #      -OsDiskName $osDiskName `
+        #      -OsDiskStorageType $ConfigController.Vm.OsDisk.Type `
+        #      -OsDiskSizeInGB $ConfigController.Vm.OsDisk.SizeInGB `
+        #      -VmAutoShutdownTime "9999" `
+        #      -NetworkInterfaceResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
+        #      -EnableBootDiagnostics $true `
+        #      -BootDiagnosticsStorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}" `
+        #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+        #    Write-Debug -Debug:$true -Message "$output"
+
+        #    $output = Deploy-DiagnosticsSetting `
+        #      -SubscriptionID "$SubscriptionId" `
+        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+        #      -ResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }} `
+        #      -DiagnosticsSettingName ("diag-" + ${{ env.AA_VM_NAME_CONTROLLER }}) `
+        #      -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
+        #      -SendLogs $true `
+        #      -SendMetrics $true
+
+        #    Write-Debug -Debug:$debug -Message "$output"
 
 
         - name: Azure logout

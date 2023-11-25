@@ -18,6 +18,23 @@
           "DestinationPortRanges": "80,443,8443,3478,8080,8880,8843"
         }
       ]
+    },
+    "PublicIp": {
+      "Type": "Dynamic",
+      "Sku": "Standard"
+    },
+    "Nic": {
+      "EnableAcceleratedNetworking": false
+    }
+  },
+  "Vm": {
+    "Size": "Standard_B1ms",
+    "Publisher": "Canonical",
+    "Offer": "0001-com-ubuntu-server-focal",
+    "Sku": "20_04-lts-gen2",
+    "OSDisk": {
+      "SizeInGB": 30,
+      "Type": "Premium_LRS"
     }
   }
 }

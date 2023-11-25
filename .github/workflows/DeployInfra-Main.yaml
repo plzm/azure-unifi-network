@@ -347,7 +347,7 @@ jobs:
             -ProtectedWorkloadSubResource "azuremonitor" `
             -PrivateEndpointName $privateEndpointName `
             -NetworkInterfaceName $privateLinkScopeNicName `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT }} `
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -520,7 +520,7 @@ jobs:
             -ProtectedWorkloadSubResource "vault" `
             -PrivateEndpointName $privateEndpointName `
             -NetworkInterfaceName $keyVaultNicName `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT }} `
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -626,7 +626,7 @@ jobs:
             -ProtectedWorkloadSubResource "blob" `
             -PrivateEndpointName $privateEndpointNameBlob `
             -NetworkInterfaceName $storageAccountNicNameBlob `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT }} `
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"

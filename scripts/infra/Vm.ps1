@@ -77,8 +77,10 @@ function Deploy-Vm()
     $EnableBootDiagnostics = $true,
     [Parameter(Mandatory = $false)]
     [string]
-    $BootDiagnosticsStorageAccountName = ""
-
+    $BootDiagnosticsStorageAccountName = "",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $Tags = ""
   )
 
   Write-Debug -Debug:$true -Message "Deploy VM $VmName"

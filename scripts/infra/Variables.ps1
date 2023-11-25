@@ -14,6 +14,10 @@ function Set-VariablesMain()
     $SubscriptionId
   )
 
+  # GitHub-hosted runner public IP address
+  $runnerIp = Get-MyCurrentPublicIpAddress
+  Set-EnvVar2 -VarName "AA_GITHUB_RUNNER_PUBLIC_IP" -VarValue "$runnerIp"
+
   # Tags
   Set-EnvVarTags -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain
 
@@ -44,7 +48,7 @@ function Set-VariablesMain()
 
   Write-Debug -Debug:$true -Message "Get first subnet resource id for private endpoints"
   $subnetResourceIdForPrivateEndpoint = Get-SubnetResourceIdForPrivateEndpoint -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -VNetName $vnetName
-  Set-EnvVar2 -VarName "AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT" -VarValue $subnetResourceIdForPrivateEndpoint
+  Set-EnvVar2 -VarName "AA_SUBNET_RESOURCE_ID_MAIN" -VarValue $subnetResourceIdForPrivateEndpoint
 
 
   # AMPLS
@@ -76,6 +80,7 @@ function Set-VariablesMain()
   Set-EnvVar2 -VarName "AA_STORAGE_ACCOUNT_RESOURCE_ID_MAIN" -VarValue "$storageAccountResourceId"
 
   # Env vars listed here for convenience
+  # AA_GITHUB_RUNNER_PUBLIC_IP
   # AA_TAGS_FOR_CLI
   # AA_TAGS_FOR_ARM
   # AA_RG_NAME_MAIN
@@ -91,7 +96,7 @@ function Set-VariablesMain()
   # AA_NSG_RESOURCE_ID
   # AA_VNET_NAME
   # AA_VNET_RESOURCE_ID
-  # AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT
+  # AA_SUBNET_RESOURCE_ID_MAIN
   # AA_KEYVAULT_NAME_MAIN
   # AA_KEYVAULT_RESOURCE_ID_MAIN
   # AA_STORAGE_ACCOUNT_NAME_MAIN
@@ -137,6 +142,21 @@ function Set-VariablesController()
   Set-EnvVar2 -VarName "AA_VM_NAME_CONTROLLER" -VarValue "$vmName"
   Set-EnvVar2 -VarName "AA_VM_RESOURCE_ID_CONTROLLER" -VarValue "$vmResourceId"
 
+  $hostName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Sequence $ConfigController.IdForNaming
+  Set-EnvVar2 -VarName "AA_VM_HOSTNAME_CONTROLLER" -VarValue "$vmName"
+
+  $vmPipName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPublicIpAddress -Sequence $ConfigController.IdForNaming
+  $vmPipResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameController" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "publicIPAddresses" -ResourceName $vmPipName
+
+  Set-EnvVar2 -VarName "AA_VM_PIP_NAME_CONTROLLER" -VarValue "$vmPipName"
+  Set-EnvVar2 -VarName "AA_VM_PIP_RESOURCE_ID_CONTROLLER" -VarValue "$vmPipResourceId"
+
+  $vmNicName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigController.IdForNaming
+  $vmNicResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameController" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $vmNicName
+
+  Set-EnvVar2 -VarName "AA_VM_NIC_NAME_CONTROLLER" -VarValue "$vmNicName"
+  Set-EnvVar2 -VarName "AA_VM_NIC_RESOURCE_ID_CONTROLLER" -VarValue "$vmNicResourceId"
+
   # Env vars listed here for convenience
   # AA_RG_NAME_CONTROLLER
   # AA_UAI_NAME_CONTROLLER
@@ -145,5 +165,10 @@ function Set-VariablesController()
   # AA_UAI_PRINCIPAL_ID_CONTROLLER - set later
   # AA_VM_NAME_CONTROLLER
   # AA_VM_RESOURCE_ID_CONTROLLER
+  # AA_VM_HOSTNAME_CONTROLLER
+  # AA_VM_PIP_NAME_CONTROLLER
+  # AA_VM_PIP_RESOURCE_ID_CONTROLLER
+  # AA_VM_NIC_NAME_CONTROLLER
+  # AA_VM_NIC_RESOURCE_ID_CONTROLLER
 
 }
