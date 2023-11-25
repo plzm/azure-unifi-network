@@ -42,6 +42,10 @@
   "SeqNumLogAnalytics": 110,
   "SeqNumKeyVault": 120,
   "SeqNumStorage": 130,
+  "SshKeyAlgorithm": "ecdsa",
+  "SshKeyFormat": "pem",
+  "SshKeyNamePrefix": "id_",
+  "SshKeySize": 521,
   "SuffixAmplsDataCollectionRuleLinux": "linux",
   "SuffixAmplsDataCollectionRuleWindows": "windows",
   "TemplateUriPrefix": "https://raw.githubusercontent.com/plzm/azure-deploy/main/template/"

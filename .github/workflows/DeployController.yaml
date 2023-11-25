@@ -246,7 +246,41 @@
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
+            ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -N "" -C $ConfigController.Vm.AdminUserName
 
+            $publicKey = Get-Content -Path ("./" + ${{ env.AA_SSH_KEY_NAME_CONTROLLER }} + ".pub")
+            $privateKey = Get-Content -Path ("./" + ${{ env.AA_SSH_KEY_NAME_CONTROLLER }})
+
+            # Write admin username, SSH key name, public SSH key, and private SSH key to Key Vault
+
+            # Admin username
+            Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-admin-username" `
+              -SecretValue $ConfigController.Vm.AdminUserName
+
+            # SSH key name
+            Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname" `
+              -SecretValue ${{ env.AA_SSH_KEY_NAME_CONTROLLER }}
+
+              # SSH public key
+              Set-KeyVaultSecret `
+                -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+                -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+                -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key" `
+                -SecretValue $publicKey
+  
+                # SSH private key
+                Set-KeyVaultSecret `
+                  -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+                  -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+                  -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key" `
+                  -SecretValue $privateKey
+  
 
         - name: Close Key Vault access from GitHub runner
           if: always()

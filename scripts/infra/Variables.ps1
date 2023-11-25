@@ -135,6 +135,10 @@ function Set-VariablesController()
   # In separate step after UAI provisioned
   # AA_UAI_CLIENT_ID_CONTROLLER, AA_UAI_PRINCIPAL_ID_CONTROLLER
 
+  # SSH for Controller VM
+  $sshKeyName = $ConfigConstants.SshKeyNamePrefix + $ConfigController.IdForNaming
+  Set-EnvVar2 -VarName "AA_SSH_KEY_NAME_CONTROLLER" -VarValue "$sshKeyName"
+
   # Controller VM
   $vmName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVirtualMachine -Sequence $ConfigController.IdForNaming
   $vmResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameController" -ResourceProviderName "Microsoft.Compute" -ResourceTypeName "virtualMachines" -ResourceName $vmName
@@ -143,7 +147,7 @@ function Set-VariablesController()
   Set-EnvVar2 -VarName "AA_VM_RESOURCE_ID_CONTROLLER" -VarValue "$vmResourceId"
 
   $hostName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Sequence $ConfigController.IdForNaming
-  Set-EnvVar2 -VarName "AA_VM_HOSTNAME_CONTROLLER" -VarValue "$vmName"
+  Set-EnvVar2 -VarName "AA_VM_HOSTNAME_CONTROLLER" -VarValue "$hostName"
 
   $vmPipName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPublicIpAddress -Sequence $ConfigController.IdForNaming
   $vmPipResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameController" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "publicIPAddresses" -ResourceName $vmPipName
@@ -163,6 +167,7 @@ function Set-VariablesController()
   # AA_UAI_RESOURCE_ID_CONTROLLER
   # AA_UAI_CLIENT_ID_CONTROLLER - set later
   # AA_UAI_PRINCIPAL_ID_CONTROLLER - set later
+  # AA_SSH_KEY_NAME_CONTROLLER
   # AA_VM_NAME_CONTROLLER
   # AA_VM_RESOURCE_ID_CONTROLLER
   # AA_VM_HOSTNAME_CONTROLLER

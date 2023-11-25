@@ -28,6 +28,7 @@
     }
   },
   "Vm": {
+    "AdminUserName": "vmadmin",
     "Size": "Standard_B1ms",
     "Publisher": "Canonical",
     "Offer": "0001-com-ubuntu-server-focal",
