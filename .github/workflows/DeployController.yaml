@@ -246,11 +246,13 @@
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-            $empty = ""
             ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
 
             $publicKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + ".pub")
             $privateKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
+
+            Write-Debug -Debug:$true -Message "Public key: $publicKey"
+            Write-Debug -Debug:$true -Message "Private key: $privateKey"
 
             # Write admin username, SSH key name, public SSH key, and private SSH key to Key Vault
 
@@ -274,14 +276,14 @@
               -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
               -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key" `
               -SecretValue $publicKey
-  
+
             # SSH private key
             Set-KeyVaultSecret `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
               -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key" `
               -SecretValue $privateKey
-  
+
 
         - name: Close Key Vault access from GitHub runner
           if: always()
