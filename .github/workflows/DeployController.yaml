@@ -284,8 +284,8 @@
               -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key" `
               -SecretValue $privateKey
 
-            Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue "$publicKey"
-            Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue "$privateKey"
+            Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue ""$publicKey""
+            Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue ""$privateKey""
 
 
         - name: Close Key Vault access from GitHub runner
