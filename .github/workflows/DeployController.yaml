@@ -248,8 +248,8 @@
 
             ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
 
-            $publicKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + ".pub")
-            $privateKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
+            $publicKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + ".pub") -Raw
+            $privateKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}") -Raw
 
             Write-Debug -Debug:$true -Message "Public key: $publicKey"
             Write-Debug -Debug:$true -Message "Private key: $privateKey"
