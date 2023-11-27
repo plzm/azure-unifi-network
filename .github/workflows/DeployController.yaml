@@ -246,7 +246,7 @@
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-            ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -N "" -C $ConfigController.Vm.AdminUserName
+            ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName
 
             $publicKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + ".pub")
             $privateKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")

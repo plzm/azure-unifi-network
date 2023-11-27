@@ -139,6 +139,17 @@ jobs:
           $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
+
+          Write-Debug -Debug:$true -Message "Deploy Role Assignment | Deploy SP | KV Secrets Officer"
+          $output = Deploy-RoleAssignmentSub `
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
+            -PrincipalId "${{ secrets.AZURE_SP_AA_INFRA_APP_ID }}"
+
+          Write-Debug -Debug:$true -Message "$output"
+
+
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Certificates Officer"
           $output = Deploy-RoleAssignmentSub `
             -Location $ConfigMain.Location `
