@@ -267,12 +267,10 @@
             Set-KeyVaultSecret `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-              -SecretName "$secretName" `
+              -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname" `
               -SecretValue ${{ env.AA_SSH_KEY_NAME_CONTROLLER }}
 
             # SSH public key
-            $secretName = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname"
-
             Set-KeyVaultSecret `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
