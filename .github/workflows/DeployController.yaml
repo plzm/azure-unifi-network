@@ -246,13 +246,28 @@
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-            echo y | ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
 
-            $publicKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + ".pub") -Raw
-            $privateKey = Get-Content -Path ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}") -Raw
+            # Key filenames
+            $filePathPrivate = ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
+            $filePathPublic = ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + ".pub")
+
+            # Delete key files if already exist
+            if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
+            if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
+
+            # Create SSH key pair
+            ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
+
+            $publicKey = Get-Content -Path $filePathPublic -Raw
+            $privateKey = Get-Content -Path $filePathPrivate -Raw
 
             Write-Debug -Debug:$true -Message "Public key: $publicKey"
             Write-Debug -Debug:$true -Message "Private key: $privateKey"
+
+            # Delete key files
+            if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
+            if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
+
 
             # Write admin username, SSH key name, public SSH key, and private SSH key to Key Vault and to Env Vars
 
@@ -284,8 +299,8 @@
               -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key" `
               -SecretValue $privateKey
 
-            Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue ""$publicKey""
-            Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue ""$privateKey""
+            Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue "$publicKey"
+            Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue (""$privateKey"")
 
 
         - name: Close Key Vault access from GitHub runner
