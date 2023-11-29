@@ -356,7 +356,7 @@
               -Location $ConfigController.Location `
               -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.public-ip.json") `
-              -PublicIpAddressName ${{ env.AA_PIP_NAME_CONTROLLER }} `
+              -PublicIpAddressName ${{ env.AA_VM_PIP_NAME_CONTROLLER }} `
               -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
               -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
               -HostName ${{ env.AA_VM_HOSTNAME_CONTROLLER}} `
