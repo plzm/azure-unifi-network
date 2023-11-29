@@ -244,7 +244,7 @@ function Set-EnvVar2
   if ($env:GITHUB_ENV)
   {
     #Write-Host "GH"
-    Write-Output "$VarName='$VarValue'" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    Write-Output "$VarName=$VarValue" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
   }
   else
   {
