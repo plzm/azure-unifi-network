@@ -20,7 +20,7 @@
       ]
     },
     "PublicIp": {
-      "Type": "Dynamic",
+      "Type": "Static",
       "Sku": "Standard"
     },
     "Nic": {
