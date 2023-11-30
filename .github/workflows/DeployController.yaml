@@ -438,7 +438,7 @@
               -ResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }} `
               -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_NAME_CONTROLLER }}") `
               -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
-              -SendLogs $true `
+              -SendLogs $false `
               -SendMetrics $true
 
             Write-Debug -Debug:$debug -Message "$output"
