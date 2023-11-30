@@ -341,6 +341,7 @@
 
             . ./scripts/infra/Utility.ps1
             . ./scripts/infra/Network.ps1
+            . ./scripts/infra/Observability.ps1
             . ./scripts/infra/Vm.ps1
 
             $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
