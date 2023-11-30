@@ -24,6 +24,7 @@
       "Sku": "Standard"
     },
     "Nic": {
+      "IpConfigurationName": "ipConfig1",
       "EnableAcceleratedNetworking": false
     }
   },
@@ -33,8 +34,8 @@
     "Publisher": "Canonical",
     "Offer": "0001-com-ubuntu-server-focal",
     "Sku": "20_04-lts-gen2",
-    "OSDisk": {
-      "SizeInGB": 30,
+    "OsDisk": {
+      "SizeInGB": 32,
       "Type": "Premium_LRS"
     }
   }

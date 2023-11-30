@@ -386,6 +386,7 @@
               -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN}} `
               -EnableAcceleratedNetworking $ConfigController.Network.Nic.EnableAcceleratedNetworking `
               -PublicIpResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER}} `
+              -IpConfigName $ConfigController.Network.Nic.IpConfigurationName `
               -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
             $output = Deploy-DiagnosticsSetting `
