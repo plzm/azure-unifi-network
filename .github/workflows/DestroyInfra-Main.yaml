@@ -59,6 +59,19 @@ jobs:
             -SubscriptionId $SubscriptionId
 
 
+      - name: Delete Diagnostics Settings
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          . ./scripts/infra/Utility.ps1
+          . ./scripts/infra/Security.ps1
+
+          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+
+
       - name: Delete UAI Role Assignments
         if: success()
         shell: pwsh
