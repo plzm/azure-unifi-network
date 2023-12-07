@@ -124,9 +124,6 @@ function Remove-RoleAssignments()
     [Parameter(Mandatory = $false)]
     [string]
     $ResourceGroupName = "",
-    [Parameter(Mandatory = $false)]
-    [string]
-    $ResourceGroupName = "",
     [Parameter(Mandatory = $true)]
     [string]
     $PrincipalId
