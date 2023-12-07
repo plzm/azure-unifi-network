@@ -132,9 +132,9 @@
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-            $uaiName = "${{ env.AA_UAI_NAME_MAIN }}"
+            $uaiName = "${{ env.AA_UAI_NAME_CONTROLLER }}"
             Write-Debug -Debug:$true -Message "Get UAI $uaiName"
-            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
+            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n $uaiName)" | ConvertFrom-Json
 
             # Remove sub-level role assignments for UAI
             $output = Remove-RoleAssignments `
