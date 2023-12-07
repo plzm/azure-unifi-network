@@ -50,7 +50,7 @@ jobs:
           Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
 
 
-      - name: Set Variables and write to Environment
+      - name: Set Variables and write to Environment - Main
         if: success()
         shell: pwsh
         run: |
@@ -58,86 +58,16 @@ jobs:
 
           . ./scripts/infra/Utility.ps1
           . ./scripts/infra/Network.ps1
+          . ./scripts/infra/Variables.ps1
 
           $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-
-          # Tags
-          Set-EnvVarTags -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain
-
-          # Resource Groups
-          $rgNameMain = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixRsg -Suffix $ConfigMain.Suffix
-
-          Set-EnvVar2 -VarName "AA_RG_NAME_MAIN" -VarValue "$rgNameMain"
-
-          # User Assigned Identity
-          $uaiName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixUai -Sequence $ConfigConstants.SeqNumUai
-          $uaiResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.ManagedIdentity" -ResourceTypeName "userAssignedIdentities" -ResourceName $uaiName
-
-          Set-EnvVar2 -VarName "AA_UAI_NAME" -VarValue "$uaiName"
-          Set-EnvVar2 -VarName "AA_UAI_RESOURCE_ID" -VarValue "$uaiResourceId"
-          # In step below (after UAI provisioned)
-          # AA_UAI_CLIENT_ID, AA_UAI_PRINCIPAL_ID
-
-          # Log Analytics
-          $workspaceName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixLogAnalytics -Sequence $ConfigConstants.SeqNumLogAnalytics
-          $workspaceResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "microsoft.operationalinsights" -ResourceTypeName "workspaces" -ResourceName $workspaceName
-
-          Set-EnvVar2 -VarName "AA_LAW_NAME" -VarValue "$workspaceName"
-          Set-EnvVar2 -VarName "AA_LAW_RESOURCE_ID" -VarValue "$workspaceResourceId"
-
-          # Network
-          $nsg = $ConfigMain.Network.NSG
-          $nsgName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNsg -Sequence $ConfigConstants.SeqNumNsg
-          $nsgResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkSecurityGroups" -ResourceName $nsgName
-          Set-EnvVar2 -VarName "AA_NSG_NAME" -VarValue "$nsgName"
-          Set-EnvVar2 -VarName "AA_NSG_RESOURCE_ID" -VarValue "$nsgResourceId"
-
-          $vnet = $ConfigMain.Network.VNet
-          $vnetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
-          $vnetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $vnetName
-          Set-EnvVar2 -VarName "AA_VNET_NAME" -VarValue "$vnetName"
-          Set-EnvVar2 -VarName "AA_VNET_RESOURCE_ID" -VarValue "$vnetResourceId"
-
-          Write-Debug -Debug:$true -Message "Get first subnet resource id for private endpoints"
-          $subnetResourceIdForPrivateEndpoint = Get-SubnetResourceIdForPrivateEndpoint -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain"
-          Set-EnvVar2 -VarName "AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT" -VarValue $subnetResourceIdForPrivateEndpoint
-
-          # Key Vault
-          $keyVaultName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixKeyVault -Sequence $ConfigConstants.SeqNumKeyVault
-          $keyVaultResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.KeyVault" -ResourceTypeName "vaults" -ResourceName $keyVaultName
-
-          Set-EnvVar2 -VarName "AA_KEYVAULT_NAME" -VarValue "$keyVaultName"
-          Set-EnvVar2 -VarName "AA_KEYVAULT_RESOURCE_ID" -VarValue "$keyVaultResourceId"
-
-          # Storage
-          $storageAccountName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixStorageAccount -Sequence $ConfigConstants.SeqNumStorage -IncludeDelimiter $false
-          $storageAccountResourceId = Get-ResourceId -SubscriptionId $subscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Storage" -ResourceTypeName "storageAccounts" -ResourceName $storageAccountName
-
-          Set-EnvVar2 -VarName "AA_STORAGE_ACCOUNT_NAME" -VarValue "$storageAccountName"
-          Set-EnvVar2 -VarName "AA_STORAGE_ACCOUNT_RESOURCE_ID" -VarValue "$storageAccountResourceId"
-
-          # Env vars listed here for convenience
-          # AA_TAGS_FOR_CLI
-          # AA_TAGS_FOR_ARM
-          # AA_RG_NAME_MAIN
-          # AA_UAI_NAME
-          # AA_UAI_RESOURCE_ID
-          # AA_UAI_CLIENT_ID - set below
-          # AA_UAI_PRINCIPAL_ID - set below
-          # AA_LAW_NAME
-          # AA_LAW_RESOURCE_ID
-          # AA_NSG_NAME
-          # AA_NSG_RESOURCE_ID
-          # AA_VNET_NAME
-          # AA_VNET_RESOURCE_ID
-          # AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT
-          # AA_KEYVAULT_NAME
-          # AA_KEYVAULT_RESOURCE_ID
-          # AA_STORAGE_ACCOUNT_NAME
-          # AA_STORAGE_ACCOUNT_RESOURCE_ID
+          Set-VariablesMain `
+            -ConfigConstants $ConfigConstants `
+            -ConfigMain $ConfigMain `
+            -SubscriptionId $SubscriptionId
 
 
       - name: Create Resource Groups
@@ -151,12 +81,12 @@ jobs:
           $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           $rgNameMain = "${{ env.AA_RG_NAME_MAIN }}"
 
           Write-Debug -Debug:$true -Message "Create RG $rgNameMain"
           $output = az group create `
-            --subscription "$subscriptionId" `
+            --subscription "$SubscriptionId" `
             -l $ConfigMain.Location `
             -n "$rgNameMain" `
             --tags ${{ env.AA_TAGS_FOR_CLI }} `
@@ -175,14 +105,14 @@ jobs:
           $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Deploy UAI ${{ env.AA_UAI_NAME }}"
+          Write-Debug -Debug:$true -Message "Deploy UAI ${{ env.AA_UAI_NAME_MAIN }}"
           $output = Deploy-UAI `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $ConfigMain.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
             -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
-            -UAIName "${{ env.AA_UAI_NAME }}" `
+            -UAIName "${{ env.AA_UAI_NAME_MAIN }}" `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -190,11 +120,11 @@ jobs:
           Write-Debug -Debug:$true -Message "Sleep to allow UAI deploy to complete"
           Start-Sleep -s 60
 
-          Write-Debug -Debug:$true -Message "Get UAI ${{ env.AA_UAI_NAME }}"
-          $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n ${{ env.AA_UAI_NAME }})" | ConvertFrom-Json
+          Write-Debug -Debug:$true -Message "Get UAI ${{ env.AA_UAI_NAME_MAIN }}"
+          $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n ${{ env.AA_UAI_NAME_MAIN }})" | ConvertFrom-Json
 
-          Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID" -VarValue $uai.clientId
-          Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID" -VarValue $uai.principalId
+          Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID_MAIN" -VarValue $uai.clientId
+          Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID_MAIN" -VarValue $uai.principalId
 
 
       - name: Deploy Role Assignments
@@ -209,12 +139,23 @@ jobs:
           $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
+
+          Write-Debug -Debug:$true -Message "Deploy Role Assignment | Deploy SP | KV Secrets Officer"
+          $output = Deploy-RoleAssignmentSub `
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
+            -PrincipalId "${{ secrets.AZURE_SP_AA_INFRA_PRINCIPAL_ID }}"
+
+          Write-Debug -Debug:$true -Message "$output"
+
+
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Certificates Officer"
           $output = Deploy-RoleAssignmentSub `
             -Location $ConfigMain.Location `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
             -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultCertificatesOfficer `
-            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
+            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -223,7 +164,7 @@ jobs:
             -Location $ConfigMain.Location `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
             -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultCryptoOfficer `
-            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
+            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -232,7 +173,7 @@ jobs:
             -Location $ConfigMain.Location `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
             -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
-            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
+            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -241,7 +182,7 @@ jobs:
             -Location $ConfigMain.Location `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
             -RoleDefinitionId $ConfigConstants.RoleDefinitionIdMonitoringMetricsPublisher `
-            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
+            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -250,7 +191,7 @@ jobs:
             -Location $ConfigMain.Location `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
             -RoleDefinitionId $ConfigConstants.RoleDefinitionIdStorageBlobDataContributor `
-            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
+            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -259,7 +200,7 @@ jobs:
             -Location $ConfigMain.Location `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
             -RoleDefinitionId $ConfigConstants.RoleDefinitionIdStorageQueueDataContributor `
-            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID }}"
+            -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -294,13 +235,13 @@ jobs:
           $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Deploy LAW ${{ env.AA_LAW_NAME }}"
+          Write-Debug -Debug:$true -Message "Deploy LAW ${{ env.AA_LAW_NAME_MAIN }}"
           $output = Deploy-LogAnalyticsWorkspace `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.log-analytics-workspace.json") `
-            -WorkspaceName "${{ env.AA_LAW_NAME }}" `
+            -WorkspaceName "${{ env.AA_LAW_NAME_MAIN }}" `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -310,9 +251,9 @@ jobs:
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-            -ResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
+            -ResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
+            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
             -SendLogs $true `
             -SendMetrics $true
 
@@ -342,8 +283,8 @@ jobs:
             -NSGResourceId ${{ env.AA_NSG_RESOURCE_ID }} `
             -VNetName ${{ env.AA_VNET_NAME }} `
             -VNetResourceId ${{ env.AA_VNET_RESOURCE_ID }} `
-            -LogAnalyticsWorkspaceName "${{ env.AA_LAW_NAME }}" `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
+            -LogAnalyticsWorkspaceName "${{ env.AA_LAW_NAME_MAIN }}" `
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
 
@@ -365,6 +306,7 @@ jobs:
             -ConfigMain $ConfigMain `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -VNetName ${{ env.AA_VNET_NAME }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
 
@@ -381,11 +323,7 @@ jobs:
           $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $privateLinkScopeName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixAmpls -Sequence $ConfigConstants.SeqNumAmpls
-          $privateLinkScopeResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "microsoft.insights" -ResourceTypeName "privatelinkscopes" -ResourceName $privateLinkScopeName
-
           $privateEndpointName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumAmpls
-
           $privateLinkScopeNicName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumAmpls
           $privateLinkScopeNicResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $privateLinkScopeNicName
 
@@ -394,7 +332,7 @@ jobs:
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.json") `
-            -PrivateLinkScopeName $privateLinkScopeName `
+            -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -404,9 +342,9 @@ jobs:
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
-            -PrivateLinkScopeName $privateLinkScopeName `
-            -ScopedResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
-            -ScopedResourceName "${{ env.AA_LAW_NAME }}"
+            -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }} `
+            -ScopedResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
+            -ScopedResourceName "${{ env.AA_LAW_NAME_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -416,11 +354,11 @@ jobs:
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
-            -ProtectedWorkloadResourceId "$privateLinkScopeResourceId" `
+            -ProtectedWorkloadResourceId ${{ env.AA_AMPLS_RESOURCE_ID_MAIN }} `
             -ProtectedWorkloadSubResource "azuremonitor" `
             -PrivateEndpointName $privateEndpointName `
             -NetworkInterfaceName $privateLinkScopeNicName `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT }} `
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -431,13 +369,12 @@ jobs:
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId $privateLinkScopeNicResourceId `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
+            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
             -SendLogs $false `
             -SendMetrics $true
 
           Write-Debug -Debug:$true -Message "$output"
-
 
           # Private Endpoint DNS Zone Group
           Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group"
@@ -499,8 +436,8 @@ jobs:
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule.linux.json") `
             -DataCollectionRuleName "$dataCollectionRuleLinuxName" `
-            -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME }} `
-            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID }} `
+            -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME_MAIN }} `
+            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -512,8 +449,8 @@ jobs:
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule.windows.json") `
             -DataCollectionRuleName "$dataCollectionRuleWindowsName" `
-            -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME }} `
-            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID }} `
+            -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME_MAIN }} `
+            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -538,13 +475,13 @@ jobs:
             -ConfigConstants $ConfigConstants `
             -ConfigMain $ConfigMain `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }}
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -VNetName ${{ env.AA_VNET_NAME }}
 
           $subnetResourceIdsCsv = $($subnetResourceIds -join ",")
           Write-Debug -Debug:$true -Message "$subnetResourceIdsCsv"
 
           $privateEndpointName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumKeyVault
-
           $keyVaultNicName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumKeyVault
           $keyVaultNicResourceId = Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $keyVaultNicName
 
@@ -555,7 +492,7 @@ jobs:
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "key-vault.json") `
-            -KeyVaultName "${{ env.AA_KEYVAULT_NAME }}" `
+            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
             -EnabledForDeployment $false `
             -EnabledForDiskEncryption $false `
             -EnabledForTemplateDeployment $false `
@@ -576,9 +513,9 @@ jobs:
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-            -ResourceId "${{ env.AA_KEYVAULT_RESOURCE_ID}}" `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
+            -ResourceId "${{ env.AA_KEYVAULT_RESOURCE_ID_MAIN}}" `
+            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
             -SendLogs $true `
             -SendMetrics $true
 
@@ -590,11 +527,11 @@ jobs:
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
-            -ProtectedWorkloadResourceId "${{ env.AA_KEYVAULT_RESOURCE_ID}}" `
+            -ProtectedWorkloadResourceId "${{ env.AA_KEYVAULT_RESOURCE_ID_MAIN}}" `
             -ProtectedWorkloadSubResource "vault" `
             -PrivateEndpointName $privateEndpointName `
             -NetworkInterfaceName $keyVaultNicName `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT }} `
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -606,8 +543,8 @@ jobs:
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId $keyVaultNicResourceId `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
+            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
             -SendLogs $false `
             -SendMetrics $true
 
@@ -651,7 +588,8 @@ jobs:
             -ConfigConstants $ConfigConstants `
             -ConfigMain $ConfigMain `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }}
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -VNetName ${{ env.AA_VNET_NAME }}
 
           $subnetResourceIdsCsv = $($subnetResourceIds -join ",")
           Write-Debug -Debug:$true -Message "$subnetResourceIdsCsv"
@@ -667,7 +605,7 @@ jobs:
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "storage.account.json") `
-            -StorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME }}" `
+            -StorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}" `
             -SkuName $ConfigMain.Storage.SkuName `
             -AllowedSubnetResourceIdsCsv "$subnetResourceIdsCsv" `
             -AllowedIpAddressRangesCsv "" `
@@ -682,9 +620,9 @@ jobs:
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "storage.diagnostic-settings.json") `
-            -ResourceId "${{ env.AA_STORAGE_ACCOUNT_RESOURCE_ID }}" `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_STORAGE_ACCOUNT_NAME }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}"
+            -ResourceId "${{ env.AA_STORAGE_ACCOUNT_RESOURCE_ID_MAIN }}" `
+            -DiagnosticsSettingName ("diag-" + "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}") `
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -695,11 +633,11 @@ jobs:
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
-            -ProtectedWorkloadResourceId "${{ env.AA_STORAGE_ACCOUNT_RESOURCE_ID }}" `
+            -ProtectedWorkloadResourceId "${{ env.AA_STORAGE_ACCOUNT_RESOURCE_ID_MAIN }}" `
             -ProtectedWorkloadSubResource "blob" `
             -PrivateEndpointName $privateEndpointNameBlob `
             -NetworkInterfaceName $storageAccountNicNameBlob `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_PRIVATE_ENDPOINT }} `
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
@@ -711,13 +649,12 @@ jobs:
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId $storageAccountNicResourceIdBlob `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID }}" `
+            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
             -SendLogs $false `
             -SendMetrics $true
 
           Write-Debug -Debug:$true -Message "$output"
-
 
           # Private Endpoint DNS Zone Group
           Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group - Blob"

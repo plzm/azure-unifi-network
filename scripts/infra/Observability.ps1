@@ -95,7 +95,8 @@ function Deploy-DiagnosticsSetting()
   return $output
 }
 
-function Deploy-Ampls() {
+function Deploy-Ampls()
+{
   [CmdletBinding()]
   param
   (
@@ -140,7 +141,8 @@ function Deploy-Ampls() {
   return $output
 }
 
-function Deploy-ConnectLawToAmpls() {
+function Deploy-ConnectLawToAmpls()
+{
   [CmdletBinding()]
   param
   (
@@ -180,7 +182,8 @@ function Deploy-ConnectLawToAmpls() {
   return $output
 }
 
-function Deploy-DataCollectionEndpoint() {
+function Deploy-DataCollectionEndpoint()
+{
   [CmdletBinding()]
   param
   (
@@ -224,7 +227,8 @@ function Deploy-DataCollectionEndpoint() {
   return $output
 }
 
-function Deploy-DataCollectionRule() {
+function Deploy-DataCollectionRule()
+{
   [CmdletBinding()]
   param
   (

@@ -367,6 +367,129 @@ function Deploy-Subnet() {
 
 # -------------------------------
 
+function Deploy-Pip()
+{
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory = $true)]
+    [string]
+    $SubscriptionId,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $Location,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $TemplateUri,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $PublicIpAddressName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $PublicIpAddressType,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $PublicIpAddressSku,
+    [Parameter(Mandatory = $false)]
+    [string]
+    $HostName = "",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $Tags = ""
+  )
+  Write-Debug -Debug:$debug -Message "Deploy PIP $PublicIpAddressName"
+
+  $output = az deployment group create --verbose `
+    --subscription "$SubscriptionId" `
+    -n "$PublicIpAddressName" `
+    -g "$ResourceGroupName" `
+    --template-uri "$TemplateUri" `
+    --parameters `
+    location="$Location" `
+    publicIpName="$PublicIpAddressName" `
+    publicIpType="$PublicIpAddressType" `
+    publicIpSku="$PublicIpAddressSku" `
+    domainNameLabel="$HostName" `
+    tags=$Tags `
+    | ConvertFrom-Json
+  
+  return $output
+}
+
+function Deploy-Nic()
+{
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory = $true)]
+    [string]
+    $SubscriptionId,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $Location,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $TemplateUri,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $NicName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $SubnetResourceId,
+    [Parameter(Mandatory = $false)]
+    [bool]
+    $EnableAcceleratedNetworking = $false,
+    [Parameter(Mandatory = $false)]
+    [string]
+    $PrivateIpAllocationMethod = "Dynamic",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $PrivateIpAddress = "",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $PrivateIpAddressVersion = "IPv4",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $PublicIpResourceId = "",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $IpConfigName = "",
+    [Parameter(Mandatory = $false)]
+    [string]
+    $Tags = ""
+  )
+
+  Write-Debug -Debug:$debug -Message "Deploy NIC $NicName"
+
+  $output = az deployment group create --verbose `
+    --subscription "$SubscriptionId" `
+    -n "$NicName" `
+    -g "$ResourceGroupName" `
+    --template-uri "$TemplateUri" `
+    --parameters `
+    location="$Location" `
+    networkInterfaceName="$NicName" `
+    subnetResourceId="$SubnetResourceId" `
+    enableAcceleratedNetworking="$EnableAcceleratedNetworking" `
+    privateIpAllocationMethod="$PrivateIpAllocationMethod" `
+    privateIpAddress="$PrivateIpAddress" `
+    privateIpAddressVersion="$PrivateIpAddressVersion" `
+    publicIpResourceId="$PublicIpResourceId" `
+    ipConfigName="$IpConfigName" `
+    tags=$Tags `
+    | ConvertFrom-Json
+  
+  return $output
+}
+
+# -------------------------------
+
 function Deploy-PrivateEndpointAndNic() {
   [CmdletBinding()]
   param
@@ -530,6 +653,9 @@ function Deploy-PrivateDnsZones()
     [Parameter(Mandatory = $true)]
     [string]
     $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VNetName,
     [Parameter(Mandatory = $false)]
     [string]
     $Tags = ""
@@ -545,7 +671,6 @@ function Deploy-PrivateDnsZones()
    | Where-Object { $_.StartsWith("PrivateDnsZoneName") }
 
 
-  $VNetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
   $VNetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $VNetName
 
   foreach ($privateDnsZonePropName in $privateDnsZonePropNames)
@@ -668,7 +793,10 @@ function Get-SubnetResourceIds()
     $SubscriptionId,
     [Parameter(Mandatory = $true)]
     [string]
-    $ResourceGroupName
+    $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VNetName
   )
 
   Write-Debug -Debug:$debug -Message "Get Subnet Resource IDs"
@@ -676,7 +804,6 @@ function Get-SubnetResourceIds()
   $result = [System.Collections.ArrayList]@()
 
   $vnet = $ConfigMain.Network.VNet
-  $VNetName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixVNet -Sequence $ConfigConstants.SeqNumVnet
   $VNetResourceId = Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ResourceProviderName "Microsoft.Network" -ResourceTypeName "virtualNetworks" -ResourceName $VNetName
 
   foreach ($subnet in $vnet.Subnets)
@@ -706,14 +833,17 @@ function Get-SubnetResourceIdForPrivateEndpoint()
     $SubscriptionId,
     [Parameter(Mandatory = $true)]
     [string]
-    $ResourceGroupName
+    $ResourceGroupName,
+    [Parameter(Mandatory = $true)]
+    [string]
+    $VNetName
   )
 
   Write-Debug -Debug:$debug -Message "Get Subnet Resource ID for Private Endpoint"
 
   $result = ""
 
-  $subnetResourceIds = Get-SubnetResourceIds -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $SubscriptionId -ResourceGroupName "$ResourceGroupName"
+  $subnetResourceIds = Get-SubnetResourceIds -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -SubscriptionId $SubscriptionId -ResourceGroupName "$ResourceGroupName" -VNetName $VNetName
 
   if ($subnetResourceIds -is [Array])
   {
