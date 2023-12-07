@@ -309,3 +309,18 @@ function Get-EnvVars()
 
   Get-ChildItem env:
 }
+
+function Test-ResourceGroupExists()
+{
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory=$true)]
+    [string]
+    $ResourceGroupName
+  )
+
+  $rgExists = [System.Convert]::ToBoolean("$(az group exists -n $ResourceGroupName)")
+
+  return $rgExists
+}
