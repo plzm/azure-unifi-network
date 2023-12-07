@@ -113,6 +113,7 @@ function Deploy-RoleAssignmentSub()
 }
 
 function Remove-RoleAssignments()
+function Remove-RoleAssignments()
 {
   [CmdletBinding()]
   param
@@ -120,6 +121,9 @@ function Remove-RoleAssignments()
     [Parameter(Mandatory = $true)]
     [string]
     $SubscriptionId,
+    [Parameter(Mandatory = $false)]
+    [string]
+    $ResourceGroupName = "",
     [Parameter(Mandatory = $false)]
     [string]
     $ResourceGroupName = "",
@@ -152,4 +156,6 @@ function Remove-RoleAssignments()
   {
     Write-Debug -Debug:$true -Message "No role assignments found for $PrincipalId"
   }
+
+  return $output
 }
