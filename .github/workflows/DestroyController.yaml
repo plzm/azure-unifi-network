@@ -1,0 +1,174 @@
+---
+  name: Destroy Controller
+  
+  on: 
+    workflow_dispatch:
+  
+  jobs:
+    destroy-controller:
+      name: Destroy Controller
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v3
+  
+        - name: Set Azure CLI extensions to auto-install
+          if: success()
+          run: |
+            $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
+  
+            Write-Debug -Debug:$true -Message "$output"
+          shell: pwsh
+  
+        - name: Azure login
+          if: success()
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+            enable-AzPSSession: true
+
+        - name: Set Config File Paths to Environment
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+
+            Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
+            Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
+            Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
+
+        - name: Set Variables
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Network.ps1
+            . ./scripts/infra/Variables.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+            Set-VariablesMain `
+              -ConfigConstants $ConfigConstants `
+              -ConfigMain $ConfigMain `
+              -SubscriptionId $SubscriptionId
+
+            Set-VariablesController `
+              -ConfigConstants $ConfigConstants `
+              -ConfigMain $ConfigMain `
+              -ConfigController $ConfigController `
+              -SubscriptionId $SubscriptionId
+
+        - name: Remove NSG rule
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Network.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+            $nsgRule = $ConfigController.Network.NSG.Rules[0]
+
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            $nsgRuleName = $ConfigController.IdForNaming
+
+            $output = Remove-NSGRule `
+              -SubscriptionID "$SubscriptionId" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -NSGName ${{ env.AA_NSG_NAME }} `
+              -NSGRuleName $nsgRuleName
+
+        - name: Delete Diagnostics Settings
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Observability.ps1
+
+            # PIP
+            Remove-DiagnosticsSettingsForResource `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
+              -ResourceId "${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER }}" `
+              -ResourceName "${{ env.AA_VM_PIP_NAME_CONTROLLER }}"
+
+            # NIC
+            Remove-DiagnosticsSettingsForResource `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
+              -ResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
+              -ResourceName "${{ env.AA_VM_NIC_NAME_CONTROLLER }}"
+
+            # VM
+            Remove-DiagnosticsSettingsForResource `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
+              -ResourceId "${{ env.AA_VM_RESOURCE_ID_CONTROLLER }}" `
+              -ResourceName "${{ env.AA_VM_NAME_CONTROLLER }}"
+
+        - name: Delete UAI Role Assignments
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+            . ./scripts/infra/Security.ps1
+
+            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+            $uaiName = "${{ env.AA_UAI_NAME_MAIN }}"
+            Write-Debug -Debug:$true -Message "Get UAI $uaiName"
+            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
+
+            # Remove sub-level role assignments for UAI
+            $output = Remove-RoleAssignments `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_CONTROLLER }}"
+
+            # Remove RG-level role assignments for UAI
+            $output = Remove-RoleAssignments `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName "${{ env.AA_RG_NAME_CONTROLLER }}" `
+              -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_CONTROLLER }}"
+    
+            Write-Debug -Debug:$true -Message "$output"
+
+        - name: Delete Resource Group
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
+
+            . ./scripts/infra/Utility.ps1
+
+            $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+
+            $rgExists = Test-ResourceGroupExists `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName "${{ env.AA_RG_NAME_CONTROLLER }}"
+
+            if ($rgExists)
+            {
+              az group delete -y `
+                --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+                -n "${{ env.AA_RG_NAME_CONTROLLER }}"
+            }
+
+...

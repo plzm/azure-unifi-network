@@ -275,3 +275,106 @@ function Deploy-DataCollectionRule()
 
   return $output
 }
+
+function Remove-DiagnosticsSetting()
+{
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory=$true)]
+    [string]
+    $SubscriptionId,
+    [Parameter(Mandatory=$true)]
+    [string]
+    $DiagnosticsSettingName,
+    [Parameter(Mandatory=$true)]
+    [string]
+    $ResourceId,
+    [Parameter(Mandatory=$true)]
+    [string]
+    $ResourceName
+  )
+  Write-Debug -Debug:$true -Message "Remove-DiagnosticsSetting $DiagnosticsSettingName from $ResourceName"
+
+  az monitor diagnostic-settings delete --subscription $SubscriptionId --name $DiagnosticsSettingName --resource $ResourceId
+}
+
+function Remove-DiagnosticsSettingsForAllResources()
+{
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory=$true)]
+    [string]
+    $SubscriptionId,
+    [Parameter(Mandatory=$false)]
+    [string]
+    $LogAnalyticsWorkspaceId = ""
+  )
+  Write-Debug -Debug:$true -Message "Remove-DiagnosticsSettingsForAllResources on Log Analytics $LogAnalyticsWorkspaceId"
+
+  $resources = "$(az resource list --subscription $SubscriptionId --query '[].{name:name, id:id}')" | ConvertFrom-Json
+
+  foreach ($resource in $resources)
+  {
+    Remove-DiagnosticsSettingsForResource -SubscriptionId $SubscriptionId -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -ResourceId $resource.id -ResourceName $resource.name
+  }
+}
+
+function Remove-DiagnosticsSettingsForResource()
+{
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory=$true)]
+    [string]
+    $SubscriptionId,
+    [Parameter(Mandatory=$false)]
+    [string]
+    $LogAnalyticsWorkspaceId = "",
+    [Parameter(Mandatory=$true)]
+    [string]
+    $ResourceId,
+    [Parameter(Mandatory=$true)]
+    [string]
+    $ResourceName
+  )
+  Write-Debug -Debug:$true -Message "Remove-DiagnosticsSettingsForResource $ResourceName"
+
+  $settings = Get-DiagnosticsSettingsForResource -SubscriptionId $SubscriptionId -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId -ResourceId $ResourceId -ResourceName $ResourceName
+
+  if ($settings.Count -gt 0)
+  {
+    foreach ($setting in $settings)
+    {
+      Remove-DiagnosticsSetting `
+        -SubscriptionId $SubscriptionId `
+        -DiagnosticsSettingName $setting.name `
+        -ResourceId $ResourceId `
+        -ResourceName $ResourceName
+    }
+  }
+}
+
+function Remove-DiagnosticsSettingsForSub()
+{
+  [CmdletBinding()]
+  param
+  (
+    [Parameter(Mandatory=$true)]
+    [string]
+    $SubscriptionId,
+    [Parameter(Mandatory=$false)]
+    [string]
+    $LogAnalyticsWorkspaceId = ""
+  )
+  Write-Debug -Debug:$true -Message "Remove-DiagnosticsSettingsForSub $SubscriptionId"
+
+  $settings = Get-DiagnosticsSettingsForSub -SubscriptionId $SubscriptionId -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId
+
+  foreach ($setting in $settings)
+  {
+    $dgid = "/" + $setting.id
+    az monitor diagnostic-settings subscription delete --ids $dgid --yes
+  }
+}

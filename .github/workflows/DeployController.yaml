@@ -40,27 +40,7 @@
             Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
 
 
-        - name: Set Variables and write to Environment - Main
-          if: success()
-          shell: pwsh
-          run: |
-            $ErrorActionPreference = "Stop"
-
-            . ./scripts/infra/Utility.ps1
-            . ./scripts/infra/Network.ps1
-            . ./scripts/infra/Variables.ps1
-
-            $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-            $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-
-            Set-VariablesMain `
-              -ConfigConstants $ConfigConstants `
-              -ConfigMain $ConfigMain `
-              -SubscriptionId $SubscriptionId
-
-
-        - name: Set Variables and write to Environment - Controller
+        - name: Set Variables
           if: success()
           shell: pwsh
           run: |
@@ -74,6 +54,11 @@
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
             $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+            Set-VariablesMain `
+              -ConfigConstants $ConfigConstants `
+              -ConfigMain $ConfigMain `
+              -SubscriptionId $SubscriptionId
 
             Set-VariablesController `
               -ConfigConstants $ConfigConstants `
@@ -262,7 +247,7 @@
             $privateKey = Get-Content -Path $filePathPrivate -Raw
 
             Write-Debug -Debug:$true -Message "Public key: $publicKey"
-            Write-Debug -Debug:$true -Message "Private key: $privateKey"
+            #Write-Debug -Debug:$true -Message "Private key: $privateKey"
 
             # Delete key files
             if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
