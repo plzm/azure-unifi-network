@@ -113,7 +113,6 @@ function Deploy-RoleAssignmentSub()
 }
 
 function Remove-RoleAssignments()
-function Remove-RoleAssignments()
 {
   [CmdletBinding()]
   param
