@@ -317,10 +317,13 @@ function Test-ResourceGroupExists()
   (
     [Parameter(Mandatory=$true)]
     [string]
+    $SubscriptionId,
+    [Parameter(Mandatory=$true)]
+    [string]
     $ResourceGroupName
   )
 
-  $rgExists = [System.Convert]::ToBoolean("$(az group exists -n $ResourceGroupName)")
+  $rgExists = [System.Convert]::ToBoolean("$(az group exists --subscription $SubscriptionId -n $ResourceGroupName)")
 
   return $rgExists
 }

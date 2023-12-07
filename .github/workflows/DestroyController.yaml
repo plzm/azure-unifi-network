@@ -132,20 +132,20 @@
             $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
             $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-            $uaiName = "${{ env.AA_UAI_NAME_MAIN }}"
-            Write-Debug -Debug:$true -Message "Get UAI $uaiName"
-            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
+            Write-Debug -Debug:$true -Message "Get UAI ${{ env.AA_UAI_NAME_CONTROLLER }}"
+            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_UAI_NAME_CONTROLLER }})" | ConvertFrom-Json
+            $principalId = $uai.principalId
 
-            # Remove sub-level role assignments for UAI
+            Write-Debug -Debug:$true -Message "Remove sub-level role assignments"
             $output = Remove-RoleAssignments `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-              -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_CONTROLLER }}"
+              -PrincipalId "$principalId"
 
-            # Remove RG-level role assignments for UAI
-            $output = Remove-RoleAssignments `
+              Write-Debug -Debug:$true -Message "Remove RG-level role assignments"
+              $output = Remove-RoleAssignments `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -ResourceGroupName "${{ env.AA_RG_NAME_CONTROLLER }}" `
-              -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_CONTROLLER }}"
+              -PrincipalId "$principalId"
     
             Write-Debug -Debug:$true -Message "$output"
 

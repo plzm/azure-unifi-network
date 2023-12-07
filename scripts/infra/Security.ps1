@@ -137,22 +137,20 @@ function Remove-RoleAssignments()
     $Scope = "/subscriptions/" + $SubscriptionId
   }
 
-  $assignments = "$(az role assignment list --scope $Scope --assignee $principalId --query '[].id')" | ConvertFrom-Json
+  # Have to do it this way because Powershell will make a one-item result into a string, not an array
+  [System.Collections.ArrayList]$assignments = @()
+  $a = "$(az role assignment list --scope $Scope --assignee $principalId --query '[].id')" | ConvertFrom-Json
+  $assignments.Add($a)
 
-  $count = $assignments.Count
-
-  if ($count -gt 0)
+  foreach ($assignment in $assignments)
   {
-    Write-Debug -Debug:$true -Message "Delete $count Role Assignment(s) for Principal ID $principalId and Scope $Scope"
-
-    $output = az role assignment delete --verbose `
-      --scope $Scope `
-      --assignee $principalId `
+    Write-Debug -Debug:$true -Message "Delete Role Assignment $assignment"
+    az role assignment delete --verbose --ids $assignment
   }
-  else
+
+  if ($assignments.Count -eq 0)
   {
-    $output = $null
-    Write-Debug -Debug:$true -Message "No Role Assignment(s) for Principal ID $principalId and Scope $Scope"
+    Write-Debug -Debug:$true -Message "No role assignments found for $PrincipalId"
   }
 
   return $output
