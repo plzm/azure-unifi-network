@@ -86,7 +86,9 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          . ./scripts/infra/Variables.ps1
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          . ./scripts/Variables.ps1
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
@@ -103,6 +105,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
@@ -124,6 +128,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
@@ -156,9 +162,10 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | Deploy SP | KV Secrets Officer"
           $output = plzm.Azure\Deploy-RoleAssignmentSub `
@@ -168,7 +175,6 @@ jobs:
             -PrincipalId "${{ secrets.AZURE_SP_AA_INFRA_PRINCIPAL_ID }}"
 
           Write-Debug -Debug:$true -Message "$output"
-
 
           Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Certificates Officer"
           $output = plzm.Azure\Deploy-RoleAssignmentSub `
@@ -249,6 +255,8 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
@@ -283,7 +291,9 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          . ./scripts/infra/Network.ps1
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          . ./scripts/Network.ps1
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
@@ -309,6 +319,8 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
@@ -327,6 +339,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
@@ -409,6 +423,8 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
@@ -465,6 +481,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
@@ -573,6 +591,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"

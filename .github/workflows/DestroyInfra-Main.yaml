@@ -51,6 +51,8 @@ jobs:
 
           Import-Module "$localFolderPath" -Force
 
+          plzm.Azure\Set-EnvVar2 -VarName "AA_MODULE_PATH_PLZM_AZURE" -VarValue "$localFolderPath"
+
           Get-Timestamp
           plzm.Azure\Get-Timestamp
 
@@ -59,6 +61,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
@@ -70,7 +74,9 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          . ./scripts/infra/Variables.ps1
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          . ./scripts/Variables.ps1
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
@@ -88,6 +94,8 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
           plzm.Azure\Remove-DiagnosticsSettingsForAllResources `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}"
@@ -99,6 +107,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $uaiName = "${{ env.AA_UAI_NAME_MAIN }}"
           Write-Debug -Debug:$true -Message "Get UAI $uaiName"
@@ -116,6 +126,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $configConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $configMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
