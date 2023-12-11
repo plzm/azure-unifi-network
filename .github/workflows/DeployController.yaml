@@ -31,7 +31,7 @@
           if: success()
           shell: pwsh
           run: |
-            $urlRoot = ${{ env.SCRIPT_URL_ROOT }}
+            $urlRoot = ${{ vars.SCRIPT_URL_ROOT }}
             $localFolder = "./scripts/"
 
             $scriptFileName = "Utility.ps1"
