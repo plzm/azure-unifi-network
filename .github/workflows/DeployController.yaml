@@ -31,12 +31,12 @@
           if: success()
           shell: pwsh
           run: |
-            $urlRoot = ${{ vars.SCRIPT_URL_ROOT }}
+            $urlRoot = "${{ vars.SCRIPT_URL_ROOT }}"
             $localFolder = "./scripts/"
 
             $scriptFileName = "Utility.ps1"
             $url = ($urlRoot + $scriptFileName)
-            Invoke-WebRequest -Uri $url -OutFile ($localFolder + $scriptFileName)
+            Invoke-WebRequest -Uri "$url" -OutFile ($localFolder + $scriptFileName)
             Invoke-Expression (". " + $localFolder + $scriptFileName)
 
             $result = Get-Timestamp
