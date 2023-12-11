@@ -27,21 +27,34 @@
         #    creds: ${{ secrets.AZURE_CREDENTIALS }}
         #    enable-AzPSSession: true
 
-        - name: Download script files
+        - name: Download and import module
           if: success()
           shell: pwsh
           run: |
-            $urlRoot = "${{ vars.SCRIPT_URL_ROOT }}"
-            $localFolder = "./scripts/"
+            $urlRoot = "${{ vars.URL_ROOT_MODULE_PLZM_AZURE }}"
+            $moduleName = "plzm.Azure"
+            $localFolderPath = "./modules/$moduleName/"
+            $psm1FileName = "$moduleName.psm1"
+            $psd1FileName = "$moduleName.psd1"
 
-            $scriptFileName = "Utility.ps1"
-            $url = ($urlRoot + $scriptFileName)
-            Invoke-WebRequest -Uri "$url" -OutFile ($localFolder + $scriptFileName)
-            Invoke-Expression (". " + $localFolder + $scriptFileName)
+            if (!(Test-Path -Path $localFolderPath)) {
+              New-Item -Path $localFolderPath -ItemType "Directory" -Force
+            }
 
-            $result = Get-Timestamp
+            # PSM1 file
+            $url = ($urlRoot + $psm1FileName)
+            Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psm1FileName)
 
-            Write-Debug -Debug:$true -Message "$result"
+            # PSD1 file
+            $url = ($urlRoot + $psd1FileName)
+            Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psd1FileName)
+
+            Import-Module "$localFolderPath" -Force
+            #Invoke-Expression ("Import-Module " + $localFolderPath + " -Force")
+
+            Get-Timestamp
+            plzm.Azure/Get-Timestamp
+            plzm.Azure\Get-Timestamp
 
 
         #- name: Set Config File Paths to Environment
