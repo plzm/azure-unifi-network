@@ -42,7 +42,7 @@ function Deploy-Network()
 
   $nsg = $ConfigMain.Network.NSG
 
-  $output = Deploy-NSG `
+  $output = plzm.Azure\Deploy-NetworkSecurityGroup `
     -SubscriptionID "$SubscriptionId" `
     -Location $ConfigMain.Location `
     -ResourceGroupName $ResourceGroupName `
@@ -54,7 +54,7 @@ function Deploy-Network()
 
   if ($LogAnalyticsWorkspaceName -and $LogAnalyticsWorkspaceResourceId)
   {
-    $output = Deploy-DiagnosticsSetting `
+    $output = plzm.Azure\Deploy-DiagnosticsSetting `
       -SubscriptionID "$SubscriptionId" `
       -ResourceGroupName $ResourceGroupName `
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
@@ -69,7 +69,7 @@ function Deploy-Network()
 
   foreach ($nsgRule in $nsg.Rules)
   {
-    $output = Deploy-NSGRule `
+    $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
       -SubscriptionID "$SubscriptionId" `
       -ResourceGroupName $ResourceGroupName `
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
@@ -92,7 +92,7 @@ function Deploy-Network()
 
   $vnet = $ConfigMain.Network.VNet
 
-  $output = Deploy-VNet `
+  $output = plzm.Azure\Deploy-NetworkVNet `
     -SubscriptionID "$SubscriptionId" `
     -Location $ConfigMain.Location `
     -ResourceGroupName $ResourceGroupName `
@@ -106,7 +106,7 @@ function Deploy-Network()
 
   if ($LogAnalyticsWorkspaceName -and $LogAnalyticsWorkspaceResourceId)
   {
-    $output = Deploy-DiagnosticsSetting `
+    $output = plzm.Azure\Deploy-DiagnosticsSetting `
       -SubscriptionID "$SubscriptionId" `
       -ResourceGroupName $ResourceGroupName `
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
@@ -123,7 +123,7 @@ function Deploy-Network()
   {
     Write-Debug -Debug:$debug -Message $subnet.Name
 
-    $output = Deploy-Subnet `
+    $output = plzm.Azure\Deploy-NetworkSubnet `
       -SubscriptionID "$SubscriptionId" `
       -ResourceGroupName $ResourceGroupName `
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.vnet.subnet.json") `

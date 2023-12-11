@@ -27,7 +27,7 @@
             creds: ${{ secrets.AZURE_CREDENTIALS }}
             enable-AzPSSession: true
 
-        - name: Download and import module
+        - name: Download and import plzm.Azure module
           if: success()
           shell: pwsh
           run: |

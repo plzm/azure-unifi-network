@@ -27,16 +27,41 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
 
+      - name: Download and import plzm.Azure module
+        if: success()
+        shell: pwsh
+        run: |
+          $urlRoot = "${{ vars.URL_ROOT_MODULE_PLZM_AZURE }}"
+          $moduleName = "plzm.Azure"
+          $localFolderPath = "./modules/$moduleName/"
+          $psm1FileName = "$moduleName.psm1"
+          $psd1FileName = "$moduleName.psd1"
+
+          if (!(Test-Path -Path $localFolderPath)) {
+            New-Item -Path $localFolderPath -ItemType "Directory" -Force
+          }
+
+          # PSM1 file
+          $url = ($urlRoot + $psm1FileName)
+          Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psm1FileName)
+
+          # PSD1 file
+          $url = ($urlRoot + $psd1FileName)
+          Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psd1FileName)
+
+          Import-Module "$localFolderPath" -Force
+
+          Get-Timestamp
+          plzm.Azure\Get-Timestamp
+
       - name: Set Config File Paths to Environment
         if: success()
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
 
-          . ./scripts/infra/Utility.ps1
-
-          Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
-          Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
+          plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
+          plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
 
 
       - name: Set Variables and write to Environment - Main
@@ -45,12 +70,10 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          . ./scripts/infra/Utility.ps1
-          . ./scripts/infra/Network.ps1
           . ./scripts/infra/Variables.ps1
 
-          $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           Set-VariablesMain `
@@ -65,10 +88,7 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          . ./scripts/infra/Utility.ps1
-          . ./scripts/infra/Observability.ps1
-
-          Remove-DiagnosticsSettingsForAllResources `
+          plzm.Azure\Remove-DiagnosticsSettingsForAllResources `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}"
 
@@ -80,14 +100,11 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          . ./scripts/infra/Utility.ps1
-          . ./scripts/infra/Security.ps1
-
           $uaiName = "${{ env.AA_UAI_NAME_MAIN }}"
           Write-Debug -Debug:$true -Message "Get UAI $uaiName"
           $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
 
-          $output = Remove-RoleAssignments `
+          $output = plzm.Azure\Remove-RoleAssignments `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -PrincipalId $uai.principalId
  
@@ -100,12 +117,10 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          . ./scripts/infra/Utility.ps1
+          $configConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $configMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $configConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-
-          $rgExists = Test-ResourceGroupExists `
+          $rgExists = plzm.Azure\Test-ResourceGroupExists `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}"
 
@@ -116,4 +131,13 @@ jobs:
               -n "${{ env.AA_RG_NAME_MAIN }}"
           }
 
+
+      - name: Azure logout
+        if: always()
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear
 ...
