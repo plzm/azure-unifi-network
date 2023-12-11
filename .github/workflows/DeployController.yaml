@@ -12,20 +12,20 @@
         - name: Checkout repository
           uses: actions/checkout@v3
 
-        #- name: Set Azure CLI extensions to auto-install
-        #  if: success()
-        #  run: |
-        #    $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
+        - name: Set Azure CLI extensions to auto-install
+          if: success()
+          run: |
+            $output = az config set extension.use_dynamic_install=yes_without_prompt | ConvertFrom-Json
 
-        #    Write-Debug -Debug:$true -Message "$output"
-        #  shell: pwsh
+            Write-Debug -Debug:$true -Message "$output"
+          shell: pwsh
 
-        #- name: Azure login
-        #  if: success()
-        #  uses: azure/login@v1
-        #  with:
-        #    creds: ${{ secrets.AZURE_CREDENTIALS }}
-        #    enable-AzPSSession: true
+        - name: Azure login
+          if: success()
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+            enable-AzPSSession: true
 
         - name: Download and import module
           if: success()
@@ -50,421 +50,384 @@
             Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psd1FileName)
 
             Import-Module "$localFolderPath" -Force
-            #Invoke-Expression ("Import-Module " + $localFolderPath + " -Force")
 
             Get-Timestamp
             plzm.Azure\Get-Timestamp
 
 
-        #- name: Set Config File Paths to Environment
-        #  if: success()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Set Config File Paths to Environment
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
-
-        #    Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
-        #    Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
-        #    Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
+            plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
+            plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
+            plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
 
 
-        #- name: Set Variables
-        #  if: success()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Set Variables
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
-        #    . ./scripts/infra/Network.ps1
-        #    . ./scripts/infra/Variables.ps1
+            . ./scripts/Variables.ps1
 
-        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-        #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-        #    Set-VariablesMain `
-        #      -ConfigConstants $ConfigConstants `
-        #      -ConfigMain $ConfigMain `
-        #      -SubscriptionId $SubscriptionId
+            Set-VariablesMain `
+              -ConfigConstants $ConfigConstants `
+              -ConfigMain $ConfigMain `
+              -SubscriptionId $SubscriptionId
 
-        #    Set-VariablesController `
-        #      -ConfigConstants $ConfigConstants `
-        #      -ConfigMain $ConfigMain `
-        #      -ConfigController $ConfigController `
-        #      -SubscriptionId $SubscriptionId
+            Set-VariablesController `
+              -ConfigConstants $ConfigConstants `
+              -ConfigMain $ConfigMain `
+              -ConfigController $ConfigController `
+              -SubscriptionId $SubscriptionId
 
 
-        #- name: Add NSG rule
-        #  if: success()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Add NSG rule
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
-        #    . ./scripts/infra/Network.ps1
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+            $nsgRule = $ConfigController.Network.NSG.Rules[0]
 
-        #    $nsgRule = $ConfigController.Network.NSG.Rules[0]
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            $nsgRuleName = $ConfigController.IdForNaming
 
-        #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-        #    $nsgRuleName = $ConfigController.IdForNaming
+            $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
+              -SubscriptionID "$SubscriptionId" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
+              -NSGName ${{ env.AA_NSG_NAME }} `
+              -NSGRuleName $nsgRuleName `
+              -Description $nsgRule.Description `
+              -Priority ($ConfigConstants.NsgPriorityBase + $ConfigController.Id) `
+              -Direction $nsgRule.Direction `
+              -Access $nsgRule.Access `
+              -Protocol $nsgRule.Protocol `
+              -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
+              -SourcePortRange $nsgRule.SourcePortRange `
+              -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
+              -DestinationPortRanges $nsgRule.DestinationPortRanges
 
-        #    $output = Deploy-NSGRule `
-        #      -SubscriptionID "$SubscriptionId" `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
-        #      -NSGName ${{ env.AA_NSG_NAME }} `
-        #      -NSGRuleName $nsgRuleName `
-        #      -Description $nsgRule.Description `
-        #      -Priority ($ConfigConstants.NsgPriorityBase + $ConfigController.Id) `
-        #      -Direction $nsgRule.Direction `
-        #      -Access $nsgRule.Access `
-        #      -Protocol $nsgRule.Protocol `
-        #      -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
-        #      -SourcePortRange $nsgRule.SourcePortRange `
-        #      -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
-        #      -DestinationPortRanges $nsgRule.DestinationPortRanges
-
-        #    Write-Debug -Debug:$debug -Message "$output"
+            Write-Debug -Debug:$debug -Message "$output"
 
 
-        #- name: Create Resource Group
-        #  if: success()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Create Resource Group
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            $rgNameController = "${{ env.AA_RG_NAME_CONTROLLER }}"
 
-        #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-        #    $rgNameController = "${{ env.AA_RG_NAME_CONTROLLER }}"
-
-        #    Write-Debug -Debug:$true -Message "Create RG $rgNameController"
-        #    $output = az group create `
-        #      --subscription "$SubscriptionId" `
-        #      -l $ConfigController.Location `
-        #      -n "$rgNameController" `
-        #      --tags ${{ env.AA_TAGS_FOR_CLI }} `
-        #      | ConvertFrom-Json
+            Write-Debug -Debug:$true -Message "Create RG $rgNameController"
+            $output = az group create `
+              --subscription "$SubscriptionId" `
+              -l $ConfigController.Location `
+              -n "$rgNameController" `
+              --tags ${{ env.AA_TAGS_FOR_CLI }} `
+              | ConvertFrom-Json
 
 
-        #- name: Deploy User Assigned Identity
-        #  if: success()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Deploy User Assigned Identity
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
-        #    . ./scripts/infra/Security.ps1
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+            Write-Debug -Debug:$true -Message "Deploy UAI ${{ env.AA_UAI_NAME_CONTROLLER }}"
+            $output = plzm.Azure\Deploy-UserAssignedIdentity `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -Location $ConfigMain.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
+              -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
+              -UAIName "${{ env.AA_UAI_NAME_CONTROLLER }}" `
+              -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
-        #    Write-Debug -Debug:$true -Message "Deploy UAI ${{ env.AA_UAI_NAME_CONTROLLER }}"
-        #    $output = Deploy-UAI `
-        #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-        #      -Location $ConfigMain.Location `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
-        #      -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
-        #      -UAIName "${{ env.AA_UAI_NAME_CONTROLLER }}" `
-        #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            Write-Debug -Debug:$true -Message "$output"
 
-        #    Write-Debug -Debug:$true -Message "$output"
+            Write-Debug -Debug:$true -Message "Sleep to allow UAI deploy to complete"
+            Start-Sleep -s 60
 
-        #    Write-Debug -Debug:$true -Message "Sleep to allow UAI deploy to complete"
-        #    Start-Sleep -s 60
+            Write-Debug -Debug:$true -Message "Get UAI ${{ env.AA_UAI_NAME_CONTROLLER }}"
+            $uai = "$(az identity show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_UAI_NAME_CONTROLLER }})" | ConvertFrom-Json
 
-        #    Write-Debug -Debug:$true -Message "Get UAI ${{ env.AA_UAI_NAME_CONTROLLER }}"
-        #    $uai = "$(az identity show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_UAI_NAME_CONTROLLER }})" | ConvertFrom-Json
-
-        #    Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID_CONTROLLER" -VarValue $uai.clientId
-        #    Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID_CONTROLLER" -VarValue $uai.principalId
+            plzm.Azure\Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID_CONTROLLER" -VarValue $uai.clientId
+            plzm.Azure\Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID_CONTROLLER" -VarValue $uai.principalId
 
 
-        #- name: Deploy Role Assignments
-        #  if: success()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Deploy Role Assignments
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
-        #    . ./scripts/infra/Security.ps1
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+            Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Monitoring Metrics Publisher"
+            $output = plzm.Azure\Deploy-RoleAssignmentSub `
+              -Location $ConfigMain.Location `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+              -RoleDefinitionId $ConfigConstants.RoleDefinitionIdMonitoringMetricsPublisher `
+              -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_CONTROLLER }}"
 
-
-        #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Monitoring Metrics Publisher"
-        #    $output = Deploy-RoleAssignmentSub `
-        #      -Location $ConfigMain.Location `
-        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-        #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdMonitoringMetricsPublisher `
-        #      -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_CONTROLLER }}"
-
-        #    Write-Debug -Debug:$true -Message "$output"
+            Write-Debug -Debug:$true -Message "$output"
 
 
-        #- name: Open Key Vault access for GitHub runner
-        #  if: success()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Open Key Vault access for GitHub runner
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
-        #    . ./scripts/infra/Network.ps1
-        #    . ./scripts/infra/KeyVault.ps1
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-
-        #    Write-Debug -Debug:$true -Message "Enable Key Vault public network access with default action Deny since we will explicitly add runner IP"
-        #    Set-KeyVaultNetworkSettings `
-        #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-        #      -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-        #      -PublicNetworkAccess "Enabled" `
-        #      -DefaultAction "Deny"
+            Write-Debug -Debug:$true -Message "Enable Key Vault public network access with default action Deny since we will explicitly add runner IP"
+            plzm.Azure\Set-KeyVaultNetworkSettings `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -PublicNetworkAccess "Enabled" `
+              -DefaultAction "Deny"
   
-        #    Write-Debug -Debug:$true -Message "Add runner IP to KV network rules"
-        #    New-KeyVaultNetworkRuleForIpAddressOrRange `
-        #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-        #      -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-        #      -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
+            Write-Debug -Debug:$true -Message "Add runner IP to KV network rules"
+            plzm.Azure\New-KeyVaultNetworkRuleForIpAddressOrRange `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
 
 
-        #- name: Create SSH Key and write to Key Vault
-        #  if: success()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Create SSH Key and write to Key Vault
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
-        #    . ./scripts/infra/Network.ps1
-        #    . ./scripts/infra/KeyVault.ps1
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+            # Key filenames
+            $filePathPrivate = ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
+            $filePathPublic = ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + ".pub")
 
+            # Delete key files if already exist
+            if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
+            if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
 
-        #    # Key filenames
-        #    $filePathPrivate = ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
-        #    $filePathPublic = ("./" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + ".pub")
+            # Create SSH key pair
+            ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
 
-        #    # Delete key files if already exist
-        #    if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
-        #    if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
+            $publicKey = Get-Content -Path $filePathPublic -Raw
+            $privateKey = Get-Content -Path $filePathPrivate -Raw
 
-        #    # Create SSH key pair
-        #    ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
+            Write-Debug -Debug:$true -Message "Public key: $publicKey"
 
-        #    $publicKey = Get-Content -Path $filePathPublic -Raw
-        #    $privateKey = Get-Content -Path $filePathPrivate -Raw
+            # Delete key files
+            if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
+            if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
 
-        #    Write-Debug -Debug:$true -Message "Public key: $publicKey"
-        #    #Write-Debug -Debug:$true -Message "Private key: $privateKey"
+            # Write admin username, SSH key name, public SSH key, and private SSH key to Key Vault and to Env Vars
 
-        #    # Delete key files
-        #    if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
-        #    if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
+            # Admin username
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-admin-username" `
+              -SecretValue $ConfigController.Vm.AdminUserName
 
+            # SSH key name
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname" `
+              -SecretValue ${{ env.AA_SSH_KEY_NAME_CONTROLLER }}
 
-        #    # Write admin username, SSH key name, public SSH key, and private SSH key to Key Vault and to Env Vars
+            # SSH public key
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key" `
+              -SecretValue $publicKey
 
-        #    # Admin username
-        #    Set-KeyVaultSecret `
-        #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-        #      -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-        #      -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-admin-username" `
-        #      -SecretValue $ConfigController.Vm.AdminUserName
+            # SSH private key
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key" `
+              -SecretValue $privateKey
 
-        #    # SSH key name
-        #    Set-KeyVaultSecret `
-        #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-        #      -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-        #      -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname" `
-        #      -SecretValue ${{ env.AA_SSH_KEY_NAME_CONTROLLER }}
-
-        #    # SSH public key
-        #    Set-KeyVaultSecret `
-        #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-        #      -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-        #      -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key" `
-        #      -SecretValue $publicKey
-
-        #    # SSH private key
-        #    Set-KeyVaultSecret `
-        #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-        #      -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-        #      -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key" `
-        #      -SecretValue $privateKey
-
-        #    Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue "$publicKey"
-        #    #Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue ("""" + $privateKey + """")
+            plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue "$publicKey"
+            #Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue ("""" + $privateKey + """")
 
 
-        #- name: Close Key Vault access from GitHub runner
-        #  if: always()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Close Key Vault access from GitHub runner
+          if: always()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
-        #    . ./scripts/infra/Network.ps1
-        #    . ./scripts/infra/KeyVault.ps1
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-
-        #    Write-Debug -Debug:$true -Message "Remove runner IP from KV network rules"
-        #    Remove-KeyVaultNetworkRuleForIpAddressOrRange `
-        #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-        #      -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-        #      -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
+            Write-Debug -Debug:$true -Message "Remove runner IP from KV network rules"
+            plzm.Azure\Remove-KeyVaultNetworkRuleForIpAddressOrRange `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
   
-        #    #Write-Debug -Debug:$true -Message "Disable Key Vault public network access with default action Deny"
-        #    #Set-KeyVaultNetworkSettings `
-        #    #  -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-        #    #  -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-        #    #  -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-        #    #  -PublicNetworkAccess "Disabled" `
-        #    #  -DefaultAction "Deny"
+            Write-Debug -Debug:$true -Message "Disable Key Vault public network access with default action Deny"
+            plzm.Azure\Set-KeyVaultNetworkSettings `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -PublicNetworkAccess "Disabled" `
+              -DefaultAction "Deny"
 
 
-        #- name: Deploy Controller VM and PIP and NIC
-        #  if: success()
-        #  shell: pwsh
-        #  run: |
-        #    $ErrorActionPreference = "Stop"
+        - name: Deploy Controller VM and PIP and NIC
+          if: success()
+          shell: pwsh
+          run: |
+            $ErrorActionPreference = "Stop"
 
-        #    . ./scripts/infra/Utility.ps1
-        #    . ./scripts/infra/Network.ps1
-        #    . ./scripts/infra/Observability.ps1
-        #    . ./scripts/infra/Vm.ps1
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+            $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+            $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-        #    $ConfigConstants = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-        #    $ConfigMain = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-        #    $ConfigController = Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-        #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            $osDiskName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
 
-        #    $osDiskName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
+            # Deploy PIP
+            $output = plzm.Azure\Deploy-NetworkPublicIp `
+              -SubscriptionID "$SubscriptionId" `
+              -Location $ConfigController.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.public-ip.json") `
+              -PublicIpAddressName ${{ env.AA_VM_PIP_NAME_CONTROLLER }} `
+              -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
+              -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
+              -HostName ${{ env.AA_VM_HOSTNAME_CONTROLLER}} `
+              -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
-        #    # Deploy PIP
-        #    $output = Deploy-Pip `
-        #      -SubscriptionID "$SubscriptionId" `
-        #      -Location $ConfigController.Location `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.public-ip.json") `
-        #      -PublicIpAddressName ${{ env.AA_VM_PIP_NAME_CONTROLLER }} `
-        #      -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
-        #      -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
-        #      -HostName ${{ env.AA_VM_HOSTNAME_CONTROLLER}} `
-        #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            $output = plzm.Azure\Deploy-DiagnosticsSetting `
+              -SubscriptionID "$SubscriptionId" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+              -ResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER }} `
+              -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_PIP_NAME_CONTROLLER }}") `
+              -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
+              -SendLogs $true `
+              -SendMetrics $true
 
-        #    $output = Deploy-DiagnosticsSetting `
-        #      -SubscriptionID "$SubscriptionId" `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-        #      -ResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER }} `
-        #      -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_PIP_NAME_CONTROLLER }}") `
-        #      -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
-        #      -SendLogs $true `
-        #      -SendMetrics $true
-
-        #    Write-Debug -Debug:$debug -Message "$output"
+            Write-Debug -Debug:$debug -Message "$output"
 
 
-        #    # Deploy NIC
-        #    $output = Deploy-Nic `
-        #      -SubscriptionID "$SubscriptionId" `
-        #      -Location $ConfigController.Location `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.network-interface.json") `
-        #      -NicName ${{ env.AA_VM_NIC_NAME_CONTROLLER }} `
-        #      -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN}} `
-        #      -EnableAcceleratedNetworking $ConfigController.Network.Nic.EnableAcceleratedNetworking `
-        #      -PublicIpResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER}} `
-        #      -IpConfigName $ConfigController.Network.Nic.IpConfigurationName `
-        #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            # Deploy NIC
+            $output = plzm.Azure\Deploy-NetworkNic `
+              -SubscriptionID "$SubscriptionId" `
+              -Location $ConfigController.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.network-interface.json") `
+              -NicName ${{ env.AA_VM_NIC_NAME_CONTROLLER }} `
+              -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN}} `
+              -EnableAcceleratedNetworking $ConfigController.Network.Nic.EnableAcceleratedNetworking `
+              -PublicIpResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER}} `
+              -IpConfigName $ConfigController.Network.Nic.IpConfigurationName `
+              -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
-        #    $output = Deploy-DiagnosticsSetting `
-        #      -SubscriptionID "$SubscriptionId" `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-        #      -ResourceId ${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }} `
-        #      -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_NIC_NAME_CONTROLLER }}") `
-        #      -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
-        #      -SendLogs $false `
-        #      -SendMetrics $true
+            $output = plzm.Azure\Deploy-DiagnosticsSetting `
+              -SubscriptionID "$SubscriptionId" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+              -ResourceId ${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }} `
+              -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_NIC_NAME_CONTROLLER }}") `
+              -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
+              -SendLogs $false `
+              -SendMetrics $true
 
-        #    Write-Debug -Debug:$debug -Message "$output"
-
-
-        #    # Deploy VM
-
-        #    $output = Deploy-Vm `
-        #      -SubscriptionID "$SubscriptionId" `
-        #      -Location $ConfigController.Location `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
-        #      -VmName ${{ env.AA_VM_NAME_CONTROLLER }} `
-        #      -AssignSystemIdentity $false `
-        #      -UaiResourceId "${{ env.AA_UAI_RESOURCE_ID_CONTROLLER }}" `
-        #      -VmSize $ConfigController.Vm.Size `
-        #      -VmPublisher $ConfigController.Vm.Publisher `
-        #      -VmOffer $ConfigController.Vm.Offer `
-        #      -VmSku $ConfigController.Vm.Sku `
-        #      -ProvisionVmAgent $true `
-        #      -VmAdminUsername $ConfigController.Vm.AdminUserName `
-        #      -VmAdminSshPublicKey "${{ env.AA_VM_SSH_PUBLIC_KEY }}" `
-        #      -VmTimeZone "UTC" `
-        #      -OsDiskName $osDiskName `
-        #      -OsDiskStorageType $ConfigController.Vm.OsDisk.Type `
-        #      -OsDiskSizeInGB $ConfigController.Vm.OsDisk.SizeInGB `
-        #      -VmAutoShutdownTime "9999" `
-        #      -NetworkInterfaceResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
-        #      -EnableBootDiagnostics $true `
-        #      -BootDiagnosticsStorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}" `
-        #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
-
-        #    Write-Debug -Debug:$true -Message "$output"
-
-        #    $output = Deploy-DiagnosticsSetting `
-        #      -SubscriptionID "$SubscriptionId" `
-        #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-        #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-        #      -ResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }} `
-        #      -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_NAME_CONTROLLER }}") `
-        #      -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
-        #      -SendLogs $false `
-        #      -SendMetrics $true
-
-        #    Write-Debug -Debug:$debug -Message "$output"
+            Write-Debug -Debug:$debug -Message "$output"
 
 
-        #- name: Azure logout
-        #  if: always()
-        #  uses: azure/CLI@v1
-        #  with:
-        #    inlineScript: |
-        #      az logout
-        #      az cache purge
-        #      az account clear
+            # Deploy VM
+
+            $output = plzm.Azure\Deploy-Vm `
+              -SubscriptionID "$SubscriptionId" `
+              -Location $ConfigController.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
+              -VmName ${{ env.AA_VM_NAME_CONTROLLER }} `
+              -AssignSystemIdentity $false `
+              -UaiResourceId "${{ env.AA_UAI_RESOURCE_ID_CONTROLLER }}" `
+              -VmSize $ConfigController.Vm.Size `
+              -VmPublisher $ConfigController.Vm.Publisher `
+              -VmOffer $ConfigController.Vm.Offer `
+              -VmSku $ConfigController.Vm.Sku `
+              -ProvisionVmAgent $true `
+              -VmAdminUsername $ConfigController.Vm.AdminUserName `
+              -VmAdminSshPublicKey "${{ env.AA_VM_SSH_PUBLIC_KEY }}" `
+              -VmTimeZone "UTC" `
+              -OsDiskName $osDiskName `
+              -OsDiskStorageType $ConfigController.Vm.OsDisk.Type `
+              -OsDiskSizeInGB $ConfigController.Vm.OsDisk.SizeInGB `
+              -VmAutoShutdownTime "9999" `
+              -NetworkInterfaceResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
+              -EnableBootDiagnostics $true `
+              -BootDiagnosticsStorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}" `
+              -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+            Write-Debug -Debug:$true -Message "$output"
+
+            $output = plzm.Azure\Deploy-DiagnosticsSetting `
+              -SubscriptionID "$SubscriptionId" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+              -ResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }} `
+              -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_NAME_CONTROLLER }}") `
+              -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
+              -SendLogs $false `
+              -SendMetrics $true
+
+            Write-Debug -Debug:$debug -Message "$output"
+
+
+        - name: Azure logout
+          if: always()
+          uses: azure/CLI@v1
+          with:
+            inlineScript: |
+              az logout
+              az cache purge
+              az account clear
 
 ...
