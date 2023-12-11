@@ -51,6 +51,8 @@ jobs:
 
           Import-Module "$localFolderPath" -Force
 
+          plzm.Azure\Set-EnvVar2 -VarName "AA_MODULE_PATH_PLZM_AZURE" -VarValue "$localFolderPath"
+
           Get-Timestamp
           plzm.Azure\Get-Timestamp
 
@@ -71,6 +73,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
