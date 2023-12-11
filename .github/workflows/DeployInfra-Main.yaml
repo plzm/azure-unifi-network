@@ -539,7 +539,7 @@ jobs:
           Write-Debug -Debug:$true -Message "$output"
 
           Write-Debug -Debug:$true -Message "Deploy Private Endpoint and NIC"
-          $output = plzm.Azure\Deploy-PrivateEndpointAndNic `
+          $output = plzm.Azure\Deploy-NetworkPrivateEndpointAndNic `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
