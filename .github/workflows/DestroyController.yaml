@@ -56,7 +56,6 @@ jobs:
           Get-Timestamp
           plzm.Azure\Get-Timestamp
 
-
       - name: Set Config File Paths to Environment
         if: success()
         shell: pwsh
@@ -198,13 +197,13 @@ jobs:
               -n "${{ env.AA_RG_NAME_CONTROLLER }}"
           }
 
+      - name: Azure logout
+        if: always()
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear
 
-    - name: Azure logout
-      if: always()
-      uses: azure/CLI@v1
-      with:
-        inlineScript: |
-          az logout
-          az cache purge
-          az account clear
 ...

@@ -56,7 +56,6 @@ jobs:
           Get-Timestamp
           plzm.Azure\Get-Timestamp
 
-
       - name: Set Config File Paths to Environment
         if: success()
         shell: pwsh
@@ -68,7 +67,6 @@ jobs:
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
-
 
       - name: Set Variables
         if: success()
@@ -95,7 +93,6 @@ jobs:
             -ConfigMain $ConfigMain `
             -ConfigController $ConfigController `
             -SubscriptionId $SubscriptionId
-
 
       - name: Add NSG rule
         if: success()
@@ -132,7 +129,6 @@ jobs:
 
           Write-Debug -Debug:$debug -Message "$output"
 
-
       - name: Create Resource Group
         if: success()
         shell: pwsh
@@ -155,7 +151,6 @@ jobs:
             -n "$rgNameController" `
             --tags ${{ env.AA_TAGS_FOR_CLI }} `
             | ConvertFrom-Json
-
 
       - name: Deploy User Assigned Identity
         if: success()
@@ -190,7 +185,6 @@ jobs:
           plzm.Azure\Set-EnvVar2 -VarName "AA_UAI_CLIENT_ID_CONTROLLER" -VarValue $uai.clientId
           plzm.Azure\Set-EnvVar2 -VarName "AA_UAI_PRINCIPAL_ID_CONTROLLER" -VarValue $uai.principalId
 
-
       - name: Deploy Role Assignments
         if: success()
         shell: pwsh
@@ -211,7 +205,6 @@ jobs:
             -PrincipalId "${{ env.AA_UAI_PRINCIPAL_ID_CONTROLLER }}"
 
           Write-Debug -Debug:$true -Message "$output"
-
 
       - name: Open Key Vault access for GitHub runner
         if: success()
@@ -239,7 +232,6 @@ jobs:
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
             -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
-
 
       - name: Create SSH Key and write to Key Vault
         if: success()
@@ -306,7 +298,6 @@ jobs:
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue "$publicKey"
           #Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue ("""" + $privateKey + """")
 
-
       - name: Close Key Vault access from GitHub runner
         if: always()
         shell: pwsh
@@ -333,7 +324,6 @@ jobs:
             -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
             -PublicNetworkAccess "Disabled" `
             -DefaultAction "Deny"
-
 
       - name: Deploy Controller VM and PIP and NIC
         if: success()
@@ -441,7 +431,6 @@ jobs:
             -SendMetrics $true
 
           Write-Debug -Debug:$debug -Message "$output"
-
 
       - name: Azure logout
         if: always()
