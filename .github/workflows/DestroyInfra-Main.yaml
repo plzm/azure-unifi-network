@@ -67,7 +67,6 @@ jobs:
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
 
-
       - name: Set Variables and write to Environment - Main
         if: success()
         shell: pwsh
@@ -87,7 +86,6 @@ jobs:
             -ConfigMain $ConfigMain `
             -SubscriptionId $SubscriptionId
 
-
       - name: Delete Diagnostics Settings
         if: success()
         shell: pwsh
@@ -99,8 +97,6 @@ jobs:
           plzm.Azure\Remove-DiagnosticsSettingsForAllResources `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}"
-
-
 
       - name: Delete UAI Role Assignments
         if: success()
@@ -114,12 +110,12 @@ jobs:
           Write-Debug -Debug:$true -Message "Get UAI $uaiName"
           $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
 
+          Write-Debug -Debug:$true -Message "Remove sub-level role assignments"
           $output = plzm.Azure\Remove-RoleAssignments `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -PrincipalId $uai.principalId
  
           Write-Debug -Debug:$true -Message "$output"
-
 
       - name: Delete Resource Groups
         if: success()
@@ -143,7 +139,6 @@ jobs:
               -n "${{ env.AA_RG_NAME_MAIN }}"
           }
 
-
       - name: Azure logout
         if: always()
         uses: azure/CLI@v1
@@ -152,4 +147,5 @@ jobs:
             az logout
             az cache purge
             az account clear
+
 ...
