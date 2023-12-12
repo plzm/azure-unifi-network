@@ -679,7 +679,7 @@ jobs:
             -ResourceTypeName "privateDnsZones" `
             -ResourceName $ConfigConstants.PrivateDnsZoneNameStorageBlob
 
-          plzm.Azure\Deploy-PrivateEndpointPrivateDnsZoneGroup `
+          plzm.Azure\Deploy-NetworkPrivateEndpointPrivateDnsZoneGroup `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
