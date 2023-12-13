@@ -33,7 +33,7 @@ jobs:
         run: |
           $urlRoot = "${{ vars.URL_ROOT_MODULE_PLZM_AZURE }}"
           . ./scripts/Module.ps1
-          Get-Module -UrlRoot "$urlRoot"
+          Get-PlzmAzureModule -UrlRoot "$urlRoot"
 
 
       - name: Register RPs

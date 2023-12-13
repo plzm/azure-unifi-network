@@ -1,4 +1,4 @@
-function Get-Module()
+function Get-PlzmAzureModule()
 {
   [CmdletBinding()]
   param
