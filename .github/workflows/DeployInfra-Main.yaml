@@ -32,29 +32,8 @@ jobs:
         shell: pwsh
         run: |
           $urlRoot = "${{ vars.URL_ROOT_MODULE_PLZM_AZURE }}"
-          $moduleName = "plzm.Azure"
-          $localFolderPath = "./modules/$moduleName/"
-          $psm1FileName = "$moduleName.psm1"
-          $psd1FileName = "$moduleName.psd1"
-
-          if (!(Test-Path -Path $localFolderPath)) {
-            New-Item -Path $localFolderPath -ItemType "Directory" -Force
-          }
-
-          # PSM1 file
-          $url = ($urlRoot + $psm1FileName)
-          Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psm1FileName)
-
-          # PSD1 file
-          $url = ($urlRoot + $psd1FileName)
-          Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psd1FileName)
-
-          Import-Module "$localFolderPath" -Force
-
-          plzm.Azure\Set-EnvVar2 -VarName "AA_MODULE_PATH_PLZM_AZURE" -VarValue "$localFolderPath"
-
-          Get-Timestamp
-          plzm.Azure\Get-Timestamp
+          . ./scripts/Module.ps1
+          Get-PlzmAzureModule -UrlRoot "$urlRoot"
 
 
       - name: Register RPs
@@ -359,8 +338,8 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy AMPLS-LAW connection"
-          $output = plzm.Azure\Deploy-LogAnalyticsToAmplsConnection `
+          Write-Debug -Debug:$true -Message "Deploy LAW-AMPLS connection"
+          $output = plzm.Azure\Deploy-MonitorPrivateLinkScopeResourceConnection `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
@@ -428,47 +407,35 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $dataCollectionEndpointName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixDataCollectionEndpoint -Sequence $ConfigConstants.SeqNumDataCollectionEndpoint
-          $dataCollectionEndpointResourceId = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Insights" -ResourceTypeName "dataCollectionEndpoints" -ResourceName $dataCollectionEndpointName
-
-          $dataCollectionRuleLinuxName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixDataCollectionRule -Suffix $ConfigConstants.SuffixAmplsDataCollectionRuleLinux
-          $dataCollectionRuleLinuxResourceId = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Insights" -ResourceTypeName "dataCollectionRules" -ResourceName $dataCollectionRuleLinuxName
-
-          $dataCollectionRuleWindowsName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixDataCollectionRule -Suffix $ConfigConstants.SuffixAmplsDataCollectionRuleWindows
-          $dataCollectionRuleWindowsResourceId = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Insights" -ResourceTypeName "dataCollectionRules" -ResourceName $dataCollectionRuleWindowsName
-
-          Write-Debug -Debug:$true -Message "Deploy Data Collection Endpoint"
           $output = plzm.Azure\Deploy-MonitorDataCollectionEndpoint `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-endpoint.json") `
-            -DataCollectionEndpointName "$dataCollectionEndpointName" `
+            -DataCollectionEndpointName ${{ env.AA_DCE_NAME }} `
+            -DataCollectionEndpointKind "Linux" `
             -PublicNetworkAccess $ConfigMain.Observability.DataCollectionEndpoint.PublicNetworkAccess `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
           Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Data Collection Rule - Linux"
+          Write-Debug -Debug:$true -Message "Deploy DCE-AMPLS connection"
+          $output = plzm.Azure\Deploy-MonitorPrivateLinkScopeResourceConnection `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
+            -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }} `
+            -ScopedResourceId "${{ env.AA_DCE_RESOURCE_ID }}" `
+            -ScopedResourceName "${{ env.AA_DCE_NAME }}"
+
+          Write-Debug -Debug:$true -Message "$output"
+
           $output = plzm.Azure\Deploy-MonitorDataCollectionRule `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule.linux.json") `
-            -DataCollectionRuleName "$dataCollectionRuleLinuxName" `
-            -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME_MAIN }} `
-            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
-
-          Write-Debug -Debug:$true -Message "$output"
-
-          Write-Debug -Debug:$true -Message "Deploy Data Collection Rule - Windows"
-          $output = plzm.Azure\Deploy-MonitorDataCollectionRule `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $ConfigMain.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule.windows.json") `
-            -DataCollectionRuleName "$dataCollectionRuleWindowsName" `
+            -DataCollectionRuleName ${{ env.AA_DCR_NAME }} `
             -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME_MAIN }} `
             -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}

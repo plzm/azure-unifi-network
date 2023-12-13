@@ -32,29 +32,8 @@ jobs:
         shell: pwsh
         run: |
           $urlRoot = "${{ vars.URL_ROOT_MODULE_PLZM_AZURE }}"
-          $moduleName = "plzm.Azure"
-          $localFolderPath = "./modules/$moduleName/"
-          $psm1FileName = "$moduleName.psm1"
-          $psd1FileName = "$moduleName.psd1"
-
-          if (!(Test-Path -Path $localFolderPath)) {
-            New-Item -Path $localFolderPath -ItemType "Directory" -Force
-          }
-
-          # PSM1 file
-          $url = ($urlRoot + $psm1FileName)
-          Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psm1FileName)
-
-          # PSD1 file
-          $url = ($urlRoot + $psd1FileName)
-          Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psd1FileName)
-
-          Import-Module "$localFolderPath" -Force
-
-          plzm.Azure\Set-EnvVar2 -VarName "AA_MODULE_PATH_PLZM_AZURE" -VarValue "$localFolderPath"
-
-          Get-Timestamp
-          plzm.Azure\Get-Timestamp
+          . ./scripts/Module.ps1
+          Get-PlzmAzureModule -UrlRoot "$urlRoot"
 
       - name: Set Config File Paths to Environment
         if: success()
@@ -325,7 +304,7 @@ jobs:
             -PublicNetworkAccess "Disabled" `
             -DefaultAction "Deny"
 
-      - name: Deploy Controller VM and PIP and NIC
+      - name: Deploy Controller VM and PIP and NIC and DCE/DCR association
         if: success()
         shell: pwsh
         run: |
@@ -420,6 +399,9 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
+
+          # Deploy Diagnostics Setting
+
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "$SubscriptionId" `
             -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
@@ -431,6 +413,29 @@ jobs:
             -SendMetrics $true
 
           Write-Debug -Debug:$debug -Message "$output"
+
+          # Deploy Azure Monitor Agent
+
+          $output = plzm.Azure\Deploy-VmAmaLinux `
+            -SubscriptionID "$SubscriptionId" `
+            -Location $ConfigController.Location `
+            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.extension.azure-monitor-agent.linux.json") `
+            -VmName ${{ env.AA_VM_NAME_CONTROLLER }}
+
+          Write-Debug -Debug:$debug -Message "$output"
+
+          # Deploy Azure Data Collection Rule and Endpoint Association
+
+          $output = Deploy-MonitorDataCollectionRuleAssociation `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule-association.json") `
+            -DataCollectionEndpointResourceId ${{ env.AA_DCE_RESOURCE_ID }} `
+            -DataCollectionRuleResourceId ${{ env.AA_DCR_RESOURCE_ID }} `
+            -ScopedResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }}
+
+          Write-Debug -Debug:$true -Message "$output"
 
       - name: Azure logout
         if: always()

@@ -65,6 +65,20 @@ function Set-VariablesMain()
   plzm.Azure\Set-EnvVar2 -VarName "AA_LAW_NAME_MAIN" -VarValue "$workspaceName"
   plzm.Azure\Set-EnvVar2 -VarName "AA_LAW_RESOURCE_ID_MAIN" -VarValue "$workspaceResourceId"
 
+  # Data Collection Endpoint and Rule
+  $dataCollectionEndpointName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixDataCollectionEndpoint -Sequence $ConfigConstants.SeqNumDataCollectionEndpoint
+  $dataCollectionEndpointResourceId = plzm.Azure\Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Insights" -ResourceTypeName "dataCollectionEndpoints" -ResourceName $dataCollectionEndpointName
+
+  $dataCollectionRuleName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixDataCollectionRule -Suffix $ConfigConstants.SuffixAmplsDataCollectionRuleLinux
+  $dataCollectionRuleResourceId = plzm.Azure\Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Insights" -ResourceTypeName "dataCollectionRules" -ResourceName $dataCollectionRuleName
+
+  plzm.Azure\Set-EnvVar2 -VarName "AA_DCE_NAME" -VarValue "$dataCollectionEndpointName"
+  plzm.Azure\Set-EnvVar2 -VarName "AA_DCE_RESOURCE_ID" -VarValue "$dataCollectionEndpointResourceId"
+
+  plzm.Azure\Set-EnvVar2 -VarName "AA_DCR_NAME" -VarValue "$dataCollectionRuleName"
+  plzm.Azure\Set-EnvVar2 -VarName "AA_DCR_RESOURCE_ID" -VarValue "$dataCollectionRuleResourceId"
+
+
   # Key Vault
   $keyVaultName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixKeyVault -Sequence $ConfigConstants.SeqNumKeyVault
   $keyVaultResourceId = plzm.Azure\Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.KeyVault" -ResourceTypeName "vaults" -ResourceName $keyVaultName
@@ -92,6 +106,10 @@ function Set-VariablesMain()
   # AA_AMPLS_RESOURCE_ID_MAIN
   # AA_LAW_NAME_MAIN
   # AA_LAW_RESOURCE_ID_MAIN
+  # AA_DCE_NAME
+  # AA_DCE_RESOURCE_ID
+  # AA_DCR_NAME
+  # AA_DCR_RESOURCE_ID
   # AA_NSG_NAME
   # AA_NSG_RESOURCE_ID
   # AA_VNET_NAME
