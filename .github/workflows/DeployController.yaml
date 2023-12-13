@@ -32,30 +32,8 @@ jobs:
         shell: pwsh
         run: |
           $urlRoot = "${{ vars.URL_ROOT_MODULE_PLZM_AZURE }}"
-          $moduleName = "plzm.Azure"
-          $localFolderPath = "./modules/$moduleName/"
-          $psm1FileName = "$moduleName.psm1"
-          $psd1FileName = "$moduleName.psd1"
-
-          if (!(Test-Path -Path $localFolderPath)) {
-            New-Item -Path $localFolderPath -ItemType "Directory" -Force
-          }
-
-          # PSM1 file
-          $url = ($urlRoot + $psm1FileName)
-          Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psm1FileName)
-
-          # PSD1 file
-          $url = ($urlRoot + $psd1FileName)
-          Invoke-WebRequest -Uri "$url" -OutFile ($localFolderPath + $psd1FileName)
-
-          Import-Module "$localFolderPath" -Force
-
-          plzm.Azure\Set-EnvVar2 -VarName "AA_MODULE_PATH_PLZM_AZURE" -VarValue "$localFolderPath"
-
-          Write-Debug -Debug:$true -Message "Module $moduleName imported with version $((Get-Module -Name $moduleName).Version)"
-          Get-Timestamp
-          plzm.Azure\Get-Timestamp
+          . ./scripts/Module.ps1
+          Get-Module -UrlRoot "$urlRoot"
 
       - name: Set Config File Paths to Environment
         if: success()
