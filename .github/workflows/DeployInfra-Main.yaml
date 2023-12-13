@@ -338,8 +338,8 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy AMPLS-LAW connection"
-          $output = plzm.Azure\Deploy-LogAnalyticsToAmplsConnection `
+          Write-Debug -Debug:$true -Message "Deploy LAW-AMPLS connection"
+          $output = plzm.Azure\Deploy-MonitorPrivateLinkScopeResourceConnection `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
@@ -407,7 +407,6 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Deploy Data Collection Endpoint"
           $output = plzm.Azure\Deploy-MonitorDataCollectionEndpoint `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $ConfigMain.Location `
@@ -420,7 +419,17 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Data Collection Rule"
+          Write-Debug -Debug:$true -Message "Deploy DCE-AMPLS connection"
+          $output = plzm.Azure\Deploy-MonitorPrivateLinkScopeResourceConnection `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
+            -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }} `
+            -ScopedResourceId "${{ env.AA_DCE_RESOURCE_ID }}" `
+            -ScopedResourceName "${{ env.AA_DCE_NAME }}"
+
+          Write-Debug -Debug:$true -Message "$output"
+
           $output = plzm.Azure\Deploy-MonitorDataCollectionRule `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $ConfigMain.Location `
@@ -430,16 +439,6 @@ jobs:
             -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME_MAIN }} `
             -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
-
-          Write-Debug -Debug:$true -Message "$output"
-
-          Write-Debug -Debug:$true -Message "Deploy Data Collection Rule Association"
-          $output = Deploy-MonitorDataCollectionRuleAssociation `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule-association.json") `
-            -DataCollectionEndpointResourceId ${{ env.AA_DCE_RESOURCE_ID }} `
-            -DataCollectionRuleResourceId ${{ env.AA_DCR_RESOURCE_ID }}
 
           Write-Debug -Debug:$true -Message "$output"
 

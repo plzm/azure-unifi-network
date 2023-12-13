@@ -304,7 +304,7 @@ jobs:
             -PublicNetworkAccess "Disabled" `
             -DefaultAction "Deny"
 
-      - name: Deploy Controller VM and PIP and NIC
+      - name: Deploy Controller VM and PIP and NIC and DCE/DCR association
         if: success()
         shell: pwsh
         run: |
@@ -399,6 +399,9 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
+
+          # Deploy Diagnostics Setting
+
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "$SubscriptionId" `
             -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
@@ -411,12 +414,28 @@ jobs:
 
           Write-Debug -Debug:$debug -Message "$output"
 
+          # Deploy Azure Monitor Agent
+
           $output = plzm.Azure\Deploy-VmAmaLinux `
             -SubscriptionID "$SubscriptionId" `
             -Location $ConfigController.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.extension.azure-monitor-agent.linux.json") `
             -VmName ${{ env.AA_VM_NAME_CONTROLLER }}
+
+          Write-Debug -Debug:$debug -Message "$output"
+
+          # Deploy Azure Data Collection Rule and Endpoint Association
+
+          $output = Deploy-MonitorDataCollectionRuleAssociation `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule-association.json") `
+            -DataCollectionEndpointResourceId ${{ env.AA_DCE_RESOURCE_ID }} `
+            -DataCollectionRuleResourceId ${{ env.AA_DCR_RESOURCE_ID }} `
+            -ScopedResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }}
+
+          Write-Debug -Debug:$true -Message "$output"
 
       - name: Azure logout
         if: always()
