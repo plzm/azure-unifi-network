@@ -30,6 +30,6 @@ function Get-Module()
 
   plzm.Azure\Set-EnvVar2 -VarName "AA_MODULE_PATH_PLZM_AZURE" -VarValue "$localFolderPath"
 
-  Write-Debug -Debug:$true -Message "Module $moduleName imported with version $((Get-Module -Name $moduleName).Version)"
+  Write-Debug -Debug:$true -Message "Module $moduleName imported with version $((Get-Module $moduleName).Version)"
   plzm.Azure\Get-Timestamp
 }
