@@ -411,6 +411,13 @@ jobs:
 
           Write-Debug -Debug:$debug -Message "$output"
 
+          $output = plzm.Azure\Deploy-VmAmaLinux `
+            -SubscriptionID "$SubscriptionId" `
+            -Location $ConfigController.Location `
+            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.extension.azure-monitor-agent.linux.json") `
+            -VmName ${{ env.AA_VM_NAME_CONTROLLER }}
+
       - name: Azure logout
         if: always()
         uses: azure/CLI@v1
