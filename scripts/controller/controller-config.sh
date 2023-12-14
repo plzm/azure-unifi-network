@@ -3,8 +3,8 @@ sudo apt upgrade -y
 
 sudo apt install fail2ban -y
 sudo apt install debconf-utils -y
-sudo apt install openjdk-8-jre -y
 sudo apt install haveged -y
+sudo apt install apache2 -y
 
 # Unattended upgrades
 sudo apt install unattended-upgrades apt-listchanges -y
@@ -47,7 +47,7 @@ sudo ln -s /snap/bin/certbot /usr/bin/certbot
 
 # Request certfificate
 # ################### AUTOMATE FQDN ###################
-sudo certbot --apache -d ui000.alfaadin.com -m support@alfaadin.com
+sudo certbot --apache -d ui000.alfaadin.com -m support@alfaadin.com --agree-tos -n
 
 # Install certificate
 # ################### MODIFY SCRIPT AFTER DOWNLOAD - PUT CORRECT FQDN
