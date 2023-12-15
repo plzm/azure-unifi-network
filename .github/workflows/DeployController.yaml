@@ -223,10 +223,12 @@ jobs:
             mkdir -p ~/.ssh
           fi
 
+          sudo chmod 700 ~/.ssh
+
           ls -la ~
           ls -la ~/.ssh
 
-      - name: Create SSH Key and write to Key Vault
+      - name: Create SSH Key and write to Key Vault and .ssh folder
         if: success()
         shell: pwsh
         run: |
@@ -579,9 +581,10 @@ jobs:
         shell: bash
         run: |
           # Add private SSH key to SSH agent
-          #eval $(ssh-agent)
+          cd ~/.ssh
           eval `ssh-agent -s`
-          sshAddCmd="sudo ssh-add ~/.ssh/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          #eval $(ssh-agent)
+          sshAddCmd="ssh-add ~/.ssh/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
           echo "$sshAddCmd"
           eval $sshAddCmd
 
