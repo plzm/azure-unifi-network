@@ -228,11 +228,12 @@ jobs:
 
           # Key filenames
           $sshPathPrefix = $ConfigConstants.SshPathPrefix
+          $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
           $filePathPrivate = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-          $filePathPublic = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "($ConfigConstants.SshPublicKeyFileExtension)"
+          $filePathPublic = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
 
-          Write-Debug -Debug:$true -Message "filePathPrivate key: $filePathPrivate"
-          Write-Debug -Debug:$true -Message "filePathPublic key: $filePathPublic"
+          Write-Debug -Debug:$true -Message "filePathPrivate: $filePathPrivate"
+          Write-Debug -Debug:$true -Message "filePathPublic: $filePathPublic"
 
           # Delete key files if already exist
           if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
@@ -580,8 +581,9 @@ jobs:
 
           # Key filenames
           $sshPathPrefix = $ConfigConstants.SshPathPrefix
+          $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
           $filePathPrivate = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-          $filePathPublic = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "($ConfigConstants.SshPublicKeyFileExtension)"
+          $filePathPublic = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
           $filePathKnownHosts = "$sshPathPrefix" + "known_hosts"
 
           # Delete key files if exist
