@@ -213,6 +213,16 @@ jobs:
             -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
             -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
 
+      - name: Create SSH folder
+        if: success()
+        shell: bash
+        run: |
+          if [[ ! -d "~/.ssh" ]]
+          then
+            echo "Create ~/.ssh directory"
+            mkdir -p ~/.ssh
+          fi
+
       - name: Create SSH Key and write to Key Vault
         if: success()
         shell: pwsh
@@ -558,7 +568,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          file="~/.ssh/${{ env.AA_SSH_KEY_NAME_CONTROLLER }}
+          file="~/.ssh/${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
 
           if [ -f "$file" ]; then
             eval $(ssh-agent)
