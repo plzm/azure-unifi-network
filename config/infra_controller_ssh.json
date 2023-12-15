@@ -3,13 +3,25 @@
     "NSG": {
       "Rules": [
         {
+          "Name": "CertbotAccess",
+          "Description": "Certbot Access",
+          "Direction": "Inbound",
+          "Access": "Allow",
+          "Protocol": "*",
+          "SourceAddressPrefix": "*",
+          "SourcePortRange": "*",
+          "DestinationAddressPrefix": "",
+          "DestinationPortRange": "",
+          "DestinationPortRanges": "80,443"
+        },
+        {
           "Description": "Controller SSH Access",
           "Direction": "Inbound",
           "Access": "Allow",
           "Protocol": "*",
           "SourceAddressPrefix": "",
           "SourcePortRange": "*",
-          "DestinationAddressPrefix": "VirtualNetwork",
+          "DestinationAddressPrefix": "",
           "DestinationPortRange": "22",
           "DestinationPortRanges": ""
         }
