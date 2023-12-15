@@ -582,7 +582,7 @@ jobs:
           #eval $(ssh-agent)
           eval `ssh-agent -s`
           sshAddCmd="sudo ssh-add ~/.ssh/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-          Write-Debug -Debug:$true -Message "$sshAddCmd"
+          echo "$sshAddCmd"
           eval $sshAddCmd
 
           ssh -o StrictHostKeyChecking=no -i "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" ${{ env.AA_VM_PIP_IP_ADDRESS }} -t "sudo bash -s" < ./scripts/controller/controller_config.sh
