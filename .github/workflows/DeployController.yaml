@@ -263,7 +263,7 @@ jobs:
             $ConfigConstants.SshKeySize + `
             " -C " + `
             $ConfigController.Vm.AdminUserName + `
-            " -N """""
+            " -N """""""""
 
           Write-Debug -Debug:$true -Message "$cmd"
           Invoke-Expression -Command $cmd
