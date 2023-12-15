@@ -225,9 +225,11 @@ jobs:
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
+
           # Key filenames
-          $filePathPrivate = ("$ConfigConstants.SshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
-          $filePathPublic = ("$ConfigConstants.SshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "($ConfigConstants.SshPublicKeyFileExtension)")
+          $sshPathPrefix = $ConfigConstants.SshPathPrefix
+          $filePathPrivate = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          $filePathPublic = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "($ConfigConstants.SshPublicKeyFileExtension)"
 
           Write-Debug -Debug:$true -Message "filePathPrivate key: $filePathPrivate"
           Write-Debug -Debug:$true -Message "filePathPublic key: $filePathPublic"
@@ -577,9 +579,10 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
 
           # Key filenames
-          $filePathPrivate = ("$ConfigConstants.SshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
-          $filePathPublic = ("$ConfigConstants.SshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "($ConfigConstants.SshPublicKeyFileExtension)")
-          $filePathKnownHosts = ("$ConfigConstants.SshPathPrefix" + "known_hosts")
+          $sshPathPrefix = $ConfigConstants.SshPathPrefix
+          $filePathPrivate = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          $filePathPublic = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "($ConfigConstants.SshPublicKeyFileExtension)"
+          $filePathKnownHosts = "$sshPathPrefix" + "known_hosts"
 
           # Delete key files if exist
           if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
