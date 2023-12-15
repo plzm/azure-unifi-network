@@ -226,15 +226,15 @@ jobs:
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
           # Key filenames
-          $filePathPrivate = ($ConfigConstants.SshPathPrefix + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
-          $filePathPublic = ($ConfigConstants.SshPathPrefix + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$ConfigConstants.SshPublicKeyFileExtension")
+          $filePathPrivate = ("$ConfigConstants.SshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
+          $filePathPublic = ("$ConfigConstants.SshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "($ConfigConstants.SshPublicKeyFileExtension)")
 
           # Delete key files if already exist
           if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
           if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
 
           # Create SSH key pair
-          ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
+          ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "$filePathPrivate" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
 
           $publicKey = Get-Content -Path $filePathPublic -Raw
           $privateKey = Get-Content -Path $filePathPrivate -Raw
@@ -561,15 +561,15 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
 
           # Key filenames
-          $filePathPrivate = ($ConfigConstants.SshPathPrefix + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
-          $filePathPublic = ($ConfigConstants.SshPathPrefix + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$ConfigConstants.SshPublicKeyFileExtension")
-          $filePathKnownHosts = ($ConfigConstants.SshPathPrefix + "known_hosts")
+          $filePathPrivate = ("$ConfigConstants.SshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}")
+          $filePathPublic = ("$ConfigConstants.SshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "($ConfigConstants.SshPublicKeyFileExtension)")
+          $filePathKnownHosts = ("$ConfigConstants.SshPathPrefix" + "known_hosts")
 
           # Delete key files if exist
           if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
           if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
 
-          # Delete known_hosts
+          # Delete known_hosts if exist
           if (Test-Path $filePathKnownHosts) { Remove-Item -Path $filePathKnownHosts -Force }
 
       - name: Azure logout
