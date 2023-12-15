@@ -579,7 +579,8 @@ jobs:
         shell: bash
         run: |
           # Add private SSH key to SSH agent
-          eval $(sudo ssh-agent -s)
+          #eval $(ssh-agent)
+          eval `ssh-agent -s`
           sshAddCmd="sudo ssh-add ~/.ssh/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
           eval $sshAddCmd
 
