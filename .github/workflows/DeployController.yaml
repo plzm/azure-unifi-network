@@ -250,7 +250,7 @@ jobs:
           if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
 
           # Create SSH key pair
-          ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f "$filePathPrivate" -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
+          ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f $filePathPrivate -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
 
           $publicKey = Get-Content -Path "$filePathPublic" -Raw
           $privateKey = Get-Content -Path "$filePathPrivate" -Raw
