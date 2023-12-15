@@ -1,3 +1,5 @@
+set -eux
+
 sudo apt update -y
 sudo apt upgrade -y
 
@@ -46,14 +48,4 @@ sudo snap install --classic certbot
 sudo ln -s /snap/bin/certbot /usr/bin/certbot
 
 # Request certfificate
-# ################### AUTOMATE FQDN ###################
-sudo certbot --apache -d ui000.alfaadin.com -m support@alfaadin.com --agree-tos -n
-
-# Install certificate
-# ################### MODIFY SCRIPT AFTER DOWNLOAD - PUT CORRECT FQDN
-sudo wget https://raw.githubusercontent.com/plzm/azure-unifi-network/main/scripts/controller/unifi_ssl_import.sh -O /usr/local/bin/unifi_ssl_import.sh
-
-sudo chmod +x /usr/local/bin/unifi_ssl_import.sh
-sudo /usr/local/bin/unifi_ssl_import.sh
-
-sudo apt shutdown -r now
+sudo certbot --apache -d {{VM_FQDN}} -m {{CONTACT_EMAIL}} --agree-tos -n

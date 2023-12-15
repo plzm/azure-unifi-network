@@ -1,6 +1,8 @@
 {
   "Id": 0,
   "IdForNaming": "000",
+  "HostNamePrefix": "ui",
+  "DomainName": "alfaadin.com",
   "Location": "eastus2",
   "LocationShort": "eus2",
   "Network": {

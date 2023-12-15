@@ -1,7 +1,5 @@
-#!/usr/bin/env bash
-
 # Slightly modified version of the below
-# Modified December 2023 by Patrick El-Azem
+# Modified December 2023 by Patrick El-Azem to tokenize VM name for pipeline use
 
 # unifi_ssl_import.sh
 # UniFi Controller SSL Certificate Import Script for Unix/Linux Systems
@@ -25,7 +23,7 @@
 # and be back online immediately.
 
 # CONFIGURATION OPTIONS
-UNIFI_HOSTNAME=ui000.alfaadin.com
+UNIFI_HOSTNAME={{VM_FQDN}}
 UNIFI_SERVICE=unifi
 
 # Uncomment following three lines for Fedora/RedHat/CentOS

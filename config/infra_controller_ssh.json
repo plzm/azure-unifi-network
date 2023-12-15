@@ -1,0 +1,19 @@
+{
+  "Network": {
+    "NSG": {
+      "Rules": [
+        {
+          "Description": "Controller SSH Access",
+          "Direction": "Inbound",
+          "Access": "Allow",
+          "Protocol": "*",
+          "SourceAddressPrefix": "",
+          "SourcePortRange": "*",
+          "DestinationAddressPrefix": "VirtualNetwork",
+          "DestinationPortRange": "22",
+          "DestinationPortRanges": ""
+        }
+      ]
+    }
+  }
+}

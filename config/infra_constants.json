@@ -1,7 +1,8 @@
 {
   "NamePrefix": "aa",
   "NameInfix": "ui",
-  "NsgPriorityBase": 200,
+  "NsgRulePriorityBase": 200,
+  "NsgRulePriorityPlusForGha": 1000,
   "OrgName": "alfaadin",
   "PrefixAmpls": "pls",
   "PrefixAppInsights": "ais",
@@ -43,10 +44,12 @@
   "SeqNumKeyVault": 120,
   "SeqNumStorage": 130,
   "SshKeyAlgorithm": "rsa",
+  "SshPublicKeyFileExtension": ".pub",
   "SshKeyFormat": "pem",
   "SshKeyNamePrefix": "id_",
   "SshKeySize": 4096,
+  "SshPathPrefix": "./.ssh/",
   "SuffixAmplsDataCollectionRuleLinux": "linux",
-  "SuffixAmplsDataCollectionRuleWindows": "windows",
+  "SuffixNsgNameGhaAccess": "-gha",
   "TemplateUriPrefix": "https://raw.githubusercontent.com/plzm/azure-deploy/main/template/"
 }
