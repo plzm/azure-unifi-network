@@ -107,7 +107,7 @@ jobs:
       #      -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
       #      -DestinationPortRanges $nsgRule.DestinationPortRanges
 
-      #    Write-Debug -Debug:$debug -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
       #- name: Create Resource Group
       #  if: success()
@@ -316,7 +316,6 @@ jobs:
           ls -la ~
           ls -la ~/.ssh
 
-
       - name: Close Key Vault access from GitHub runner
         if: always()
         shell: pwsh
@@ -387,7 +386,7 @@ jobs:
             -SendLogs $true `
             -SendMetrics $true
 
-          Write-Debug -Debug:$debug -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
 
           # Deploy NIC
@@ -413,7 +412,7 @@ jobs:
             -SendLogs $false `
             -SendMetrics $true
 
-          Write-Debug -Debug:$debug -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
 
           # Deploy VM
@@ -458,7 +457,7 @@ jobs:
             -SendLogs $false `
             -SendMetrics $true
 
-          Write-Debug -Debug:$debug -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
           # Deploy Azure Monitor Agent
 
@@ -469,7 +468,7 @@ jobs:
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.extension.azure-monitor-agent.linux.json") `
             -VmName ${{ env.AA_VM_NAME_CONTROLLER }}
 
-          Write-Debug -Debug:$debug -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
           # Deploy Azure Data Collection Rule and Endpoint Association
 
@@ -483,7 +482,7 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-      - name: Add NSG rule for GitHub runner and Certbot access to Controller VM
+      - name: Add NSG rules for GitHub runner and Certbot access to Controller VM
         if: success()
         shell: pwsh
         run: |
@@ -499,12 +498,13 @@ jobs:
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           $controllerVmPublicIp = "${{ env.AA_VM_PIP_IP_ADDRESS }}"
-
+          Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
 
           # Certbot
           $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[0]
           $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
           $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusForCertbot + $ConfigController.Id)
+          Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
           $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
             -SubscriptionID "$SubscriptionId" `
@@ -523,13 +523,14 @@ jobs:
             -DestinationPortRange $nsgRule.DestinationPortRange `
             -DestinationPortRanges $nsgRule.DestinationPortRanges
 
-          Write-Debug -Debug:$debug -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
 
           # GHA runner
           $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[1]
           $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccess
           $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusForGha + $ConfigController.Id)
+          Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
           $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
             -SubscriptionID "$SubscriptionId" `
@@ -548,7 +549,7 @@ jobs:
             -DestinationPortRange $nsgRule.DestinationPortRange `
             -DestinationPortRanges $nsgRule.DestinationPortRanges
 
-          Write-Debug -Debug:$debug -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
       - name: Prepare script files to run on Controller
         if: success()
@@ -631,38 +632,38 @@ jobs:
           # Delete known_hosts if exist
           if (Test-Path $filePathKnownHosts) { Remove-Item -Path $filePathKnownHosts -Force }
 
-      - name: Remove NSG rule for GitHub runner access to Controller VM
-        if: always()
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
+      #- name: Remove NSG rules for GitHub runner and Certbot access to Controller VM
+      #  if: always()
+      #  shell: pwsh
+      #  run: |
+      #    $ErrorActionPreference = "Stop"
 
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+      #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
+      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
 
-          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName
+      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+      #      -NSGName ${{ env.AA_NSG_NAME }} `
+      #      -NSGRuleName $nsgRuleName
 
-          Write-Debug -Debug:$debug -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccess
+      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccess
 
-          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName
+      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+      #      -NSGName ${{ env.AA_NSG_NAME }} `
+      #      -NSGRuleName $nsgRuleName
 
-          Write-Debug -Debug:$debug -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
       - name: Azure logout
         if: always()

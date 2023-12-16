@@ -47,9 +47,9 @@ LE_MODE=true
 LE_LIVE_DIR=/etc/letsencrypt/live
 
 # THE FOLLOWING OPTIONS NOT REQUIRED IF LE_MODE IS ENABLED
-PRIV_KEY=/etc/ssl/private/hostname.example.com.key
-SIGNED_CRT=/etc/ssl/certs/hostname.example.com.crt
-CHAIN_FILE=/etc/ssl/certs/startssl-chain.crt
+#PRIV_KEY=/etc/ssl/private/hostname.example.com.key
+#SIGNED_CRT=/etc/ssl/certs/hostname.example.com.crt
+#CHAIN_FILE=/etc/ssl/certs/startssl-chain.crt
 
 # CONFIGURATION OPTIONS YOU PROBABLY SHOULDN'T CHANGE
 ALIAS=unifi
