@@ -60,6 +60,7 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigControllerSsh = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER_SSH }}"
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           Set-VariablesMain `
@@ -71,6 +72,7 @@ jobs:
             -ConfigConstants $ConfigConstants `
             -ConfigMain $ConfigMain `
             -ConfigController $ConfigController `
+            -ConfigControllerSsh $ConfigControllerSsh `
             -SubscriptionId $SubscriptionId
 
       - name: Remove NSG rule
