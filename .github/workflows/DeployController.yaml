@@ -344,20 +344,20 @@ jobs:
             -PublicNetworkAccess "Disabled" `
             -DefaultAction "Deny"
 
-      #- name: Deploy Controller VM and PIP and NIC and DCE/DCR association
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    $ErrorActionPreference = "Stop"
+      - name: Deploy Controller VM and PIP and NIC and DCE/DCR association
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
 
-      #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      #    $osDiskName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
+          $osDiskName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
 
       #    # Deploy PIP
       #    $output = plzm.Azure\Deploy-NetworkPublicIp `
@@ -416,34 +416,34 @@ jobs:
       #    Write-Debug -Debug:$true -Message "$output"
 
 
-      #    # Deploy VM
+          # Deploy VM
 
-      #    $output = plzm.Azure\Deploy-Vm `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -Location $ConfigController.Location `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
-      #      -VmName ${{ env.AA_VM_NAME_CONTROLLER }} `
-      #      -AssignSystemIdentity $false `
-      #      -UaiResourceId "${{ env.AA_UAI_RESOURCE_ID_CONTROLLER }}" `
-      #      -VmSize $ConfigController.Vm.Size `
-      #      -VmPublisher $ConfigController.Vm.Publisher `
-      #      -VmOffer $ConfigController.Vm.Offer `
-      #      -VmSku $ConfigController.Vm.Sku `
-      #      -ProvisionVmAgent $true `
-      #      -VmAdminUsername "${{ env.AA_VM_ADMIN_USERNAME }}" `
-      #      -VmAdminSshPublicKey "${{ env.AA_VM_SSH_PUBLIC_KEY }}" `
-      #      -VmTimeZone "UTC" `
-      #      -OsDiskName $osDiskName `
-      #      -OsDiskStorageType $ConfigController.Vm.OsDisk.Type `
-      #      -OsDiskSizeInGB $ConfigController.Vm.OsDisk.SizeInGB `
-      #      -VmAutoShutdownTime "9999" `
-      #      -NetworkInterfaceResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
-      #      -EnableBootDiagnostics $true `
-      #      -BootDiagnosticsStorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}" `
-      #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+          $output = plzm.Azure\Deploy-Vm `
+            -SubscriptionID "$SubscriptionId" `
+            -Location $ConfigController.Location `
+            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
+            -VmName ${{ env.AA_VM_NAME_CONTROLLER }} `
+            -AssignSystemIdentity $false `
+            -UaiResourceId "${{ env.AA_UAI_RESOURCE_ID_CONTROLLER }}" `
+            -VmSize $ConfigController.Vm.Size `
+            -VmPublisher $ConfigController.Vm.Publisher `
+            -VmOffer $ConfigController.Vm.Offer `
+            -VmSku $ConfigController.Vm.Sku `
+            -ProvisionVmAgent $true `
+            -VmAdminUsername "${{ env.AA_VM_ADMIN_USERNAME }}" `
+            -VmAdminSshPublicKey "${{ env.AA_VM_SSH_PUBLIC_KEY }}" `
+            -VmTimeZone "UTC" `
+            -OsDiskName $osDiskName `
+            -OsDiskStorageType $ConfigController.Vm.OsDisk.Type `
+            -OsDiskSizeInGB $ConfigController.Vm.OsDisk.SizeInGB `
+            -VmAutoShutdownTime "9999" `
+            -NetworkInterfaceResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
+            -EnableBootDiagnostics $true `
+            -BootDiagnosticsStorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}" `
+            -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
 
       #    # Deploy Diagnostics Setting
