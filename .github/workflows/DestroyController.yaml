@@ -46,6 +46,7 @@ jobs:
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
+          plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER_SSH" -VarValue ("./config/infra_controller_ssh.json")
 
       - name: Set Variables
         if: success()
