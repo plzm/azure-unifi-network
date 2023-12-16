@@ -565,7 +565,7 @@ jobs:
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          $controllerFqdn = $ConfigController.HostNamePrefix + "." + $ConfigController.IdForNaming + "." + $ConfigController.DomainName
+          $controllerFqdn = $ConfigController.HostNamePrefix + $ConfigController.IdForNaming + "." + $ConfigController.DomainName
           $contactEmail = $ConfigMain.ContactEmail
 
           Write-Debug -Debug:$true -Message "Updating Controller Config file with Controller FQDN $controllerFqdn and Contact Email $contactEmail"
@@ -589,8 +589,8 @@ jobs:
           echo "$sshAddCmd"
           eval $sshAddCmd
 
-          ssh -o StrictHostKeyChecking=no -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} "sudo bash -s" < ./scripts/controller/controller_config.sh
-          ssh -o StrictHostKeyChecking=no -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} "sudo bash -s" < ./scripts/controller/unifi_ssl_import.sh
+          ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} "sudo bash -s" < ./scripts/controller/controller_config.sh
+          ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} "sudo bash -s" < ./scripts/controller/unifi_ssl_import.sh
 
           #sudo chmod +x /usr/local/bin/unifi_ssl_import.sh
           #sudo /usr/local/bin/unifi_ssl_import.sh
@@ -632,38 +632,38 @@ jobs:
           # Delete known_hosts if exist
           if (Test-Path $filePathKnownHosts) { Remove-Item -Path $filePathKnownHosts -Force }
 
-      #- name: Remove NSG rules for GitHub runner and Certbot access to Controller VM
-      #  if: always()
-      #  shell: pwsh
-      #  run: |
-      #    $ErrorActionPreference = "Stop"
+      - name: Remove NSG rules for GitHub runner and Certbot access to Controller VM
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
 
-      #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
 
-      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -NSGName ${{ env.AA_NSG_NAME }} `
-      #      -NSGRuleName $nsgRuleName
+          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
-      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccess
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccess
 
-      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -NSGName ${{ env.AA_NSG_NAME }} `
-      #      -NSGRuleName $nsgRuleName
+          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
       - name: Azure logout
         if: always()
