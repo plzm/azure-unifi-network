@@ -260,13 +260,15 @@ jobs:
           # Create SSH key pair
           Write-Debug -Debug:$true -Message "Run ssh-keygen"
           $cmd = `
-            "ssh-keygen -v -q -m " + `
-            $ConfigConstants.SshKeyFormat + `
+            "ssh-keygen -v -q " + `
+            " -m " + $ConfigConstants.SshKeyFormat + `
             " -f $filePathPrivate" + `
             " -t " + $ConfigConstants.SshKeyAlgorithm + `
-            " -b " + "${{ env.AA_VM_ADMIN_USERNAME }}" + `
+            " -b " + $ConfigConstants.SshKeySize + `
+            " -C " + "${{ env.AA_VM_ADMIN_USERNAME }}" + `
             " -N """""""""
 
+          Write-Debug -Debug:$true -Message "cmd ==="
           Write-Debug -Debug:$true -Message "$cmd"
           Invoke-Expression -Command $cmd
           #ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f $filePathPrivate -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
