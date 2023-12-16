@@ -581,15 +581,14 @@ jobs:
         shell: bash
         run: |
           # Add private SSH key to SSH agent
-          #cd ~/.ssh
           eval `ssh-agent -s`
 
           sshAddCmd="ssh-add ~/.ssh/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
           echo "$sshAddCmd"
           eval $sshAddCmd
 
-          ssh -o StrictHostKeyChecking=no -i "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" ${{ env.AA_VM_PIP_IP_ADDRESS }} -t "sudo bash -s" < ./scripts/controller/controller_config.sh
-          ssh -o StrictHostKeyChecking=no -i "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" ${{ env.AA_VM_PIP_IP_ADDRESS }} -t "sudo bash -s" < ./scripts/controller/unifi_ssl_import.sh
+          ssh -o StrictHostKeyChecking=no -i "~/.ssh/${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" ${{ env.AA_VM_PIP_IP_ADDRESS }} -t "sudo bash -s" < ./scripts/controller/controller_config.sh
+          ssh -o StrictHostKeyChecking=no -i "~/.ssh/${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" ${{ env.AA_VM_PIP_IP_ADDRESS }} -t "sudo bash -s" < ./scripts/controller/unifi_ssl_import.sh
 
           #sudo chmod +x /usr/local/bin/unifi_ssl_import.sh
           #sudo /usr/local/bin/unifi_ssl_import.sh
