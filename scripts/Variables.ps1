@@ -137,6 +137,9 @@ function Set-VariablesController()
     [object]
     $ConfigController,
     [Parameter(Mandatory = $true)]
+    [object]
+    $ConfigControllerSsh,
+    [Parameter(Mandatory = $true)]
     [string]
     $SubscriptionId
   )
@@ -179,6 +182,13 @@ function Set-VariablesController()
   plzm.Azure\Set-EnvVar2 -VarName "AA_VM_NIC_NAME_CONTROLLER" -VarValue "$vmNicName"
   plzm.Azure\Set-EnvVar2 -VarName "AA_VM_NIC_RESOURCE_ID_CONTROLLER" -VarValue "$vmNicResourceId"
 
+  # Controller VM SSH
+  $vmAdminUsername = $ConfigController.Vm.AdminUserName
+  plzm.Azure\Set-EnvVar2 -VarName "AA_VM_ADMIN_USERNAME" -VarValue "$vmAdminUsername"
+
+  $sshPath = $ConfigConstants.SshPath
+  plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PATH" -VarValue "$sshPath"
+
   # Env vars listed here for convenience
   # AA_RG_NAME_CONTROLLER
   # AA_UAI_NAME_CONTROLLER
@@ -193,7 +203,8 @@ function Set-VariablesController()
   # AA_VM_PIP_RESOURCE_ID_CONTROLLER
   # AA_VM_NIC_NAME_CONTROLLER
   # AA_VM_NIC_RESOURCE_ID_CONTROLLER
-
+  # AA_VM_ADMIN_USERNAME
+  # AA_VM_SSH_PATH
 }
 
 function Set-EnvVarTags()

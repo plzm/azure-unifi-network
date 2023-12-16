@@ -49,7 +49,7 @@
   "SshKeyFormat": "pem",
   "SshKeyNamePrefix": "id_",
   "SshKeySize": 4096,
-  "SshPathPrefix": "~/.ssh/",
+  "SshPath": "~/.ssh",
   "SuffixAmplsDataCollectionRuleLinux": "linux",
   "SuffixNsgNameCertbotAccess": "-certbot",
   "SuffixNsgNameGhaAccess": "-gha",

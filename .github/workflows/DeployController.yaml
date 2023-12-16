@@ -61,6 +61,8 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigControllerSsh = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER_SSH }}"
+
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           Set-VariablesMain `
@@ -72,6 +74,7 @@ jobs:
             -ConfigConstants $ConfigConstants `
             -ConfigMain $ConfigMain `
             -ConfigController $ConfigController `
+            -ConfigControllerSsh $ConfigControllerSsh `
             -SubscriptionId $SubscriptionId
 
       #- name: Add NSG rule for durable Controller access
@@ -217,16 +220,16 @@ jobs:
         if: success()
         shell: bash
         run: |
-          if [[ ! -d "~/.ssh" ]]
+          if [[ ! -d "${{ env.AA_VM_SSH_PATH }}" ]]
           then
-            echo "Create ~/.ssh directory"
-            mkdir -p ~/.ssh
+            echo "Create ${{ env.AA_VM_SSH_PATH }} directory"
+            mkdir -p ${{ env.AA_VM_SSH_PATH }}
           fi
 
-          sudo chmod 700 ~/.ssh
+          sudo chmod 700 ${{ env.AA_VM_SSH_PATH }}
 
           ls -la ~
-          ls -la ~/.ssh
+          ls -la ${{ env.AA_VM_SSH_PATH }}
 
       - name: Create SSH Key and write to Key Vault and .ssh folder
         if: success()
@@ -242,10 +245,10 @@ jobs:
 
 
           # Key filenames
-          $sshPathPrefix = $ConfigConstants.SshPathPrefix
+          $SshPath = $ConfigConstants.SshPath
           $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
-          $filePathPrivate = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-          $filePathPublic = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
+          $filePathPrivate = "$SshPath" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          $filePathPublic = "$SshPath" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
 
           Write-Debug -Debug:$true -Message "filePathPrivate: $filePathPrivate"
           Write-Debug -Debug:$true -Message "filePathPublic: $filePathPublic"
@@ -264,7 +267,7 @@ jobs:
             " -b " + `
             $ConfigConstants.SshKeySize + `
             " -C " + `
-            $ConfigController.Vm.AdminUserName + `
+            ${{ env.AA_VM_ADMIN_USERNAME }} + `
             " -N """""""""
 
           Write-Debug -Debug:$true -Message "$cmd"
@@ -314,7 +317,7 @@ jobs:
         shell: bash
         run: |
           ls -la ~
-          ls -la ~/.ssh
+          ls -la ${{ env.AA_VM_SSH_PATH }}
 
       - name: Close Key Vault access from GitHub runner
         if: always()
@@ -430,7 +433,7 @@ jobs:
             -VmOffer $ConfigController.Vm.Offer `
             -VmSku $ConfigController.Vm.Sku `
             -ProvisionVmAgent $true `
-            -VmAdminUsername $ConfigController.Vm.AdminUserName `
+            -VmAdminUsername "${{ env.AA_VM_ADMIN_USERNAME }}" `
             -VmAdminSshPublicKey "${{ env.AA_VM_SSH_PUBLIC_KEY }}" `
             -VmTimeZone "UTC" `
             -OsDiskName $osDiskName `
@@ -584,12 +587,12 @@ jobs:
           # Add private SSH key to SSH agent
           eval `ssh-agent -s`
 
-          sshAddCmd="ssh-add ~/.ssh/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          sshAddCmd="ssh-add ${{ env.AA_VM_SSH_PATH }}/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
           echo "$sshAddCmd"
           eval $sshAddCmd
 
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} ${{ env.AA_VM_PIP_IP_ADDRESS }} "sudo bash -s" < ./scripts/controller/controller_config.sh
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} ${{ env.AA_VM_PIP_IP_ADDRESS }} "sudo bash -s" < ./scripts/controller/unifi_ssl_import.sh
+          ssh -o StrictHostKeyChecking=no -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} "sudo bash -s" < ./scripts/controller/controller_config.sh
+          ssh -o StrictHostKeyChecking=no -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} "sudo bash -s" < ./scripts/controller/unifi_ssl_import.sh
 
           #sudo chmod +x /usr/local/bin/unifi_ssl_import.sh
           #sudo /usr/local/bin/unifi_ssl_import.sh
@@ -598,11 +601,11 @@ jobs:
         if: always()
         shell: bash
         run: |
-          file="~/.ssh/${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          file="${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
 
           if [ -f "$file" ]; then
             eval $(ssh-agent)
-            sshAddCmd="ssh-add -d ~/.ssh/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+            sshAddCmd="ssh-add -d ${{ env.AA_VM_SSH_PATH }}/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
             eval $sshAddCmd
           else
               echo "$file does not exist."
@@ -619,11 +622,10 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
 
           # Key filenames
-          $sshPathPrefix = $ConfigConstants.SshPathPrefix
           $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
-          $filePathPrivate = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-          $filePathPublic = "$sshPathPrefix" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
-          $filePathKnownHosts = "$sshPathPrefix" + "known_hosts"
+          $filePathPrivate = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          $filePathPublic = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
+          $filePathKnownHosts = "${{ env.AA_VM_SSH_PATH }}" + "/" + "known_hosts"
 
           # Delete key files if exist
           if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
