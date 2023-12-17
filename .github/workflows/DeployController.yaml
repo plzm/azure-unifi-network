@@ -231,18 +231,38 @@ jobs:
           ls -la ~
           ls -la ${{ env.AA_VM_SSH_PATH }}
 
-      - name: Create SSH Key and write to Key Vault and .ssh folder
+      - name: Prepare SSH Keys to/from KV and to .ssh folder
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
+          $secretNameAdminUserName = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-admin-username"
+          $secretNameSshKeyName = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname"
+          $secretNameSshPublicKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key"
+          $secretNameSshPrivateKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key"
+
+          # Check if the Controller VM already exists (meaning, this is a re-deploy run)
+          # If so, we also check if the SSH secrets already exist in the Key Vault
+          # If VM exists and SSH secrets exist, we will use the existing SSH key values from KV secrets
+
+          $vmExists = plzm.Azure\Test-ResourceExists `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+            -ResourceType "Microsoft.Compute/virtualMachines" `
+            -ResourceName "${{ env.AA_VM_NAME_CONTROLLER }}"
+
+          Write-Debug -Debug:$true -Message "vmExists: $vmExists"
+
+          if ($vmExists)
+          {
+            # Get the values of the SSH secrets from the Key Vault
+
+          }
 
           # Key filenames
           $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
@@ -283,28 +303,28 @@ jobs:
           plzm.Azure\Set-KeyVaultSecret `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-admin-username" `
+            -SecretName "$secretNameAdminUserName" `
             -SecretValue $ConfigController.Vm.AdminUserName
 
           # SSH key name
           plzm.Azure\Set-KeyVaultSecret `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname" `
+            -SecretName "$secretNameSshKeyName" `
             -SecretValue ${{ env.AA_SSH_KEY_NAME_CONTROLLER }}
 
           # SSH public key
           plzm.Azure\Set-KeyVaultSecret `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key" `
+            -SecretName "$secretNameSshPublicKey" `
             -SecretValue $publicKey
 
           # SSH private key
           plzm.Azure\Set-KeyVaultSecret `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -SecretName "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key" `
+            -SecretName "$secretNameSshPrivateKey" `
             -SecretValue $privateKey
 
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue "$publicKey"
@@ -589,12 +609,12 @@ jobs:
           echo "$sshAddCmd"
           eval $sshAddCmd
 
-          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} \"sudo bash -s\" < ./scripts/controller/controller_config.sh"
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} < ./scripts/controller/controller_config.sh"
           echo "SSH Command: Controller Config"
           echo "$sshCmd"
           eval $sshCmd
 
-          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} \"sudo bash -s\" < ./scripts/controller/unifi_ssl_import.sh"
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} < ./scripts/controller/unifi_ssl_import.sh"
           echo "SSH Command: Import TLS Cert to Unifi"
           echo "$sshCmd"
           eval $sshCmd

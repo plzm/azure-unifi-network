@@ -19,7 +19,12 @@ The GitHub Actions workflows use both GitHub Actions Secrets and GitHub Actions 
 
 ### GitHub Secrets
 
-The following GitHub Secrets are configured in Repository Settings > Security > Secrets and variables > Actions.
+The following GitHub Secrets are required. You should configure them in Repository Settings > Security > Secrets and variables > Actions.
 
-- AZURE_CREDENTIALS: the JSON output of `az ad sp create-for-rbac --name "GitHub Actions" --role Owner --scopes /subscriptions/<subscription id> --sdk-auth`. This is used to authenticate to Azure. Substitute your Azure subscription ID for `<subscription id>`.
-- AZURE_SP_AA_INFRA_PRINCIPAL_ID: 
+- `AZURE_CREDENTIALS`: the JSON output of `az ad sp create-for-rbac --name "[YOUR SERVICE PRINCIPAL NAME]" --role Owner --scopes /subscriptions/[YOUR SUBSCRIPTION ID] --sdk-auth`. This is used to authenticate to Azure. Substitute your service principal name for `[YOUR SERVICE PRINCIPAL NAME]` and your Azure subscription ID for `[YOUR SUBSCRIPTION ID]`.
+- `AZURE_SP_AA_INFRA_PRINCIPAL_ID`: the principal ID of the service principal you created for `AZURE_CREDENTIALS`. This is used to grant the service principal access to the Key Vault so that it can read and write secrets in GitHub Actions workflow steps.
+- `AZURE_SUBSCRIPTION_ID`: your Azure subscription ID. This is used widely to scope Azure CLI commands to your subscription.
+- `AZURE_TENANT_ID`: your Azure tenant ID. This is used to deploy Key Vault and User Assigned Identities.
+
+
+
