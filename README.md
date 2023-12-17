@@ -23,4 +23,3 @@ The following GitHub Secrets are configured in Repository Settings > Security > 
 
 - AZURE_CREDENTIALS: the JSON output of `az ad sp create-for-rbac --name "GitHub Actions" --role Owner --scopes /subscriptions/<subscription id> --sdk-auth`. This is used to authenticate to Azure. Substitute your Azure subscription ID for `<subscription id>`.
 - AZURE_SP_AA_INFRA_PRINCIPAL_ID: 
-The following GitHub Secrets are required:
