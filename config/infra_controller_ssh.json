@@ -3,18 +3,7 @@
     "NSG": {
       "Rules": [
         {
-          "Description": "Certbot Access - Virtual Network",
-          "Direction": "Inbound",
-          "Access": "Allow",
-          "Protocol": "*",
-          "SourceAddressPrefix": "*",
-          "SourcePortRange": "*",
-          "DestinationAddressPrefix": "VirtualNetwork",
-          "DestinationPortRange": "",
-          "DestinationPortRanges": "80,443"
-        },
-        {
-          "Description": "Certbot Access - Public IP",
+          "Description": "Certbot Access - Private IP",
           "Direction": "Inbound",
           "Access": "Allow",
           "Protocol": "*",
@@ -25,18 +14,7 @@
           "DestinationPortRanges": "80,443"
         },
         {
-          "Description": "Controller SSH Access - Virtual Network",
-          "Direction": "Inbound",
-          "Access": "Allow",
-          "Protocol": "*",
-          "SourceAddressPrefix": "",
-          "SourcePortRange": "*",
-          "DestinationAddressPrefix": "VirtualNetwork",
-          "DestinationPortRange": "22",
-          "DestinationPortRanges": ""
-        },
-        {
-          "Description": "Controller SSH Access - Public IP",
+          "Description": "Controller SSH Access - Private IP",
           "Direction": "Inbound",
           "Access": "Allow",
           "Protocol": "*",

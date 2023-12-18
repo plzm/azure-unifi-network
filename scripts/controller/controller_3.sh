@@ -91,7 +91,7 @@ sudo ls -la ${PRIV_KEY}
 sudo ls -la ${CHAIN_FILE}
 
 # Verify required files exist
-if [[ ! -f ${PRIV_KEY} ]] || [[ ! -f ${CHAIN_FILE} ]]; then
+if [[ ! -e ${PRIV_KEY} ]] || [[ ! -e ${CHAIN_FILE} ]]; then
   printf "\nMissing one or more required files. Check your settings.\n"
   exit 1
 else
@@ -131,7 +131,7 @@ fi
 printf "\nExporting SSL certificate and key data into temporary PKCS12 file...\n"
 
 #If there is a signed crt we should include this in the export
-if [[ -f ${SIGNED_CRT} ]]; then
+if [[ -e ${SIGNED_CRT} ]]; then
     openssl pkcs12 -export \
     -in "${CHAIN_FILE}" \
     -in "${SIGNED_CRT}" \
