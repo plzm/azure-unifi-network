@@ -538,9 +538,11 @@ jobs:
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $controllerVmPrivateIp = "$(az network nic show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_VM_NIC_NAME_CONTROLLER }} -o tsv --query 'ipConfigurations[0].privateIpAddress')"
+          Write-Debug -Debug:$true -Message "controllerVmPrivateIp: $controllerVmPrivateIp"
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PRIVATE_IP_ADDRESS" -VarValue "$controllerVmPrivateIp"
 
           $controllerVmPublicIp = "$(az network public-ip show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_VM_PIP_NAME_CONTROLLER }} -o tsv --query 'ipAddress')"
+          Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PUBLIC_IP_ADDRESS" -VarValue "$controllerVmPublicIp"
 
       - name: Add NSG rules for GitHub runner and Certbot access to Controller VM
