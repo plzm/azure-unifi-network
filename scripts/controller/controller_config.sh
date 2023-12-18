@@ -65,7 +65,7 @@ touch ~/9.txt
 # sudo apt install certbot python3-certbot-apache -y
 sudo apt install snapd -y
 sudo snap install --classic certbot
-sudo ln -s /snap/bin/certbot /usr/bin/certbot
+sudo ln -sf /snap/bin/certbot /usr/bin/certbot
 
 touch ~/10.txt
 
