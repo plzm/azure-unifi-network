@@ -302,8 +302,8 @@ jobs:
           {
             Write-Debug -Debug:$true -Message "Secrets NOT found in Key Vault!"
 
-            $secretValueAdminUserName = ${{ env.AA_VM_ADMIN_USERNAME }}
-            $secretValueSshKeyName = ${{ env.AA_SSH_KEY_NAME_CONTROLLER }}
+            $secretValueAdminUserName = "${{ env.AA_VM_ADMIN_USERNAME }}"
+            $secretValueSshKeyName = "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
 
             # Create SSH key pair
             Write-Debug -Debug:$true -Message "Run ssh-keygen"
