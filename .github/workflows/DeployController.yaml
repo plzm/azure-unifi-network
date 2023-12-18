@@ -558,10 +558,36 @@ jobs:
           $controllerVmPublicIp = "${{ env.AA_VM_PIP_IP_ADDRESS }}"
           Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
 
-          # Certbot
+          # Certbot to Virtual Network
           $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[0]
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessVnet
           $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id)
+          Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
+
+          $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName `
+            -Description $nsgRule.Description `
+            -Priority $priority `
+            -Direction $nsgRule.Direction `
+            -Access $nsgRule.Access `
+            -Protocol "*" `
+            -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
+            -SourcePortRange $nsgRule.SourcePortRange `
+            -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
+            -DestinationPortRange $nsgRule.DestinationPortRange `
+            -DestinationPortRanges $nsgRule.DestinationPortRanges
+
+          Write-Debug -Debug:$true -Message "$output"
+
+
+          # Certbot to Public IP
+          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[1]
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessPip
+          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 1)
           Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
           $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
@@ -585,9 +611,9 @@ jobs:
 
 
           # GHA runner SSH to Virtual Network
-          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[1]
+          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[2]
           $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessVnet
-          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 1)
+          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 2)
           Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
           $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
@@ -611,9 +637,9 @@ jobs:
 
 
           # GHA runner SSH to Controller Public IP
-          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[2]
+          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[3]
           $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessPip
-          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 2)
+          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 3)
           Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
           $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
@@ -731,7 +757,17 @@ jobs:
 
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessVnet
+
+          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName
+
+          Write-Debug -Debug:$true -Message "$output"
+
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessPip
 
           $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
             -SubscriptionID "$SubscriptionId" `

@@ -3,8 +3,18 @@
     "NSG": {
       "Rules": [
         {
-          "Name": "CertbotAccess",
-          "Description": "Certbot Access",
+          "Description": "Certbot Access - Virtual Network",
+          "Direction": "Inbound",
+          "Access": "Allow",
+          "Protocol": "*",
+          "SourceAddressPrefix": "*",
+          "SourcePortRange": "*",
+          "DestinationAddressPrefix": "VirtualNetwork",
+          "DestinationPortRange": "",
+          "DestinationPortRanges": "80,443"
+        },
+        {
+          "Description": "Certbot Access - Public IP",
           "Direction": "Inbound",
           "Access": "Allow",
           "Protocol": "*",

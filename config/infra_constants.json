@@ -50,7 +50,8 @@
   "SshKeySize": 4096,
   "SshPath": "~/.ssh",
   "SuffixAmplsDataCollectionRuleLinux": "linux",
-  "SuffixNsgNameCertbotAccess": "-certbot",
+  "SuffixNsgNameCertbotAccessVnet": "-certbot-vnet",
+  "SuffixNsgNameCertbotAccessPip": "-certbot-pip",
   "SuffixNsgNameGhaAccessVnet": "-gha-vnet",
   "SuffixNsgNameGhaAccessPip": "-gha-pip",
   "TemplateUriPrefix": "https://raw.githubusercontent.com/plzm/azure-deploy/main/template/"
