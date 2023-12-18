@@ -246,6 +246,25 @@ jobs:
           $secretNameSshPublicKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key"
           $secretNameSshPrivateKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key"
 
+          $secretValueAdminUserName = ""
+          $secretValueSshKeyName = ""
+          $secretValueSshPublicKey = ""
+          $secretValueSshPrivateKey = ""
+
+
+          # Key filenames
+          $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
+          $filePathPrivate = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          $filePathPublic = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
+
+          Write-Debug -Debug:$true -Message "filePathPrivate: $filePathPrivate"
+          Write-Debug -Debug:$true -Message "filePathPublic: $filePathPublic"
+
+          # Delete key files if already exist - should not exist on a GitHub-hosted GHA runner, but just to make sure
+          if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
+          if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
+
+
           # Check if the Controller VM already exists (meaning, this is a re-deploy run)
           # If so, we also check if the SSH secrets already exist in the Key Vault
           # If VM exists and SSH secrets exist, we will use the existing SSH key values from KV secrets
@@ -262,78 +281,109 @@ jobs:
           {
             # Get the values of the SSH secrets from the Key Vault
 
+            $secretValueAdminUserName = plzm.Azure\Get-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameAdminUserName"
+
+            $secretValueSshKeyName = plzm.Azure\Get-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshKeyName"
+
+            $secretValueSshPublicKey = plzm.Azure\Get-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPublicKey"
+
+            $secretValueSshPrivateKey = plzm.Azure\Get-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPrivateKey"
           }
 
-          # Key filenames
-          $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
-          $filePathPrivate = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-          $filePathPublic = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
+          $secretsExist = ($secretValueAdminUserName -and $secretValueSshKeyName -and $secretValueSshPublicKey -and $secretValueSshPrivateKey)
 
-          Write-Debug -Debug:$true -Message "filePathPrivate: $filePathPrivate"
-          Write-Debug -Debug:$true -Message "filePathPublic: $filePathPublic"
+          if ($secretsExist)
+          {
+            Write-Debug -Debug:$true -Message "Secrets found in Key Vault. Writing to files."
 
-          # Delete key files if already exist
-          if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
-          if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
+            Set-Content -Path "$filePathPublic" -Value $secretValueSshPublicKey
+            Set-Content -Path "$filePathPrivate" -Value $secretValueSshPrivateKey
+          }
+          else
+          {
+            Write-Debug -Debug:$true -Message "Secrets NOT found in Key Vault!"
 
-          # Create SSH key pair
-          Write-Debug -Debug:$true -Message "Run ssh-keygen"
-          $cmd = `
-            "ssh-keygen -v -q " + `
-            " -m " + $ConfigConstants.SshKeyFormat + `
-            " -f $filePathPrivate" + `
-            " -t " + $ConfigConstants.SshKeyAlgorithm + `
-            " -b " + $ConfigConstants.SshKeySize + `
-            " -C " + "${{ env.AA_VM_ADMIN_USERNAME }}" + `
-            " -N """""""""
+            $secretValueAdminUserName = ${{ env.AA_VM_ADMIN_USERNAME }}
+            $secretValueSshKeyName = ${{ env.AA_SSH_KEY_NAME_CONTROLLER }}
 
-          Write-Debug -Debug:$true -Message "cmd ==="
-          Write-Debug -Debug:$true -Message "$cmd"
-          Invoke-Expression -Command $cmd
-          #ssh-keygen -v -q -m $ConfigConstants.SshKeyFormat -f $filePathPrivate -t $ConfigConstants.SshKeyAlgorithm -b $ConfigConstants.SshKeySize -C $ConfigController.Vm.AdminUserName -N """"
+            # Create SSH key pair
+            Write-Debug -Debug:$true -Message "Run ssh-keygen"
+            $cmd = `
+              "ssh-keygen -v -q " + `
+              " -m " + $ConfigConstants.SshKeyFormat + `
+              " -f $filePathPrivate" + `
+              " -t " + $ConfigConstants.SshKeyAlgorithm + `
+              " -b " + $ConfigConstants.SshKeySize + `
+              " -C " + "${{ env.AA_VM_ADMIN_USERNAME }}" + `
+              " -N """""""""
 
-          $publicKey = Get-Content -Path "$filePathPublic" -Raw
-          $privateKey = Get-Content -Path "$filePathPrivate" -Raw
+            Write-Debug -Debug:$true -Message "cmd ==="
+            Write-Debug -Debug:$true -Message "$cmd"
+            Invoke-Expression -Command $cmd
 
-          Write-Debug -Debug:$true -Message "Public key: $publicKey"
+            # Get generated key values
+            $secretValueSshPublicKey = Get-Content -Path "$filePathPublic" -Raw
+            $secretValueSshPrivateKey = Get-Content -Path "$filePathPrivate" -Raw
 
-          # Write admin username, SSH key name, public SSH key, and private SSH key to Key Vault and to Env Vars
 
-          # Admin username
-          plzm.Azure\Set-KeyVaultSecret `
-            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -SecretName "$secretNameAdminUserName" `
-            -SecretValue $ConfigController.Vm.AdminUserName
+            # Write admin username, SSH key name, public SSH key, and private SSH key to Key Vault
+            # Admin username
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameAdminUserName" `
+              -SecretValue "$secretValueAdminUserName"
 
-          # SSH key name
-          plzm.Azure\Set-KeyVaultSecret `
-            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -SecretName "$secretNameSshKeyName" `
-            -SecretValue ${{ env.AA_SSH_KEY_NAME_CONTROLLER }}
+            # SSH key name
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshKeyName" `
+              -SecretValue "$secretValueSshKeyName"
 
-          # SSH public key
-          plzm.Azure\Set-KeyVaultSecret `
-            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -SecretName "$secretNameSshPublicKey" `
-            -SecretValue $publicKey
+            # SSH public key
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPublicKey" `
+              -SecretValue $secretValueSshPublicKey
 
-          # SSH private key
-          plzm.Azure\Set-KeyVaultSecret `
-            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -SecretName "$secretNameSshPrivateKey" `
-            -SecretValue $privateKey
+            # SSH private key
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPrivateKey" `
+              -SecretValue $secretValueSshPrivateKey
+          }
 
-          plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue "$publicKey"
-          #plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue ("""" + $privateKey + """")
+          Write-Debug -Debug:$true -Message "Public key: $secretValueSshPublicKey"
 
-      - name: List files in SSH folder
+          # Write key filenames and values to env vars for later use
+          plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY_FILE_PATH" -VarValue "$filePathPublic"
+          plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY_FILE_PATH" -VarValue "$filePathPrivate"
+          plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue "$secretValueSshPublicKey"
+          #plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue ("""" + $secretValueSshPrivateKey + """")
+
+      - name: Set SSH folder and file permission, and list files in SSH folder
         if: success()
         shell: bash
         run: |
+          sudo chmod 700 ${{ env.AA_VM_SSH_PATH }}
+          sudo chmod 600 ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}*
+          sudo chmod 644 ${{ env.AA_VM_SSH_PUBLIC_KEY_FILE_PATH }}
+
           ls -la ~
           ls -la ${{ env.AA_VM_SSH_PATH }}
 
