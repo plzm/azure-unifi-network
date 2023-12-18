@@ -1,4 +1,5 @@
 {
+  "ContactEmail": "support@alfaadin.com",
   "Location": "eastus2",
   "LocationShort": "eus2",
   "Suffix": "main",
@@ -41,7 +42,7 @@
           "Name": "subnet01",
           "AddressSpace": "10.1.0.0/20",
           "Delegation": "",
-          "ServiceEndpoints": "Microsoft.ContainerRegistry,Microsoft.KeyVault,Microsoft.Sql,Microsoft.Storage",
+          "ServiceEndpoints": "Microsoft.KeyVault,Microsoft.Storage",
           "UdrId": ""
         }
       ]

@@ -83,7 +83,8 @@ function Deploy-Network()
       -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
       -SourcePortRange $nsgRule.SourcePortRange `
       -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
-      -DestinationPortRange $nsgRule.DestinationPortRange
+      -DestinationPortRange $nsgRule.DestinationPortRange `
+      -DestinationPortRanges $nsgRule.DestinationPortRanges
 
     Write-Debug -Debug:$debug -Message "$output"
   }

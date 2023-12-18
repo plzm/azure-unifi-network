@@ -1,10 +1,14 @@
+#!/bin/bash
+
+set -eux
+
 sudo apt update -y
 sudo apt upgrade -y
 
 sudo apt install fail2ban -y
 sudo apt install debconf-utils -y
-sudo apt install openjdk-8-jre -y
 sudo apt install haveged -y
+sudo apt install apache2 -y
 
 # Unattended upgrades
 sudo apt install unattended-upgrades apt-listchanges -y
@@ -37,23 +41,3 @@ sudo ufw allow 8080
 sudo ufw allow 8443
 sudo ufw allow 8843
 sudo ufw allow 8880
-
-# TLS Certificate
-# Ensure DNS CNAME record already exists
-# sudo apt install certbot python3-certbot-apache -y
-sudo apt install snapd -y
-sudo snap install --classic certbot
-sudo ln -s /snap/bin/certbot /usr/bin/certbot
-
-# Request certfificate
-# ################### AUTOMATE FQDN ###################
-sudo certbot --apache -d ui000.alfaadin.com -m support@alfaadin.com
-
-# Install certificate
-# ################### MODIFY SCRIPT AFTER DOWNLOAD - PUT CORRECT FQDN
-sudo wget https://raw.githubusercontent.com/plzm/azure-unifi-network/main/scripts/controller/unifi_ssl_import.sh -O /usr/local/bin/unifi_ssl_import.sh
-
-sudo chmod +x /usr/local/bin/unifi_ssl_import.sh
-sudo /usr/local/bin/unifi_ssl_import.sh
-
-sudo apt shutdown -r now
