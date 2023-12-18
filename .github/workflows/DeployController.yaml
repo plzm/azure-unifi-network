@@ -39,8 +39,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
@@ -52,7 +50,7 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
+          
 
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
@@ -81,8 +79,6 @@ jobs:
       #  if: success()
       #  shell: pwsh
       #  run: |
-      #    $ErrorActionPreference = "Stop"
-
       #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
       #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -116,8 +112,6 @@ jobs:
       #  if: success()
       #  shell: pwsh
       #  run: |
-      #    $ErrorActionPreference = "Stop"
-
       #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
       #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -139,8 +133,6 @@ jobs:
       #  if: success()
       #  shell: pwsh
       #  run: |
-      #    $ErrorActionPreference = "Stop"
-
       #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
       #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -172,8 +164,6 @@ jobs:
       #  if: success()
       #  shell: pwsh
       #  run: |
-      #    $ErrorActionPreference = "Stop"
-
       #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
       #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -194,8 +184,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -375,7 +363,7 @@ jobs:
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY_FILE_PATH" -VarValue "$filePathPublic"
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY_FILE_PATH" -VarValue "$filePathPrivate"
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PUBLIC_KEY" -VarValue "$secretValueSshPublicKey"
-          plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue ("""" + $secretValueSshPrivateKey + """")
+          #plzm.Azure\Set-EnvVar2 -VarName "AA_VM_SSH_PRIVATE_KEY" -VarValue ("""" + $secretValueSshPrivateKey + """")
 
       - name: Set SSH folder and file permission, and list files in SSH folder
         if: success()
@@ -392,8 +380,6 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -419,8 +405,6 @@ jobs:
       #  if: success()
       #  shell: pwsh
       #  run: |
-      #    $ErrorActionPreference = "Stop"
-
       #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
       #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -562,8 +546,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -657,8 +639,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -695,7 +675,7 @@ jobs:
           eval $sshAddCmd
 
           #sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -v -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} < ./scripts/controller/controller_config.sh"
-          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -vvv -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}" whoami
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -vvv -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}" 'touch ~/1.txt'
           echo "SSH Command: Controller Config"
           echo "$sshCmd"
           eval $sshCmd
@@ -723,8 +703,6 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -742,48 +720,46 @@ jobs:
           # Delete known_hosts if exist
           if (Test-Path $filePathKnownHosts) { Remove-Item -Path $filePathKnownHosts -Force }
 
-      #- name: Remove NSG rules for GitHub runner and Certbot access to Controller VM
-      #  if: always()
-      #  shell: pwsh
-      #  run: |
-      #    $ErrorActionPreference = "Stop"
+      - name: Remove NSG rules for GitHub runner and Certbot access to Controller VM
+        if: always()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
 
-      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
+          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName
 
-      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -NSGName ${{ env.AA_NSG_NAME }} `
-      #      -NSGRuleName $nsgRuleName
+          Write-Debug -Debug:$true -Message "$output"
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessVnet
 
-      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessVnet
+          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName
 
-      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -NSGName ${{ env.AA_NSG_NAME }} `
-      #      -NSGRuleName $nsgRuleName
+          Write-Debug -Debug:$true -Message "$output"
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessPip
 
-      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessPip
+          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName
 
-      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -NSGName ${{ env.AA_NSG_NAME }} `
-      #      -NSGRuleName $nsgRuleName
-
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
       - name: Azure logout
         if: always()

@@ -39,8 +39,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
@@ -52,8 +50,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           . ./scripts/Variables.ps1
@@ -80,8 +76,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
@@ -103,8 +97,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           # PIP
@@ -132,8 +124,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $uaiName = "${{ env.AA_UAI_NAME_CONTROLLER }}"
@@ -160,8 +150,6 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
           $configConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
