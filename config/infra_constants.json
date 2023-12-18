@@ -2,8 +2,7 @@
   "NamePrefix": "aa",
   "NameInfix": "ui",
   "NsgRulePriorityBase": 200,
-  "NsgRulePriorityPlusForGha": 1000,
-  "NsgRulePriorityPlusForCertbot": 1001,
+  "NsgRulePriorityPlusTransient": 1000,
   "OrgName": "alfaadin",
   "PrefixAmpls": "pls",
   "PrefixAppInsights": "ais",
@@ -52,6 +51,7 @@
   "SshPath": "~/.ssh",
   "SuffixAmplsDataCollectionRuleLinux": "linux",
   "SuffixNsgNameCertbotAccess": "-certbot",
-  "SuffixNsgNameGhaAccess": "-gha",
+  "SuffixNsgNameGhaAccessVnet": "-gha-vnet",
+  "SuffixNsgNameGhaAccessPip": "-gha-pip",
   "TemplateUriPrefix": "https://raw.githubusercontent.com/plzm/azure-deploy/main/template/"
 }

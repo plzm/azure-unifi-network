@@ -189,6 +189,7 @@ jobs:
 
       #    Write-Debug -Debug:$true -Message "$output"
 
+
       - name: Open Key Vault access for GitHub runner
         if: success()
         shell: pwsh
@@ -557,154 +558,162 @@ jobs:
           $controllerVmPublicIp = "$(az network public-ip show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_VM_PIP_NAME_CONTROLLER }} -o tsv --query 'ipAddress')"
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PIP_IP_ADDRESS" -VarValue "$controllerVmPublicIp"
 
-      #- name: Add NSG rules for GitHub runner and Certbot access to Controller VM
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    $ErrorActionPreference = "Stop"
+      - name: Add NSG rules for GitHub runner and Certbot access to Controller VM
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
 
-      #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-      #    $ConfigControllerSsh = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER_SSH }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigControllerSsh = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER_SSH }}"
 
-      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      #    $controllerVmPublicIp = "${{ env.AA_VM_PIP_IP_ADDRESS }}"
-      #    Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
+          $controllerVmPublicIp = "${{ env.AA_VM_PIP_IP_ADDRESS }}"
+          Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
 
-      #    # Certbot
-      #    $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[0]
-      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
-      #    $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusForCertbot + $ConfigController.Id)
-      #    Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
+          # Certbot
+          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[0]
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
+          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id)
+          Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
-      #    $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
-      #      -NSGName ${{ env.AA_NSG_NAME }} `
-      #      -NSGRuleName $nsgRuleName `
-      #      -Description $nsgRule.Description `
-      #      -Priority $priority `
-      #      -Direction $nsgRule.Direction `
-      #      -Access $nsgRule.Access `
-      #      -Protocol "*" `
-      #      -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
-      #      -SourcePortRange $nsgRule.SourcePortRange `
-      #      -DestinationAddressPrefix $controllerVmPublicIp `
-      #      -DestinationPortRange $nsgRule.DestinationPortRange `
-      #      -DestinationPortRanges $nsgRule.DestinationPortRanges
+          $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName `
+            -Description $nsgRule.Description `
+            -Priority $priority `
+            -Direction $nsgRule.Direction `
+            -Access $nsgRule.Access `
+            -Protocol "*" `
+            -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
+            -SourcePortRange $nsgRule.SourcePortRange `
+            -DestinationAddressPrefix $controllerVmPublicIp `
+            -DestinationPortRange $nsgRule.DestinationPortRange `
+            -DestinationPortRanges $nsgRule.DestinationPortRanges
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
 
-      #    # GHA runner
-      #    $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[1]
-      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccess
-      #    $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusForGha + $ConfigController.Id)
-      #    Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
+          # GHA runner SSH to Virtual Network
+          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[1]
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessVnet
+          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 1)
+          Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
-      #    $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
-      #      -NSGName ${{ env.AA_NSG_NAME }} `
-      #      -NSGRuleName $nsgRuleName `
-      #      -Description $nsgRule.Description `
-      #      -Priority $priority `
-      #      -Direction $nsgRule.Direction `
-      #      -Access $nsgRule.Access `
-      #      -Protocol "*" `
-      #      -SourceAddressPrefix ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }} `
-      #      -SourcePortRange $nsgRule.SourcePortRange `
-      #      -DestinationAddressPrefix $controllerVmPublicIp `
-      #      -DestinationPortRange $nsgRule.DestinationPortRange `
-      #      -DestinationPortRanges $nsgRule.DestinationPortRanges
+          $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName `
+            -Description $nsgRule.Description `
+            -Priority $priority `
+            -Direction $nsgRule.Direction `
+            -Access $nsgRule.Access `
+            -Protocol "*" `
+            -SourceAddressPrefix ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }} `
+            -SourcePortRange $nsgRule.SourcePortRange `
+            -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
+            -DestinationPortRange $nsgRule.DestinationPortRange `
+            -DestinationPortRanges $nsgRule.DestinationPortRanges
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
-      #- name: Prepare script files to run on Controller
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    $ErrorActionPreference = "Stop"
 
-      #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          # GHA runner SSH to Controller Public IP
+          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[2]
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessPip
+          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 2)
+          Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName `
+            -Description $nsgRule.Description `
+            -Priority $priority `
+            -Direction $nsgRule.Direction `
+            -Access $nsgRule.Access `
+            -Protocol "*" `
+            -SourceAddressPrefix ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }} `
+            -SourcePortRange $nsgRule.SourcePortRange `
+            -DestinationAddressPrefix $controllerVmPublicIp `
+            -DestinationPortRange $nsgRule.DestinationPortRange `
+            -DestinationPortRanges $nsgRule.DestinationPortRanges
 
-      #    $controllerFqdn = $ConfigController.HostNamePrefix + $ConfigController.IdForNaming + "." + $ConfigController.DomainName
-      #    $contactEmail = $ConfigMain.ContactEmail
+          Write-Debug -Debug:$true -Message "$output"
 
-      #    Write-Debug -Debug:$true -Message "Updating Controller Config file with Controller FQDN $controllerFqdn and Contact Email $contactEmail"
-      #    $configScript = Get-Content -Path "./scripts/controller/controller_config.sh" -Raw
-      #    $configScript = $configScript.Replace("{{VM_FQDN}}", "$controllerFqdn").Replace("{{CONTACT_EMAIL}}", "$contactEmail")
-      #    Set-Content -Path "./scripts/controller/controller_config.sh" -Value $configScript
+      - name: Prepare script files to run on Controller
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
 
-      #    Write-Debug -Debug:$true -Message "Updating Certificate import file with Controller FQDN $controllerFqdn"
-      #    $certScript = Get-Content -Path "./scripts/controller/unifi_ssl_import.sh" -Raw
-      #    $certScript = $certScript.Replace("{{VM_FQDN}}", "$controllerFqdn")
-      #    Set-Content -Path "./scripts/controller/unifi_ssl_import.sh" -Value $certScript
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      - name: Test with Telnet
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+          $controllerFqdn = $ConfigController.HostNamePrefix + $ConfigController.IdForNaming + "." + $ConfigController.DomainName
+          $contactEmail = $ConfigMain.ContactEmail
+
+          Write-Debug -Debug:$true -Message "Updating Controller Config file with Controller FQDN $controllerFqdn and Contact Email $contactEmail"
+          $configScript = Get-Content -Path "./scripts/controller/controller_config.sh" -Raw
+          $configScript = $configScript.Replace("{{VM_FQDN}}", "$controllerFqdn").Replace("{{CONTACT_EMAIL}}", "$contactEmail")
+          Set-Content -Path "./scripts/controller/controller_config.sh" -Value $configScript
+
+          Write-Debug -Debug:$true -Message "Updating Certificate import file with Controller FQDN $controllerFqdn"
+          $certScript = Get-Content -Path "./scripts/controller/unifi_ssl_import.sh" -Raw
+          $certScript = $certScript.Replace("{{VM_FQDN}}", "$controllerFqdn")
+          Set-Content -Path "./scripts/controller/unifi_ssl_import.sh" -Value $certScript
+
+      - name: SSH to Controller and run scripts
         if: success()
         shell: bash
         run: |
-          telnet ${{ env.AA_VM_PIP_IP_ADDRESS }} 22
+          # Set script files executable
+          #sudo chmod +x ./scripts/controller/controller_config.sh
+          #sudo chmod +x ./scripts/controller/unifi_ssl_import.sh
 
-      #- name: Appleboy SSH
-      #  uses: appleboy/ssh-action@master
-      #  with:
-      #    host: ${{ env.AA_VM_PIP_IP_ADDRESS }}
-      #    username: ${{ env.AA_VM_ADMIN_USERNAME }}
-      #    key: ${{ secrets.SSH_KEY }}
-      #    port: 22
-      #    script: whoami
+          # Add private SSH key to SSH agent
+          eval `ssh-agent -s`
 
-      #- name: SSH to Controller and run scripts
-      #  if: success()
-      #  shell: bash
-      #  run: |
-      #    # Set script files executable
-      #    sudo chmod +x ./scripts/controller/controller_config.sh
-      #    sudo chmod +x ./scripts/controller/unifi_ssl_import.sh
+          sshAddCmd="ssh-add ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}"
+          echo "$sshAddCmd"
+          eval $sshAddCmd
 
-      #    # Add private SSH key to SSH agent
-      #    eval `ssh-agent -s`
+          #sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -v -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} < ./scripts/controller/controller_config.sh"
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -vvv -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}" whoami
+          echo "SSH Command: Controller Config"
+          echo "$sshCmd"
+          eval $sshCmd
 
-      #    sshAddCmd="ssh-add ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-      #    echo "$sshAddCmd"
-      #    eval $sshAddCmd
-
-      #    #sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -v -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} < ./scripts/controller/controller_config.sh"
-      #    sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -vvv -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}"
-      #    echo "SSH Command: Controller Config"
-      #    echo "$sshCmd"
-      #    eval $sshCmd
-
-      #    #sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -v -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} < ./scripts/controller/unifi_ssl_import.sh"
-      #    #echo "SSH Command: Import TLS Cert to Unifi"
-      #    #echo "$sshCmd"
-      #    #eval $sshCmd
-
-      #    #ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} "bash -s" < ./scripts/controller/controller_config.sh
-      #    #ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} "bash -s" < ./scripts/controller/unifi_ssl_import.sh
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -v -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} < ./scripts/controller/unifi_ssl_import.sh"
+          echo "SSH Command: Import TLS Cert to Unifi"
+          echo "$sshCmd"
+          #eval $sshCmd
 
       - name: Remove SSH Key
         if: always()
         shell: bash
         run: |
-          file="${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          file="${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}"
 
           if [ -f "$file" ]; then
             eval $(ssh-agent)
-            sshAddCmd="ssh-add -d ${{ env.AA_VM_SSH_PATH }}/""${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+            sshAddCmd="ssh-add -d ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}"
             eval $sshAddCmd
           else
               echo "$file does not exist."
@@ -722,8 +731,8 @@ jobs:
 
           # Key filenames
           $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
-          $filePathPrivate = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-          $filePathPublic = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
+          $filePathPrivate = "${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}"
+          $filePathPublic = "${{ env.AA_VM_SSH_PUBLIC_KEY_FILE_PATH }}"
           $filePathKnownHosts = "${{ env.AA_VM_SSH_PATH }}" + "/" + "known_hosts"
 
           # Delete key files if exist
@@ -756,7 +765,17 @@ jobs:
 
       #    Write-Debug -Debug:$true -Message "$output"
 
-      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccess
+      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessVnet
+
+      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+      #      -NSGName ${{ env.AA_NSG_NAME }} `
+      #      -NSGRuleName $nsgRuleName
+
+      #    Write-Debug -Debug:$true -Message "$output"
+
+      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessPip
 
       #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
       #      -SubscriptionID "$SubscriptionId" `
