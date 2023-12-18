@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -eux
-
 # Slightly modified version of the below
 # Modified December 2023 by Patrick El-Azem to tokenize VM name for pipeline use
 
@@ -88,6 +86,10 @@ if [[ ${LE_MODE} == "true" ]]; then
   fi
 fi
 
+echo "Debug: listing required files"
+sudo ls -la ${PRIV_KEY}
+sudo ls -la ${CHAIN_FILE}
+
 # Verify required files exist
 if [[ ! -f ${PRIV_KEY} ]] || [[ ! -f ${CHAIN_FILE} ]]; then
   printf "\nMissing one or more required files. Check your settings.\n"
@@ -107,12 +109,11 @@ printf "\nStopping UniFi Controller...\n"
 service "${UNIFI_SERVICE}" stop
 
 if [[ ${LE_MODE} == "true" ]]; then
-  
+
   # Write a new MD5 checksum based on the updated certificate	
   printf "\nUpdating certificate MD5 checksum...\n"
 
   md5sum "${PRIV_KEY}" > "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5"
-
 fi
 
 # Create double-safe keystore backup
@@ -144,11 +145,11 @@ else
     -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
     -name "${ALIAS}"
 fi
-  
+
 # Delete the previous certificate data from keystore to avoid "already exists" message
 printf "\nRemoving previous certificate data from UniFi keystore...\n"
 keytool -delete -alias "${ALIAS}" -keystore "${KEYSTORE}" -deststorepass "${PASSWORD}"
-  
+
 # Import the temp PKCS12 file into the UniFi keystore
 printf "\nImporting SSL certificate into UniFi keystore...\n"
 keytool -importkeystore \
@@ -162,7 +163,7 @@ keytool -importkeystore \
 # Clean up temp files
 printf "\nRemoving temporary files...\n"
 rm -f "${P12_TEMP}"
-  
+
 # Restart the UniFi Controller to pick up the updated keystore
 printf "\nRestarting UniFi Controller to apply new Let's Encrypt SSL certificate...\n"
 service "${UNIFI_SERVICE}" start

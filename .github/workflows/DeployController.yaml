@@ -683,7 +683,7 @@ jobs:
           $certScript = $certScript.Replace("{{VM_FQDN}}", "$controllerFqdn")
           Set-Content -Path "./scripts/controller/controller_3.sh" -Value $certScript
 
-      - name: SSH to Controller and run scripts
+      - name: SSH to Controller - Script 1
         if: success()
         shell: bash
         run: |
@@ -699,11 +699,19 @@ jobs:
           echo "$sshCmd"
           eval $sshCmd
 
+      - name: SSH to Controller - Script 2
+        if: success()
+        shell: bash
+        run: |
           sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} < ./scripts/controller/controller_2.sh"
           echo "SSH Command: Certbot"
           echo "$sshCmd"
           eval $sshCmd
 
+      - name: SSH to Controller - Script 3
+        if: success()
+        shell: bash
+        run: |
           sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} < ./scripts/controller/controller_3.sh"
           echo "SSH Command: Import TLS Cert to Unifi"
           echo "$sshCmd"
