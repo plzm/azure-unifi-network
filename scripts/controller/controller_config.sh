@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -eux
 
 touch ~/1.txt

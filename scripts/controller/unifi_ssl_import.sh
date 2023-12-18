@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -eux
+
 # Slightly modified version of the below
 # Modified December 2023 by Patrick El-Azem to tokenize VM name for pipeline use
 touch ~/11.txt
