@@ -414,144 +414,148 @@ jobs:
             -PublicNetworkAccess "Disabled" `
             -DefaultAction "Deny"
 
-      - name: Deploy Controller VM and PIP and NIC and DCE/DCR association
+      #- name: Deploy Controller VM and PIP and NIC and DCE/DCR association
+      #  if: success()
+      #  shell: pwsh
+      #  run: |
+      #    $ErrorActionPreference = "Stop"
+
+      #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      #    $osDiskName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
+
+      #    # Deploy PIP
+      #    $output = plzm.Azure\Deploy-NetworkPublicIp `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -Location $ConfigController.Location `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.public-ip.json") `
+      #      -PublicIpAddressName ${{ env.AA_VM_PIP_NAME_CONTROLLER }} `
+      #      -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
+      #      -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
+      #      -HostName ${{ env.AA_VM_HOSTNAME_CONTROLLER}} `
+      #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+
+      #    $output = plzm.Azure\Deploy-DiagnosticsSetting `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+      #      -ResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER }} `
+      #      -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_PIP_NAME_CONTROLLER }}") `
+      #      -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
+      #      -SendLogs $true `
+      #      -SendMetrics $true
+
+      #    Write-Debug -Debug:$true -Message "$output"
+
+
+      #    # Deploy NIC
+      #    $output = plzm.Azure\Deploy-NetworkNic `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -Location $ConfigController.Location `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.network-interface.json") `
+      #      -NicName ${{ env.AA_VM_NIC_NAME_CONTROLLER }} `
+      #      -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN}} `
+      #      -EnableAcceleratedNetworking $ConfigController.Network.Nic.EnableAcceleratedNetworking `
+      #      -PublicIpResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER}} `
+      #      -IpConfigName $ConfigController.Network.Nic.IpConfigurationName `
+      #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+      #    $output = plzm.Azure\Deploy-DiagnosticsSetting `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+      #      -ResourceId ${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }} `
+      #      -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_NIC_NAME_CONTROLLER }}") `
+      #      -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
+      #      -SendLogs $false `
+      #      -SendMetrics $true
+
+      #    Write-Debug -Debug:$true -Message "$output"
+
+
+      #    # Deploy VM
+
+      #    $output = plzm.Azure\Deploy-Vm `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -Location $ConfigController.Location `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
+      #      -VmName ${{ env.AA_VM_NAME_CONTROLLER }} `
+      #      -AssignSystemIdentity $false `
+      #      -UaiResourceId "${{ env.AA_UAI_RESOURCE_ID_CONTROLLER }}" `
+      #      -VmSize $ConfigController.Vm.Size `
+      #      -VmPublisher $ConfigController.Vm.Publisher `
+      #      -VmOffer $ConfigController.Vm.Offer `
+      #      -VmSku $ConfigController.Vm.Sku `
+      #      -ProvisionVmAgent $true `
+      #      -VmAdminUsername "${{ env.AA_VM_ADMIN_USERNAME }}" `
+      #      -VmAdminSshPublicKey "${{ env.AA_VM_SSH_PUBLIC_KEY }}" `
+      #      -VmTimeZone "UTC" `
+      #      -OsDiskName $osDiskName `
+      #      -OsDiskStorageType $ConfigController.Vm.OsDisk.Type `
+      #      -OsDiskSizeInGB $ConfigController.Vm.OsDisk.SizeInGB `
+      #      -VmAutoShutdownTime "9999" `
+      #      -NetworkInterfaceResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
+      #      -EnableBootDiagnostics $true `
+      #      -BootDiagnosticsStorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}" `
+      #      -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+      #    Write-Debug -Debug:$true -Message "$output"
+
+
+      #    # Deploy Diagnostics Setting
+
+      #    $output = plzm.Azure\Deploy-DiagnosticsSetting `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+      #      -ResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }} `
+      #      -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_NAME_CONTROLLER }}") `
+      #      -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
+      #      -SendLogs $false `
+      #      -SendMetrics $true
+
+      #    Write-Debug -Debug:$true -Message "$output"
+
+      #    # Deploy Azure Monitor Agent
+
+      #    $output = plzm.Azure\Deploy-VmAmaLinux `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -Location $ConfigController.Location `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.extension.azure-monitor-agent.linux.json") `
+      #      -VmName ${{ env.AA_VM_NAME_CONTROLLER }}
+
+      #    Write-Debug -Debug:$true -Message "$output"
+
+      #    # Deploy Azure Data Collection Rule and Endpoint Association
+
+      #    $output = Deploy-MonitorDataCollectionRuleAssociation `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule-association.json") `
+      #      -DataCollectionEndpointResourceId ${{ env.AA_DCE_RESOURCE_ID }} `
+      #      -DataCollectionRuleResourceId ${{ env.AA_DCR_RESOURCE_ID }} `
+      #      -ScopedResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }}
+
+      #    Write-Debug -Debug:$true -Message "$output"
+
+      - name: Set Controller public IP to Env Var
         if: success()
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-
-          $osDiskName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
-
-          # Deploy PIP
-          $output = plzm.Azure\Deploy-NetworkPublicIp `
-            -SubscriptionID "$SubscriptionId" `
-            -Location $ConfigController.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.public-ip.json") `
-            -PublicIpAddressName ${{ env.AA_VM_PIP_NAME_CONTROLLER }} `
-            -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
-            -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
-            -HostName ${{ env.AA_VM_HOSTNAME_CONTROLLER}} `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
-
-
-          # Set PIP to env var
           $controllerVmPublicIp = "$(az network public-ip show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_VM_PIP_NAME_CONTROLLER }} -o tsv --query 'ipAddress')"
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PIP_IP_ADDRESS" -VarValue "$controllerVmPublicIp"
-
-
-          $output = plzm.Azure\Deploy-DiagnosticsSetting `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-            -ResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER }} `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_PIP_NAME_CONTROLLER }}") `
-            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
-            -SendLogs $true `
-            -SendMetrics $true
-
-          Write-Debug -Debug:$true -Message "$output"
-
-
-          # Deploy NIC
-          $output = plzm.Azure\Deploy-NetworkNic `
-            -SubscriptionID "$SubscriptionId" `
-            -Location $ConfigController.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.network-interface.json") `
-            -NicName ${{ env.AA_VM_NIC_NAME_CONTROLLER }} `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN}} `
-            -EnableAcceleratedNetworking $ConfigController.Network.Nic.EnableAcceleratedNetworking `
-            -PublicIpResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER}} `
-            -IpConfigName $ConfigController.Network.Nic.IpConfigurationName `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
-
-          $output = plzm.Azure\Deploy-DiagnosticsSetting `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-            -ResourceId ${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }} `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_NIC_NAME_CONTROLLER }}") `
-            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
-            -SendLogs $false `
-            -SendMetrics $true
-
-          Write-Debug -Debug:$true -Message "$output"
-
-
-          # Deploy VM
-
-          $output = plzm.Azure\Deploy-Vm `
-            -SubscriptionID "$SubscriptionId" `
-            -Location $ConfigController.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.linux.json") `
-            -VmName ${{ env.AA_VM_NAME_CONTROLLER }} `
-            -AssignSystemIdentity $false `
-            -UaiResourceId "${{ env.AA_UAI_RESOURCE_ID_CONTROLLER }}" `
-            -VmSize $ConfigController.Vm.Size `
-            -VmPublisher $ConfigController.Vm.Publisher `
-            -VmOffer $ConfigController.Vm.Offer `
-            -VmSku $ConfigController.Vm.Sku `
-            -ProvisionVmAgent $true `
-            -VmAdminUsername "${{ env.AA_VM_ADMIN_USERNAME }}" `
-            -VmAdminSshPublicKey "${{ env.AA_VM_SSH_PUBLIC_KEY }}" `
-            -VmTimeZone "UTC" `
-            -OsDiskName $osDiskName `
-            -OsDiskStorageType $ConfigController.Vm.OsDisk.Type `
-            -OsDiskSizeInGB $ConfigController.Vm.OsDisk.SizeInGB `
-            -VmAutoShutdownTime "9999" `
-            -NetworkInterfaceResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
-            -EnableBootDiagnostics $true `
-            -BootDiagnosticsStorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}" `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
-
-          Write-Debug -Debug:$true -Message "$output"
-
-
-          # Deploy Diagnostics Setting
-
-          $output = plzm.Azure\Deploy-DiagnosticsSetting `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-            -ResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }} `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_VM_NAME_CONTROLLER }}") `
-            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
-            -SendLogs $false `
-            -SendMetrics $true
-
-          Write-Debug -Debug:$true -Message "$output"
-
-          # Deploy Azure Monitor Agent
-
-          $output = plzm.Azure\Deploy-VmAmaLinux `
-            -SubscriptionID "$SubscriptionId" `
-            -Location $ConfigController.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "vm.extension.azure-monitor-agent.linux.json") `
-            -VmName ${{ env.AA_VM_NAME_CONTROLLER }}
-
-          Write-Debug -Debug:$true -Message "$output"
-
-          # Deploy Azure Data Collection Rule and Endpoint Association
-
-          $output = Deploy-MonitorDataCollectionRuleAssociation `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule-association.json") `
-            -DataCollectionEndpointResourceId ${{ env.AA_DCE_RESOURCE_ID }} `
-            -DataCollectionRuleResourceId ${{ env.AA_DCR_RESOURCE_ID }} `
-            -ScopedResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }}
-
-          Write-Debug -Debug:$true -Message "$output"
 
       - name: Add NSG rules for GitHub runner and Certbot access to Controller VM
         if: success()
@@ -663,12 +667,12 @@ jobs:
           echo "$sshAddCmd"
           eval $sshAddCmd
 
-          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} \"bash -s\" < ./scripts/controller/controller_config.sh"
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -v -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} \"bash -s\" < ./scripts/controller/controller_config.sh"
           echo "SSH Command: Controller Config"
           echo "$sshCmd"
           eval $sshCmd
 
-          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} \"bash -s\" < ./scripts/controller/unifi_ssl_import.sh"
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -v -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PATH }}/${{ env.AA_SSH_KEY_NAME_CONTROLLER }} \"bash -s\" < ./scripts/controller/unifi_ssl_import.sh"
           echo "SSH Command: Import TLS Cert to Unifi"
           echo "$sshCmd"
           eval $sshCmd
@@ -713,38 +717,38 @@ jobs:
           # Delete known_hosts if exist
           if (Test-Path $filePathKnownHosts) { Remove-Item -Path $filePathKnownHosts -Force }
 
-      - name: Remove NSG rules for GitHub runner and Certbot access to Controller VM
-        if: always()
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
+      #- name: Remove NSG rules for GitHub runner and Certbot access to Controller VM
+      #  if: always()
+      #  shell: pwsh
+      #  run: |
+      #    $ErrorActionPreference = "Stop"
 
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+      #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
+      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccess
 
-          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName
+      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+      #      -NSGName ${{ env.AA_NSG_NAME }} `
+      #      -NSGRuleName $nsgRuleName
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccess
+      #    $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccess
 
-          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName
+      #    $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+      #      -SubscriptionID "$SubscriptionId" `
+      #      -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+      #      -NSGName ${{ env.AA_NSG_NAME }} `
+      #      -NSGRuleName $nsgRuleName
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
       - name: Azure logout
         if: always()
