@@ -91,7 +91,8 @@ sudo ls -la ${PRIV_KEY}
 sudo ls -la ${CHAIN_FILE}
 
 # Verify required files exist
-if [[ ! -e ${PRIV_KEY} ]] || [[ ! -e ${CHAIN_FILE} ]]; then
+#if [[ ! -e ${PRIV_KEY} ]] || [[ ! -e ${CHAIN_FILE} ]]; then
+if (! sudo test -e ${PRIV_KEY}) || (! sudo test -e ${CHAIN_FILE}); then
   printf "\nMissing one or more required files. Check your settings.\n"
   exit 1
 else

@@ -782,15 +782,15 @@ jobs:
 
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessVnet
+          #$nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessVnet
 
-          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName
+          #$output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+          #  -SubscriptionID "$SubscriptionId" `
+          #  -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+          #  -NSGName ${{ env.AA_NSG_NAME }} `
+          #  -NSGRuleName $nsgRuleName
 
-          Write-Debug -Debug:$true -Message "$output"
+          #Write-Debug -Debug:$true -Message "$output"
 
           $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessPip
 
@@ -802,15 +802,15 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessVnet
+          #$nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessVnet
 
-          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName
+          #$output = plzm.Azure\Remove-NetworkSecurityGroupRule `
+          #  -SubscriptionID "$SubscriptionId" `
+          #  -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+          #  -NSGName ${{ env.AA_NSG_NAME }} `
+          #  -NSGRuleName $nsgRuleName
 
-          Write-Debug -Debug:$true -Message "$output"
+          #Write-Debug -Debug:$true -Message "$output"
 
           $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessPip
 
