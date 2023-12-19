@@ -2,6 +2,8 @@
 
 set -eux
 
+touch ~/controller_1.txt
+
 sudo apt update -y
 sudo apt upgrade -y
 
