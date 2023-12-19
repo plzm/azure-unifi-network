@@ -698,7 +698,7 @@ jobs:
           $certScript = $certScript.Replace("{{VM_FQDN}}", "$controllerFqdn")
           Set-Content -Path "./scripts/controller/controller_3.sh" -Value $certScript
 
-      - name: SSH to Controller - Add SSH Key to SSH Agent
+      - name: Add SSH Key to SSH Agent on GitHub Runner
         if: success()
         shell: bash
         run: |
