@@ -713,7 +713,7 @@ jobs:
         if: success()
         shell: bash
         run: |
-          scp -r -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} ./scripts/controller/ ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PUBLIC_IP_ADDRESS }}:~
+          scp -r -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} ./scripts/controller/ ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PUBLIC_IP_ADDRESS }}:~ -o StrictHostKeyChecking=no
 
           sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'chmod +x ~/controller/controller_*.sh; sudo mv ~/controller/controller_*.sh /usr/local/bin/; rm -rf ./controller'"
           echo "$sshCmd"
