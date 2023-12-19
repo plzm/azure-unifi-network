@@ -91,7 +91,6 @@ sudo ls -la ${PRIV_KEY}
 sudo ls -la ${CHAIN_FILE}
 
 # Verify required files exist
-#if [[ ! -e ${PRIV_KEY} ]] || [[ ! -e ${CHAIN_FILE} ]]; then
 if (! sudo test -e ${PRIV_KEY}) || (! sudo test -e ${CHAIN_FILE}); then
   printf "\nMissing one or more required files. Check your settings.\n"
   exit 1
@@ -107,40 +106,39 @@ P12_TEMP=$(mktemp)
 
 # Stop the UniFi Controller
 printf "\nStopping UniFi Controller...\n"
-service "${UNIFI_SERVICE}" stop
+sudo systemctl stop "${UNIFI_SERVICE}"
 
 if [[ ${LE_MODE} == "true" ]]; then
-
   # Write a new MD5 checksum based on the updated certificate	
   printf "\nUpdating certificate MD5 checksum...\n"
 
-  md5sum "${PRIV_KEY}" > "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5"
+  sudo md5sum "${PRIV_KEY}" > "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5"
 fi
 
 # Create double-safe keystore backup
 if [[ -s "${KEYSTORE}.orig" ]]; then
   printf "\nBackup of original keystore exists!\n"
   printf "\nCreating non-destructive backup as keystore.bak...\n"
-  cp "${KEYSTORE}" "${KEYSTORE}.bak"
+  sudo cp "${KEYSTORE}" "${KEYSTORE}.bak"
 else
-  cp "${KEYSTORE}" "${KEYSTORE}.orig"
+  sudo cp "${KEYSTORE}" "${KEYSTORE}.orig"
   printf "\nNo original keystore backup found.\n"
   printf "\nCreating backup as keystore.orig...\n"
 fi
-   
+
 # Export your existing SSL key, cert, and CA data to a PKCS12 file
 printf "\nExporting SSL certificate and key data into temporary PKCS12 file...\n"
 
 #If there is a signed crt we should include this in the export
-if [[ -e ${SIGNED_CRT} ]]; then
-    openssl pkcs12 -export \
+if (sudo test -e ${SIGNED_CRT}); then
+    sudo openssl pkcs12 -export \
     -in "${CHAIN_FILE}" \
     -in "${SIGNED_CRT}" \
     -inkey "${PRIV_KEY}" \
     -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
     -name "${ALIAS}"
 else
-    openssl pkcs12 -export \
+    sudo openssl pkcs12 -export \
     -in "${CHAIN_FILE}" \
     -inkey "${PRIV_KEY}" \
     -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
@@ -149,11 +147,11 @@ fi
 
 # Delete the previous certificate data from keystore to avoid "already exists" message
 printf "\nRemoving previous certificate data from UniFi keystore...\n"
-keytool -delete -alias "${ALIAS}" -keystore "${KEYSTORE}" -deststorepass "${PASSWORD}"
+sudo keytool -delete -alias "${ALIAS}" -keystore "${KEYSTORE}" -deststorepass "${PASSWORD}"
 
 # Import the temp PKCS12 file into the UniFi keystore
 printf "\nImporting SSL certificate into UniFi keystore...\n"
-keytool -importkeystore \
+sudo keytool -importkeystore \
 -srckeystore "${P12_TEMP}" -srcstoretype PKCS12 \
 -srcstorepass "${PASSWORD}" \
 -destkeystore "${KEYSTORE}" \
@@ -163,11 +161,11 @@ keytool -importkeystore \
 
 # Clean up temp files
 printf "\nRemoving temporary files...\n"
-rm -f "${P12_TEMP}"
+sudo rm -f "${P12_TEMP}"
 
 # Restart the UniFi Controller to pick up the updated keystore
 printf "\nRestarting UniFi Controller to apply new Let's Encrypt SSL certificate...\n"
-service "${UNIFI_SERVICE}" start
+sudo systemctl start "${UNIFI_SERVICE}"
 
 # That's all, folks!
 printf "\nDone!\n"
