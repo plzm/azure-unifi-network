@@ -537,6 +537,8 @@ jobs:
         run: |
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
+          Write-Debug -Debug:$true -Message "${{ env.AA_RG_NAME_CONTROLLER }}"
+          Write-Debug -Debug:$true -Message "${{ env.AA_VM_NIC_NAME_CONTROLLER }}"
           $controllerVmPrivateIp = "$(az network nic show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_VM_NIC_NAME_CONTROLLER }} -o tsv --query 'ipConfigurations[0].privateIpAddress')"
           Write-Debug -Debug:$true -Message "controllerVmPrivateIp: $controllerVmPrivateIp"
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PRIVATE_IP_ADDRESS" -VarValue "$controllerVmPrivateIp"
