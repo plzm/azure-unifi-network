@@ -1,92 +1,34 @@
 #!/bin/bash
 
-# Slightly modified version of the below
-# Modified December 2023 by Patrick El-Azem to tokenize VM name for pipeline use
-
-# unifi_ssl_import.sh
-# UniFi Controller SSL Certificate Import Script for Unix/Linux Systems
-# by Steve Jenkins <http://www.stevejenkins.com/>
-# Part of https://github.com/stevejenkins/ubnt-linux-utils/
-# Incorporates ideas from https://source.sosdg.org/brielle/lets-encrypt-scripts
-# Version 2.8
-# Last Updated Jan 13, 2017
-
-# REQUIREMENTS
-# 1) Assumes you have a UniFi Controller installed and running on your system.
-# 2) Assumes you already have a valid 2048-bit private key, signed certificate, and certificate authority
-#    chain file. The Controller UI will not work with a 4096-bit certificate. See http://wp.me/p1iGgP-2wU
-#    for detailed instructions on how to generate those files and use them with this script.
-
-# KEYSTORE BACKUP
-# Even though this script attempts to be clever and careful in how it backs up your existing keystore,
-# it's never a bad idea to manually back up your keystore (located at $UNIFI_DIR/data/keystore on RedHat
-# systems or /$UNIFI_DIR/keystore on Debian/Ubunty systems) to a separate directory before running this
-# script. If anything goes wrong, you can restore from your backup, restart the UniFi Controller service,
-# and be back online immediately.
-
 sudo su
 
 # CONFIGURATION OPTIONS
 UNIFI_HOSTNAME={{VM_FQDN}}
 UNIFI_SERVICE=unifi
-
-# Uncomment following three lines for Fedora/RedHat/CentOS
-#UNIFI_DIR=/opt/UniFi
-#JAVA_DIR=${UNIFI_DIR}
-#KEYSTORE=${UNIFI_DIR}/data/keystore
-
-# Uncomment following three lines for Debian/Ubuntu
 UNIFI_DIR=/var/lib/unifi
 JAVA_DIR=/usr/lib/unifi
 KEYSTORE=${UNIFI_DIR}/keystore
-
-# Uncomment following three lines for CloudKey
-#UNIFI_DIR=/var/lib/unifi
-#JAVA_DIR=/usr/lib/unifi
-#KEYSTORE=${JAVA_DIR}/data/keystore
-
-# FOR LET'S ENCRYPT SSL CERTIFICATES ONLY
-# Generate your Let's Encrtypt key & cert with certbot before running this script
 LE_MODE=true
 LE_LIVE_DIR=/etc/letsencrypt/live
-
-# THE FOLLOWING OPTIONS NOT REQUIRED IF LE_MODE IS ENABLED
-#PRIV_KEY=/etc/ssl/private/hostname.example.com.key
-#SIGNED_CRT=/etc/ssl/certs/hostname.example.com.crt
-#CHAIN_FILE=/etc/ssl/certs/startssl-chain.crt
-
-# CONFIGURATION OPTIONS YOU PROBABLY SHOULDN'T CHANGE
 ALIAS=unifi
 PASSWORD=aircontrolenterprise
 
-#### SHOULDN'T HAVE TO TOUCH ANYTHING PAST THIS POINT ####
+PRIV_KEY=${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem
+CHAIN_FILE=${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/fullchain.pem
 
 printf "\nStarting UniFi Controller SSL Import...\n"
 
-# Check to see whether Let's Encrypt Mode (LE_MODE) is enabled
 
-if [[ ${LE_MODE} == "YES" || ${LE_MODE} == "yes" || ${LE_MODE} == "Y" || ${LE_MODE} == "y" || ${LE_MODE} == "TRUE" || ${LE_MODE} == "true" || ${LE_MODE} == "ENABLED" || ${LE_MODE} == "enabled" || ${LE_MODE} == 1 ]] ; then
-  LE_MODE=true
-  printf "\nRunning in Let's Encrypt Mode...\n"
-  PRIV_KEY=${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem
-  CHAIN_FILE=${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/fullchain.pem
+printf "\nInspecting current SSL certificate...\n"
+if md5sum -c "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5" &>/dev/null; then
+  # MD5 remains unchanged, exit the script
+  printf "\nCertificate is unchanged, no update is necessary.\n"
+  exit 0
 else
-  LE_MODE=false
-  printf "\nRunning in Standard Mode...\n"
+  # MD5 is different, so it's time to get busy!
+  printf "\nUpdated SSL certificate available. Proceeding with import...\n"
 fi
 
-if [[ ${LE_MODE} == "true" ]]; then
-  # Check to see whether LE certificate has changed
-  printf "\nInspecting current SSL certificate...\n"
-  if md5sum -c "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5" &>/dev/null; then
-    # MD5 remains unchanged, exit the script
-    printf "\nCertificate is unchanged, no update is necessary.\n"
-    exit 0
-  else
-    # MD5 is different, so it's time to get busy!
-    printf "\nUpdated SSL certificate available. Proceeding with import...\n"
-  fi
-fi
 
 echo "Debug: listing required files"
 ls -la ${PRIV_KEY}
