@@ -674,29 +674,29 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-      #- name: Prepare script files to run on Controller
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+      - name: Prepare script files to run on Controller
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      #    $controllerFqdn = $ConfigController.HostNamePrefix + $ConfigController.IdForNaming + "." + $ConfigController.DomainName
-      #    $contactEmail = $ConfigMain.ContactEmail
+          $controllerFqdn = $ConfigController.HostNamePrefix + $ConfigController.IdForNaming + "." + $ConfigController.DomainName
+          $contactEmail = $ConfigMain.ContactEmail
 
-      #    Write-Debug -Debug:$true -Message "Updating Certbot script file with Controller FQDN $controllerFqdn and Contact Email $contactEmail"
-      #    $configScript = Get-Content -Path "./scripts/controller/controller_2.sh" -Raw
-      #    $configScript = $configScript.Replace("{{VM_FQDN}}", "$controllerFqdn").Replace("{{CONTACT_EMAIL}}", "$contactEmail")
-      #    Set-Content -Path "./scripts/controller/controller_2.sh" -Value $configScript
+          Write-Debug -Debug:$true -Message "Updating Certbot script file with Controller FQDN $controllerFqdn and Contact Email $contactEmail"
+          $configScript = Get-Content -Path "./scripts/controller/controller_2.sh" -Raw
+          $configScript = $configScript.Replace("{{VM_FQDN}}", "$controllerFqdn").Replace("{{CONTACT_EMAIL}}", "$contactEmail")
+          Set-Content -Path "./scripts/controller/controller_2.sh" -Value $configScript
 
-      #    Write-Debug -Debug:$true -Message "Updating Certificate import script file with Controller FQDN $controllerFqdn"
-      #    $certScript = Get-Content -Path "./scripts/controller/controller_3.sh" -Raw
-      #    $certScript = $certScript.Replace("{{VM_FQDN}}", "$controllerFqdn")
-      #    Set-Content -Path "./scripts/controller/controller_3.sh" -Value $certScript
+          Write-Debug -Debug:$true -Message "Updating Certificate import script file with Controller FQDN $controllerFqdn"
+          $certScript = Get-Content -Path "./scripts/controller/controller_3.sh" -Raw
+          $certScript = $certScript.Replace("{{VM_FQDN}}", "$controllerFqdn")
+          Set-Content -Path "./scripts/controller/controller_3.sh" -Value $certScript
 
       - name: SSH to Controller - Add SSH Key to SSH Agent
         if: success()

@@ -1,9 +1,8 @@
 #!/bin/bash
 
-sudo su
-
 # CONFIGURATION OPTIONS
 UNIFI_HOSTNAME={{VM_FQDN}}
+
 UNIFI_SERVICE=unifi
 UNIFI_DIR=/var/lib/unifi
 JAVA_DIR=/usr/lib/unifi
@@ -15,9 +14,9 @@ PASSWORD=aircontrolenterprise
 
 PRIV_KEY=${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem
 CHAIN_FILE=${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/fullchain.pem
+P12_TEMP=$(mktemp)
 
 printf "\nStarting UniFi Controller SSL Import...\n"
-
 
 printf "\nInspecting current SSL certificate...\n"
 if md5sum -c "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5" &>/dev/null; then
@@ -45,49 +44,40 @@ else
   printf "CA File: %s\n" "$CHAIN_FILE"
 fi
 
-# Create temp files
-P12_TEMP=$(mktemp)
-
 # Stop the UniFi Controller
 printf "\nStopping UniFi Controller...\n"
 systemctl stop "${UNIFI_SERVICE}"
 
-if [[ ${LE_MODE} == "true" ]]; then
-  # Write a new MD5 checksum based on the updated certificate	
-  printf "\nUpdating certificate MD5 checksum...\n"
+# Write a new MD5 checksum based on the updated certificate	
+printf "\nUpdating certificate MD5 checksum...\n"
 
-  md5sum "${PRIV_KEY}" > "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5"
-fi
+MD5SUM=$(sudo md5sum "${PRIV_KEY}")
+CMD="echo ${MD5SUM} >> ~/privkey.pem.md5"
+eval $CMD
+CMD="mv ~/privkey.pem.md5 ${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5"
+eval $CMD
 
 # Create double-safe keystore backup
-if [[ -s "${KEYSTORE}.orig" ]]; then
+if (test -e $KEYSTORE.orig); then
   printf "\nBackup of original keystore exists!\n"
   printf "\nCreating non-destructive backup as keystore.bak...\n"
-  cp "${KEYSTORE}" "${KEYSTORE}.bak"
+  CMD="cp ${KEYSTORE} ${KEYSTORE}.bak"
+  eval $CMD
 else
-  cp "${KEYSTORE}" "${KEYSTORE}.orig"
   printf "\nNo original keystore backup found.\n"
   printf "\nCreating backup as keystore.orig...\n"
+  CMD="cp ${KEYSTORE} ${KEYSTORE}.orig"
+  eval $CMD
 fi
 
 # Export your existing SSL key, cert, and CA data to a PKCS12 file
 printf "\nExporting SSL certificate and key data into temporary PKCS12 file...\n"
 
-#If there is a signed crt we should include this in the export
-if (test -e ${SIGNED_CRT}); then
-    openssl pkcs12 -export \
-    -in "${CHAIN_FILE}" \
-    -in "${SIGNED_CRT}" \
-    -inkey "${PRIV_KEY}" \
-    -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
-    -name "${ALIAS}"
-else
-    openssl pkcs12 -export \
-    -in "${CHAIN_FILE}" \
-    -inkey "${PRIV_KEY}" \
-    -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
-    -name "${ALIAS}"
-fi
+# sudo?
+CMD="openssl pkcs12 -export -in ${CHAIN_FILE} -inkey ${PRIV_KEY} -out ${P12_TEMP} -passout pass:${PASSWORD} -name ${ALIAS}"
+eval $CMD
+CMD="chmod 744 ${P12_TEMP}"
+eval $CMD
 
 # Delete the previous certificate data from keystore to avoid "already exists" message
 printf "\nRemoving previous certificate data from UniFi keystore...\n"
@@ -95,21 +85,25 @@ keytool -delete -alias "${ALIAS}" -keystore "${KEYSTORE}" -deststorepass "${PASS
 
 # Import the temp PKCS12 file into the UniFi keystore
 printf "\nImporting SSL certificate into UniFi keystore...\n"
-keytool -importkeystore \
--srckeystore "${P12_TEMP}" -srcstoretype PKCS12 \
--srcstorepass "${PASSWORD}" \
--destkeystore "${KEYSTORE}" \
--deststorepass "${PASSWORD}" \
--destkeypass "${PASSWORD}" \
--alias "${ALIAS}" -trustcacerts
+CMD="keytool -importkeystore \
+-srckeystore ${P12_TEMP} \
+-srcstoretype PKCS12 \
+-srcstorepass ${PASSWORD} \
+-destkeystore ${KEYSTORE} \
+-deststorepass ${PASSWORD} \
+-destkeypass ${PASSWORD} \
+-alias ${ALIAS} \
+-trustcacerts"
+eval $CMD
 
 # Clean up temp files
 printf "\nRemoving temporary files...\n"
-rm -f "${P12_TEMP}"
+CMD="rm -f ${P12_TEMP}"
+eval $CMD
 
 # Restart the UniFi Controller to pick up the updated keystore
 printf "\nRestarting UniFi Controller to apply new Let's Encrypt SSL certificate...\n"
-systemctl start "${UNIFI_SERVICE}"
+systemctl restart "${UNIFI_SERVICE}"
 
 # That's all, folks!
 printf "\nDone!\n"
