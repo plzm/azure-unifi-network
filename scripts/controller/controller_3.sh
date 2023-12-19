@@ -1,5 +1,7 @@
 #!/bin/bash
 
+touch ~/controller_3.txt
+
 # CONFIGURATION OPTIONS
 UNIFI_HOSTNAME={{VM_FQDN}}
 
