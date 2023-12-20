@@ -3,7 +3,7 @@
     "NSG": {
       "Rules": [
         {
-          "Description": "Certbot Access - Private IP",
+          "Description": "Certbot Access",
           "Direction": "Inbound",
           "Access": "Allow",
           "Protocol": "*",
@@ -14,7 +14,7 @@
           "DestinationPortRanges": "80,443"
         },
         {
-          "Description": "Controller SSH Access - Private IP",
+          "Description": "Controller SSH Access",
           "Direction": "Inbound",
           "Access": "Allow",
           "Protocol": "*",

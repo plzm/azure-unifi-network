@@ -120,6 +120,92 @@ jobs:
             -ResourceId "${{ env.AA_VM_RESOURCE_ID_CONTROLLER }}" `
             -ResourceName "${{ env.AA_VM_NAME_CONTROLLER }}"
 
+      - name: Open Key Vault access for GitHub runner
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+          Write-Debug -Debug:$true -Message "Enable Key Vault public network access with default action Deny since we will explicitly add runner IP"
+          plzm.Azure\Set-KeyVaultNetworkSettings `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+            -PublicNetworkAccess "Enabled" `
+            -DefaultAction "Deny"
+
+          Write-Debug -Debug:$true -Message "Add runner IP to KV network rules"
+          plzm.Azure\New-KeyVaultNetworkRuleForIpAddressOrRange `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+            -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
+
+      - name: Delete Key Vault secrets
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+          $secretNameAdminUserName = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-admin-username"
+          $secretNameSshKeyName = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname"
+          $secretNameSshPublicKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key"
+          $secretNameSshPrivateKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key"
+
+          plzm.Azure\Remove-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameAdminUserName"
+
+          plzm.Azure\Remove-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshKeyName"
+
+          plzm.Azure\Remove-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPublicKey"
+
+          plzm.Azure\Remove-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPrivateKey"
+
+      - name: Close Key Vault access from GitHub runner
+        if: always()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+          Write-Debug -Debug:$true -Message "Remove runner IP from KV network rules"
+          plzm.Azure\Remove-KeyVaultNetworkRuleForIpAddressOrRange `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+            -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
+
+          Write-Debug -Debug:$true -Message "Disable Key Vault public network access with default action Deny"
+          plzm.Azure\Set-KeyVaultNetworkSettings `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+            -PublicNetworkAccess "Disabled" `
+            -DefaultAction "Deny"
+
+
       - name: Delete UAI Role Assignments
         if: success()
         shell: pwsh

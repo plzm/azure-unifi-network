@@ -531,14 +531,24 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-      - name: Set Controller public IP to Env Var
+      - name: Set Controller IP addresses to Env Vars
         if: success()
         shell: pwsh
         run: |
           Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
 
+          Write-Debug -Debug:$true -Message "${{ env.AA_RG_NAME_CONTROLLER }}"
+          Write-Debug -Debug:$true -Message "${{ env.AA_VM_NIC_NAME_CONTROLLER }}"
+
+          az network nic show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_VM_NIC_NAME_CONTROLLER }}
+
+          $controllerVmPrivateIp = "$(az network nic show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_VM_NIC_NAME_CONTROLLER }} -o tsv --query 'ipConfigurations[0].privateIPAddress')"
+          Write-Debug -Debug:$true -Message "controllerVmPrivateIp: $controllerVmPrivateIp"
+          plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PRIVATE_IP_ADDRESS" -VarValue "$controllerVmPrivateIp"
+
           $controllerVmPublicIp = "$(az network public-ip show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n ${{ env.AA_VM_PIP_NAME_CONTROLLER }} -o tsv --query 'ipAddress')"
-          plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PIP_IP_ADDRESS" -VarValue "$controllerVmPublicIp"
+          Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
+          plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PUBLIC_IP_ADDRESS" -VarValue "$controllerVmPublicIp"
 
       - name: Add NSG rules for GitHub runner and Certbot access to Controller VM
         if: success()
@@ -553,13 +563,18 @@ jobs:
 
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          $controllerVmPublicIp = "${{ env.AA_VM_PIP_IP_ADDRESS }}"
+          $controllerVmPublicIp = "${{ env.AA_VM_PUBLIC_IP_ADDRESS }}"
           Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
 
-          # Certbot to Virtual Network
-          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[0]
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessVnet
-          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id)
+          $controllerVmPrivateIp = "${{ env.AA_VM_PRIVATE_IP_ADDRESS }}"
+          Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPrivateIp"
+
+
+          # Certbot to Controller VM
+          $index = 0
+          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[$index]
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgRuleNameCertbotAccess
+          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + $index)
           Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
           $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
@@ -575,43 +590,18 @@ jobs:
             -Protocol "*" `
             -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
             -SourcePortRange $nsgRule.SourcePortRange `
-            -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
+            -DestinationAddressPrefix $controllerVmPrivateIp `
             -DestinationPortRange $nsgRule.DestinationPortRange `
             -DestinationPortRanges $nsgRule.DestinationPortRanges
 
           Write-Debug -Debug:$true -Message "$output"
 
 
-          # Certbot to Public IP
-          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[1]
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessPip
-          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 1)
-          Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
-
-          $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName `
-            -Description $nsgRule.Description `
-            -Priority $priority `
-            -Direction $nsgRule.Direction `
-            -Access $nsgRule.Access `
-            -Protocol "*" `
-            -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
-            -SourcePortRange $nsgRule.SourcePortRange `
-            -DestinationAddressPrefix $controllerVmPublicIp `
-            -DestinationPortRange $nsgRule.DestinationPortRange `
-            -DestinationPortRanges $nsgRule.DestinationPortRanges
-
-          Write-Debug -Debug:$true -Message "$output"
-
-
-          # GHA runner SSH to Virtual Network
-          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[2]
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessVnet
-          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 2)
+          # GHA runner SSH to Controller VM
+          $index = 1
+          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[$index]
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgRuleNameGhaAccess
+          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + $index)
           Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
 
           $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
@@ -627,33 +617,7 @@ jobs:
             -Protocol "*" `
             -SourceAddressPrefix ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }} `
             -SourcePortRange $nsgRule.SourcePortRange `
-            -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
-            -DestinationPortRange $nsgRule.DestinationPortRange `
-            -DestinationPortRanges $nsgRule.DestinationPortRanges
-
-          Write-Debug -Debug:$true -Message "$output"
-
-
-          # GHA runner SSH to Controller Public IP
-          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[3]
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessPip
-          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + 3)
-          Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
-
-          $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName `
-            -Description $nsgRule.Description `
-            -Priority $priority `
-            -Direction $nsgRule.Direction `
-            -Access $nsgRule.Access `
-            -Protocol "*" `
-            -SourceAddressPrefix ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }} `
-            -SourcePortRange $nsgRule.SourcePortRange `
-            -DestinationAddressPrefix $controllerVmPublicIp `
+            -DestinationAddressPrefix $controllerVmPrivateIp `
             -DestinationPortRange $nsgRule.DestinationPortRange `
             -DestinationPortRanges $nsgRule.DestinationPortRanges
 
@@ -683,7 +647,7 @@ jobs:
           $certScript = $certScript.Replace("{{VM_FQDN}}", "$controllerFqdn")
           Set-Content -Path "./scripts/controller/controller_3.sh" -Value $certScript
 
-      - name: SSH to Controller - Script 1
+      - name: Add SSH Key to SSH Agent on GitHub Runner
         if: success()
         shell: bash
         run: |
@@ -694,26 +658,37 @@ jobs:
           echo "$sshAddCmd"
           eval $sshAddCmd
 
-          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} < ./scripts/controller/controller_1.sh"
-          echo "SSH Command: Controller Config"
-          echo "$sshCmd"
-          eval $sshCmd
-
-      - name: SSH to Controller - Script 2
+      - name: Upload script files to Controller VM
         if: success()
         shell: bash
         run: |
-          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} < ./scripts/controller/controller_2.sh"
-          echo "SSH Command: Certbot"
+          scp -r -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} -o StrictHostKeyChecking=no ./scripts/controller/ ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PUBLIC_IP_ADDRESS }}:~
+
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'chmod +x ~/controller/controller_*.sh; sudo mv ~/controller/controller_*.sh /usr/local/bin/; rm -rf ./controller'"
           echo "$sshCmd"
           eval $sshCmd
 
-      - name: SSH to Controller - Script 3
+      - name: Run script 1 on Controller VM
         if: success()
         shell: bash
         run: |
-          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PIP_IP_ADDRESS }} -o StrictHostKeyChecking=off -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} < ./scripts/controller/controller_3.sh"
-          echo "SSH Command: Import TLS Cert to Unifi"
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/controller_1.sh'"
+          echo "$sshCmd"
+          eval $sshCmd
+
+      - name: Run script 2 on Controller VM
+        if: success()
+        shell: bash
+        run: |
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/controller_2.sh'"
+          echo "$sshCmd"
+          eval $sshCmd
+
+      - name: Run script 3 on Controller VM
+        if: success()
+        shell: bash
+        run: |
+          sshCmd="ssh ${{ env.AA_VM_ADMIN_USERNAME }}@${{ env.AA_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/controller_3.sh'"
           echo "$sshCmd"
           eval $sshCmd
 
@@ -763,7 +738,7 @@ jobs:
 
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessVnet
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgRuleNameCertbotAccess
 
           $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
             -SubscriptionID "$SubscriptionId" `
@@ -773,27 +748,7 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameCertbotAccessPip
-
-          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName
-
-          Write-Debug -Debug:$true -Message "$output"
-
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessVnet
-
-          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName
-
-          Write-Debug -Debug:$true -Message "$output"
-
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgNameGhaAccessPip
+          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgRuleNameGhaAccess
 
           $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
             -SubscriptionID "$SubscriptionId" `
