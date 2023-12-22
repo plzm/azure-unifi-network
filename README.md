@@ -34,11 +34,11 @@ The following GitHub Secrets are required. You should configure them in Reposito
 
 The following GitHub Variables are required. You should configure them in Repository Settings > Secrets and variables > Actions > Variables.
 
-- `URL_ROOT_MODULE_PLZM_AZURE`: the URL to the Powershell module plzm.Azure, which contains many Powershell utility functions used by the pipelines and scripts in this repo. This Powershell module is maintained in the repo [plzm.Azure](https://github.com/plzm/azure-deploy). By default, the pipelines and scripts in this repo will use the latest version of the module from the main branch.
+- `URL_ROOT_MODULE_PLZM_AZURE`: the URL to the Powershell module plzm.Azure, which contains many Powershell utility functions used by the pipelines and scripts in this repo. This Powershell module is maintained in the repo [plzm/azure-deploy](https://github.com/plzm/azure-deploy). By default, the pipelines and scripts in this repo will use the latest version of the module from the main branch.
 
 ### JSON Config Files
 
-The following JSON config files are required for pipelines and scripts.
+The following JSON config files are required for pipelines and scripts. Hard-coding of explicit strings in the pipelines and scripts is avoided by using config files and the instantiated $Config* objects used throughout the pipelines.
 
 - [/config/infra_constants.json](/config/infra_constants.json) - various constant values set in one place, and used across pipelines and scripts, to avoid duplication of hard-coded strings.
 - [/config/infra_controller_ssh.json](/config/infra_controller_ssh.json) - values used only for managing NAC VM SSH access during pipeline execution.

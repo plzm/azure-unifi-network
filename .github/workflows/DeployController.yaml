@@ -247,7 +247,7 @@ jobs:
 
           # Key filenames
           $filePathPrivate = Join-Path -Path "${{ env.AA_VM_SSH_PATH }}" -ChildPath "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-          $filePathPrivate = Join-Path -Path "${{ env.AA_VM_SSH_PATH }}" -ChildPath ("${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + $ConfigConstants.SshPublicKeyFileExtensio)
+          $filePathPublic = Join-Path -Path "${{ env.AA_VM_SSH_PATH }}" -ChildPath ("${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + $ConfigConstants.SshPublicKeyFileExtension)
 
           Write-Debug -Debug:$true -Message "filePathPrivate: $filePathPrivate"
           Write-Debug -Debug:$true -Message "filePathPublic: $filePathPublic"
