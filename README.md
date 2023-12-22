@@ -12,6 +12,14 @@ The scenario realized by this repo is for a managed service provider (MSP) to de
 
 ![Architecture](./media/architecture.png)
 
+Key Points:
+- The Controller VMs expose a public IP address. This is required for managed network equipment to communicate with the Controller VMs from customer premises.
+- All internal networking uses Private Endpoints with Private Link, including the use of [Azure Monitor Private Link Scope](https://learn.microsoft.com/azure/azure-monitor/logs/private-link-security#how-it-works-main-principles) to keep Azure Monitor traffic within Azure.
+- An Azure Key Vault stores all Controller VM SSH keys (public and private) as well as SSH key names and VM admin usernames.
+- A Network Security Group (NSG) stores inbound rules and restricts inbound traffic. During GitHub Actions workflow execution, NSG rules are added to allow the GitHub Actions runner to access the data plane, then those NSG rules are removed again before GitHub Actions workflow completion, whether or not prior GitHub Actions workflow steps succeed.
+- Each Controller deployment includes its own User-Assigned Identity. In this way, each Controller has a distinct identity, with distinct permissions, for more granular permission management and auditing. The GitHub Actions workflows manage creating the required Role-Based Access Control (RBAC) permissions during Controller deployment, and removing the permissions during Controll destruction.
+- A utility function, `Get-SshKeyPairToLocalFiles()`, is provided in [./scripts/KeyVault.ps1](./scripts/KeyVault.ps1) to retrieve the SSH key pair from Key Vault and write the public and private SSH keys to local files, so that the Controller VMs can be accessed via SSH.
+
 ## GitHub Actions Workflows
 
 The following GitHub Actions workflows are provided:
@@ -31,22 +39,22 @@ The following GitHub Secrets are required. You should configure them in Reposito
 
 - `AZURE_CREDENTIALS`: the JSON output of `az ad sp create-for-rbac --name "[YOUR SERVICE PRINCIPAL NAME]" --role Owner --scopes /subscriptions/[YOUR SUBSCRIPTION ID] --sdk-auth`. This is used to authenticate to Azure. Substitute your service principal name for `[YOUR SERVICE PRINCIPAL NAME]` and your Azure subscription ID for `[YOUR SUBSCRIPTION ID]`.
 - `AZURE_SP_AA_INFRA_PRINCIPAL_ID`: the principal ID of the service principal you created for `AZURE_CREDENTIALS`. This is used to grant the service principal access to the Key Vault so that it can read and write secrets in GitHub Actions workflow steps.
-- `AZURE_SUBSCRIPTION_ID`: your Azure subscription ID. This is used widely to scope Azure CLI commands to your subscription.
-- `AZURE_TENANT_ID`: your Azure tenant ID. This is used to deploy Key Vault and User Assigned Identities.
+- `AZURE_SUBSCRIPTION_ID`: your Azure subscription ID. This is used widely to scope Azure CLI commands to your subscription. Specifying the subscription ID during Azure CLI and Powershell commands enables scenarions where you may be logged into multiple Azure subscriptions, with your default subscription differing from the subscription you want to target with this repo's deployments.
+- `AZURE_TENANT_ID`: your Azure tenant ID. This is required to deploy Azure Key Vault and User Assigned Identities.
 
 ### GitHub Variables
 
 The following GitHub Variables are required. You should configure them in Repository Settings > Secrets and variables > Actions > Variables.
 
-- `URL_ROOT_MODULE_PLZM_AZURE`: the URL to the Powershell module plzm.Azure, which contains many Powershell utility functions used by the pipelines and scripts in this repo. This Powershell module is maintained in the repo [plzm/azure-deploy](https://github.com/plzm/azure-deploy). By default, the pipelines and scripts in this repo will use the latest version of the module from the main branch.
+- `URL_ROOT_MODULE_PLZM_AZURE`: the URL to the Powershell module plzm.Azure, which contains many Powershell utility functions used by the GitHub Actions workflows and scripts in this repo. This Powershell module is maintained in the repo [plzm/azure-deploy](https://github.com/plzm/azure-deploy). By default, the GitHub Actions workflows and scripts in this repo will use the latest version of the module from the main branch.
 
 ### JSON Config Files
 
-The following JSON config files are required for pipelines and scripts. Hard-coding of explicit strings in the pipelines and scripts is avoided by using config files and the instantiated $Config* objects used throughout the pipelines.
+The following JSON config files are required for GitHub Actions workflows and scripts. Hard-coding of explicit strings in the GitHub Actions workflows and scripts is avoided by using config files and the instantiated $Config* objects used throughout the GitHub Actions workflows.
 
-- [/config/infra_constants.json](/config/infra_constants.json) - various constant values set in one place, and used across pipelines and scripts, to avoid duplication of hard-coded strings.
-- [/config/infra_controller_ssh.json](/config/infra_controller_ssh.json) - values used only for managing NAC VM SSH access during pipeline execution.
+- [/config/infra_constants.json](/config/infra_constants.json) - various constant values set in one place, and used across GitHub Actions workflows and scripts, to avoid duplication of hard-coded strings.
+- [/config/infra_controller_ssh.json](/config/infra_controller_ssh.json) - values used only for managing NAC VM SSH access during GitHub Actions workflow execution.
 - [/config/infra_controller.json](/config/infra_controller.json) - values used for NAC VM deployment. This will be replaced by a more flexible store, such as a CRM database or similar, to avoid storing client information in a public repo and to enable more flexible deployment scenarios.
 - [/config/infra_main.json](/config/infra_main.json) - values used for shared/hub resource deployments.
 
-These files can be modified as needed. Key names should be maintained (or refactored throughout all pipelines and scripts).
+These files can be modified as needed. Key names should be maintained (or refactored throughout all GitHub Actions workflows and scripts).
