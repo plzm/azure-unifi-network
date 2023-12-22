@@ -6,7 +6,11 @@ The hub resource group should be deployed first. Spoke resource groups, each wit
 
 ## Scenario
 
-The scenario realized by this repo is for a managed service provider (MSP) to deploy a fleet of NAC VMs for their clients. The MSP can deploy a hub resource group with central observability and other resources, and then deploy a spoke resource group with a VM running NAC for each client. The MSP can then manage the NAC VMs for their clients from the hub resource group.
+The scenario realized by this repo is for a managed service provider (MSP) to deploy a fleet of NAC VMs for their clients. The MSP deploys a hub resource group with central observability and other resources, and then deploys a spoke resource group (0-n) with a VM running NAC for each client. The MSP can then manage the NAC VMs for their clients from the hub resource group.
+
+## Architecture
+
+![Architecture](./media/architecture.png)
 
 ## GitHub Actions Workflows
 
