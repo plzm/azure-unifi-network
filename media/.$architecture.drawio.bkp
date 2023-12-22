@@ -1,0 +1,28 @@
+<mxfile host="Electron" modified="2023-12-22T16:06:16.571Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.11 Chrome/114.0.5735.289 Electron/25.9.8 Safari/537.36" etag="M7w9k6MpHCNXXC5QBFzW" version="22.1.11" type="device">
+  <diagram id="rQ0TlfBuieNGAIFZ-L1q" name="Page-1">
+    <mxGraphModel dx="1512" dy="869" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="BwGK9CX1p3ADyJWq2FCL-1" value="" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#007FFF;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="90" y="140" width="130" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="BwGK9CX1p3ADyJWq2FCL-2" value="Log Analytics" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/analytics/Log_Analytics_Workspaces.svg;" vertex="1" parent="1">
+          <mxGeometry x="120" y="320" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BwGK9CX1p3ADyJWq2FCL-6" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCIgaGVpZ2h0PSIxOCIgd2lkdGg9IjE4Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHkyPSI3LjY5NSIgeDI9IjkuMDMzIiB5MT0iMTAuMzA1IiB4MT0iOS4wMzMiIGlkPSJiY2ViNjBkZC04YjhjLTQwOTgtOTRmOC1hZWI0ZGIyZWRhZWYiPjxzdG9wIHN0b3AtY29sb3I9IiM1ZTk2MjQiIG9mZnNldD0iMCIvPjxzdG9wIHN0b3AtY29sb3I9IiM2ZmIwMmEiIG9mZnNldD0iMC4yNDEiLz48c3RvcCBzdG9wLWNvbG9yPSIjN2NjNTJmIiBvZmZzZXQ9IjAuNTAxIi8+PHN0b3Agc3RvcC1jb2xvcj0iIzgzZDIzMiIgb2Zmc2V0PSIwLjc1NiIvPjxzdG9wIHN0b3AtY29sb3I9IiM4NmQ2MzMiIG9mZnNldD0iMSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxnIGlkPSJhYzc1YzIxZS0yYTkzLTQ2NGYtODA0OC1mMTUxOGRhYjhiNzUiPjxnPjxwYXRoIGZpbGw9InVybCgjYmNlYjYwZGQtOGI4Yy00MDk4LTk0ZjgtYWViNGRiMmVkYWVmKSIgZD0iTTkuMDMxLDcuN0ExLjMwNSwxLjMwNSwwLDEsMCwxMC4zMzgsOSwxLjMwNSwxLjMwNSwwLDAsMCw5LjAzMSw3LjdaIi8+PGc+PHBhdGggZmlsbD0iIzUwZTZmZiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTMuNjUzIDE2LjQ4NSkgcm90YXRlKDEzNC45MTkpIiBkPSJNMi45NjEsNy4zNzRoLjg4OGEuMjg0LjI4NCwwLDAsMSwuMjg0LjI4NHY2LjU1MWEuNTY4LjU2OCwwLDAsMS0uNTY4LjU2OEgyLjY3N2EwLDAsMCwwLDEsMCwwVjcuNjU5QS4yODQuMjg0LDAsMCwxLDIuOTYxLDcuMzc0WiIvPjxwYXRoIGZpbGw9IiMxNDkwZGYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUuODQ3IC0wLjM1OCkgcm90YXRlKDQ0LjkxOSkiIGQ9Ik0yLjkxMywzLjI0NEgzLjhhLjI4NC4yODQsMCwwLDEsLjI4NC4yODR2Ny4wMTVhMCwwLDAsMCwxLDAsMEgzLjJhLjU2OC41NjgsMCwwLDEtLjU2OC0uNTY4VjMuNTI4YS4yODQuMjg0LDAsMCwxLC4yODQtLjI4NFoiLz48cGF0aCBmaWxsPSIjNTBlNmZmIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMi4xMzIgLTcuMDc5KSByb3RhdGUoNDUuMDgxKSIgZD0iTTEzLjg2Nyw3LjM3NGguODg4YS41NjguNTY4LDAsMCwxLC41NjguNTY4djYuNTUxYS4yODQuMjg0LDAsMCwxLS4yODQuMjg0aC0uODg4YS4yODQuMjg0LDAsMCwxLS4yODQtLjI4NFY3LjM3NGEwLDAsMCwwLDEsMCwwWiIvPjxwYXRoIGZpbGw9IiMxNDkwZGYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI5Ljg3OSAxLjQzNSkgcm90YXRlKDEzNS4wODEpIiBkPSJNMTQuNDgzLDMuMjQ0aC44ODhhMCwwLDAsMCwxLDAsMHY3LjAxNWEuMjg0LjI4NCwwLDAsMS0uMjg0LjI4NEgxNC4yYS4yODQuMjg0LDAsMCwxLS4yODQtLjI4NFYzLjgxMmEuNTY4LjU2OCwwLDAsMSwuNTY4LS41NjhaIi8+PC9nPjwvZz48L2c+PC9zdmc+;" vertex="1" parent="1">
+          <mxGeometry x="260" y="520" width="18" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="BwGK9CX1p3ADyJWq2FCL-8" value="" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/networking/Virtual_Networks.svg;" vertex="1" parent="1">
+          <mxGeometry x="180" y="509" width="67" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BwGK9CX1p3ADyJWq2FCL-9" value="" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/networking/DNS_Zones.svg;" vertex="1" parent="1">
+          <mxGeometry x="160" y="600" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BwGK9CX1p3ADyJWq2FCL-10" value="" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/networking/Private_Endpoint.svg;" vertex="1" parent="1">
+          <mxGeometry x="247" y="321.83000000000004" width="41.63" height="38.17" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

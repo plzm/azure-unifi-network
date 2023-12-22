@@ -6,7 +6,11 @@ The hub resource group should be deployed first. Spoke resource groups, each wit
 
 ## Scenario
 
-The scenario realized by this repo is for a managed service provider (MSP) to deploy a fleet of NAC VMs for their clients. The MSP can deploy a hub resource group with central observability and other resources, and then deploy a spoke resource group with a VM running NAC for each client. The MSP can then manage the NAC VMs for their clients from the hub resource group.
+The scenario realized by this repo is for a managed service provider (MSP) to deploy a fleet of NAC VMs for their clients. The MSP deploys a hub resource group with central observability and other resources, and then deploys a spoke resource group (0-n) with a VM running NAC for each client. The MSP can then manage the NAC VMs for their clients from the hub resource group.
+
+## Architecture
+
+![Architecture](./media/architecture.png)
 
 ## GitHub Actions Workflows
 
@@ -34,11 +38,11 @@ The following GitHub Secrets are required. You should configure them in Reposito
 
 The following GitHub Variables are required. You should configure them in Repository Settings > Secrets and variables > Actions > Variables.
 
-- `URL_ROOT_MODULE_PLZM_AZURE`: the URL to the Powershell module plzm.Azure, which contains many Powershell utility functions used by the pipelines and scripts in this repo. This Powershell module is maintained in the repo [plzm.Azure](https://github.com/plzm/azure-deploy). By default, the pipelines and scripts in this repo will use the latest version of the module from the main branch.
+- `URL_ROOT_MODULE_PLZM_AZURE`: the URL to the Powershell module plzm.Azure, which contains many Powershell utility functions used by the pipelines and scripts in this repo. This Powershell module is maintained in the repo [plzm/azure-deploy](https://github.com/plzm/azure-deploy). By default, the pipelines and scripts in this repo will use the latest version of the module from the main branch.
 
 ### JSON Config Files
 
-The following JSON config files are required for pipelines and scripts.
+The following JSON config files are required for pipelines and scripts. Hard-coding of explicit strings in the pipelines and scripts is avoided by using config files and the instantiated $Config* objects used throughout the pipelines.
 
 - [/config/infra_constants.json](/config/infra_constants.json) - various constant values set in one place, and used across pipelines and scripts, to avoid duplication of hard-coded strings.
 - [/config/infra_controller_ssh.json](/config/infra_controller_ssh.json) - values used only for managing NAC VM SSH access during pipeline execution.
