@@ -228,10 +228,16 @@ jobs:
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-          $secretNameAdminUserName = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-admin-username"
-          $secretNameSshKeyName = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname"
-          $secretNameSshPublicKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key"
-          $secretNameSshPrivateKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key"
+          # Secret names
+          $suffixSshAdminUserName = $ConfigConstants.SuffixSecretNameSshAdminUserName
+          $suffixSshKeyName = $ConfigConstants.SuffixSecretNameSshKeyName
+          $suffixSshPublicKey = $ConfigConstants.SuffixSecretNameSshPublicKey
+          $suffixSshPrivateKey = $ConfigConstants.SuffixSecretNameSshPrivateKey
+
+          $secretNameAdminUserName = "${{ env.AA_VM_NAME_CONTROLLER }}" + "$suffixSshAdminUsername"
+          $secretNameSshKeyName = "${{ env.AA_VM_NAME_CONTROLLER }}" + "$suffixSshKeyName"
+          $secretNameSshPublicKey = "${{ env.AA_VM_NAME_CONTROLLER }}" + "$suffixSshPublicKey"
+          $secretNameSshPrivateKey = "${{ env.AA_VM_NAME_CONTROLLER }}" + "$suffixSshPrivateKey"
 
           $secretValueAdminUserName = ""
           $secretValueSshKeyName = ""
@@ -240,9 +246,8 @@ jobs:
 
 
           # Key filenames
-          $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
-          $filePathPrivate = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
-          $filePathPublic = "${{ env.AA_VM_SSH_PATH }}" + "/" + "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + "$sshPublicKeyFileExtension"
+          $filePathPrivate = Join-Path -Path "${{ env.AA_VM_SSH_PATH }}" -ChildPath "${{ env.AA_SSH_KEY_NAME_CONTROLLER }}"
+          $filePathPrivate = Join-Path -Path "${{ env.AA_VM_SSH_PATH }}" -ChildPath ("${{ env.AA_SSH_KEY_NAME_CONTROLLER }}" + $ConfigConstants.SshPublicKeyFileExtensio)
 
           Write-Debug -Debug:$true -Message "filePathPrivate: $filePathPrivate"
           Write-Debug -Debug:$true -Message "filePathPublic: $filePathPublic"
@@ -715,7 +720,6 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
 
           # Key filenames
-          $sshPublicKeyFileExtension = $ConfigConstants.SshPublicKeyFileExtension
           $filePathPrivate = "${{ env.AA_VM_SSH_PRIVATE_KEY_FILE_PATH }}"
           $filePathPublic = "${{ env.AA_VM_SSH_PUBLIC_KEY_FILE_PATH }}"
           $filePathKnownHosts = "${{ env.AA_VM_SSH_PATH }}" + "/" + "known_hosts"

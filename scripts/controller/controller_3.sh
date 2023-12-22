@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# This script is based on Steve Jenkin's script to use an existing SSL script with Unifi NAC.
+# I made changes to get it working on a current Ubuntu VM, and removed some extra pieces which were not relevant in this context.
+# Steve's script has not been updated since 2019 and several of the file operations fail on Ubuntu 20.04.
+# I rewrote those commands to be "eval" commands instead, which works in the security context used in the approach of this project.
+# References:
+# https://www.stevejenkins.com/blog/2016/06/use-existing-ssl-certificate-linux-unifi-controller/
+# https://github.com/stevejenkins/unifi-linux-utils
+
+# Debug to let world know "this was here"
 touch ~/controller_3.txt
 
 # CONFIGURATION OPTIONS
