@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Debug to let world know "this was here"
 touch ~/controller_2.txt
 
 # TLS Certificate

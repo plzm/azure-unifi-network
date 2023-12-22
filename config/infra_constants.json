@@ -52,5 +52,9 @@
   "SuffixAmplsDataCollectionRuleLinux": "linux",
   "SuffixNsgRuleNameCertbotAccess": "-certbot",
   "SuffixNsgRuleNameGhaAccess": "-gha",
+  "SuffixSecretNameSshAdminUserName": "-ssh-admin-username",
+  "SuffixSecretNameSshKeyName": "-ssh-keyname",
+  "SuffixSecretNameSshPublicKey": "-ssh-public-key",
+  "SuffixSecretNameSshPrivateKey": "-ssh-private-key",
   "TemplateUriPrefix": "https://raw.githubusercontent.com/plzm/azure-deploy/main/template/"
 }
