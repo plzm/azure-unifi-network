@@ -73,39 +73,6 @@ jobs:
             -ConfigControllerSsh $ConfigControllerSsh `
             -SubscriptionId $SubscriptionId
 
-      - name: Add NSG rule for durable Controller access
-        if: success()
-        shell: pwsh
-        run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
-
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-
-          $nsgRule = $ConfigController.Network.NSG.Rules[0]
-
-          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-          $nsgRuleName = $ConfigController.IdForNaming
-
-          $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
-            -NSGName ${{ env.AA_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName `
-            -Description $nsgRule.Description `
-            -Priority ($ConfigConstants.NsgRulePriorityBase + $ConfigController.Id) `
-            -Direction $nsgRule.Direction `
-            -Access $nsgRule.Access `
-            -Protocol $nsgRule.Protocol `
-            -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
-            -SourcePortRange $nsgRule.SourcePortRange `
-            -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
-            -DestinationPortRanges $nsgRule.DestinationPortRanges
-
-          Write-Debug -Debug:$true -Message "$output"
-
       - name: Create Resource Group
         if: success()
         shell: pwsh
@@ -555,7 +522,48 @@ jobs:
           Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PUBLIC_IP_ADDRESS" -VarValue "$controllerVmPublicIp"
 
-      - name: Add NSG rules for GitHub runner and Certbot access to Controller VM
+      - name: Add durable NSG rule for premise equipment access to Controller VM
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+          $nsgRule = $ConfigController.Network.NSG.Rules[0]
+
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $nsgRuleName = $ConfigController.IdForNaming
+
+          $controllerVmPrivateIp = "${{ env.AA_VM_PRIVATE_IP_ADDRESS }}"
+          Write-Debug -Debug:$true -Message "controllerVmPrivateIp: $controllerVmPrivateIp"
+
+          $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
+            -NSGName ${{ env.AA_NSG_NAME }} `
+            -NSGRuleName $nsgRuleName `
+            -Description $nsgRule.Description `
+            -Priority ($ConfigConstants.NsgRulePriorityBase + $ConfigController.Id) `
+            -Direction $nsgRule.Direction `
+            -Access $nsgRule.Access `
+            -Protocol $nsgRule.Protocol `
+            -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
+            -SourceAddressPrefixes $nsgRule.SourceAddressPrefixes `
+            -SourcePortRange $nsgRule.SourcePortRange `
+            -SourcePortRanges $nsgRule.SourcePortRanges `
+            -DestinationAddressPrefix $controllerVmPrivateIp `
+            -DestinationAddressPrefixes $nsgRule.DestinationAddressPrefixes `
+            -DestinationPortRange $nsgRule.DestinationPortRange `
+            -DestinationPortRanges $nsgRule.DestinationPortRanges
+
+          Write-Debug -Debug:$true -Message "$output"
+
+
+      - name: Add transient NSG rules for GitHub runner and Certbot access to Controller VM
         if: success()
         shell: pwsh
         run: |
@@ -568,11 +576,8 @@ jobs:
 
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-          $controllerVmPublicIp = "${{ env.AA_VM_PUBLIC_IP_ADDRESS }}"
-          Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
-
           $controllerVmPrivateIp = "${{ env.AA_VM_PRIVATE_IP_ADDRESS }}"
-          Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPrivateIp"
+          Write-Debug -Debug:$true -Message "controllerVmPrivateIp: $controllerVmPrivateIp"
 
 
           # Certbot to Controller VM
@@ -731,7 +736,7 @@ jobs:
           # Delete known_hosts if exist
           if (Test-Path $filePathKnownHosts) { Remove-Item -Path $filePathKnownHosts -Force }
 
-      - name: Remove NSG rules for GitHub runner and Certbot access to Controller VM
+      - name: Remove transient NSG rules for GitHub runner and Certbot access to Controller VM
         if: always()
         shell: pwsh
         run: |
