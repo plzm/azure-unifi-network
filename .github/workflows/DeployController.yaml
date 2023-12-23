@@ -522,7 +522,7 @@ jobs:
           Write-Debug -Debug:$true -Message "controllerVmPublicIp: $controllerVmPublicIp"
           plzm.Azure\Set-EnvVar2 -VarName "AA_VM_PUBLIC_IP_ADDRESS" -VarValue "$controllerVmPublicIp"
 
-      - name: Add durable NSG rule for Controller access
+      - name: Add durable NSG rule for premise equipment access to Controller VM
         if: success()
         shell: pwsh
         run: |
@@ -555,7 +555,7 @@ jobs:
             -SourceAddressPrefixes $nsgRule.SourceAddressPrefixes `
             -SourcePortRange $nsgRule.SourcePortRange `
             -SourcePortRanges $nsgRule.SourcePortRanges `
-            -DestinationAddressPrefix $nsgRule.DestinationAddressPrefix `
+            -DestinationAddressPrefix $controllerVmPrivateIp `
             -DestinationAddressPrefixes $nsgRule.DestinationAddressPrefixes `
             -DestinationPortRange $nsgRule.DestinationPortRange `
             -DestinationPortRanges $nsgRule.DestinationPortRanges
