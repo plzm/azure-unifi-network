@@ -1,6 +1,6 @@
 {
-  "Id": 1,
-  "IdForNaming": "001",
+  "Id": 0,
+  "IdForNaming": "000",
   "HostNamePrefix": "ui",
   "DomainName": "alfaadin.com",
   "Location": "eastus2",
@@ -13,8 +13,8 @@
           "Direction": "Inbound",
           "Access": "Allow",
           "Protocol": "*",
-          "SourceAddressPrefix": "",
-          "SourceAddressPrefixes": "70.20.53.53,73.89.169.63,73.89.169.110",
+          "SourceAddressPrefix": "75.68.47.183",
+          "SourceAddressPrefixes": "",
           "SourcePortRange": "*",
           "SourcePortRanges": "",
           "DestinationAddressPrefix": "",
@@ -37,8 +37,8 @@
     "AdminUserName": "vmadmin",
     "Size": "Standard_B1ms",
     "Publisher": "Canonical",
-    "Offer": "0001-com-ubuntu-server-jammy",
-    "Sku": "22_04-lts-gen2",
+    "Offer": "0001-com-ubuntu-server-focal",
+    "Sku": "20_04-lts-gen2",
     "OsDisk": {
       "SizeInGB": 32,
       "Type": "Premium_LRS"
