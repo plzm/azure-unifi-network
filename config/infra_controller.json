@@ -37,8 +37,8 @@
     "AdminUserName": "vmadmin",
     "Size": "Standard_B1ms",
     "Publisher": "Canonical",
-    "Offer": "0001-com-ubuntu-server-jammy",
-    "Sku": "22_04-lts-gen2",
+    "Offer": "0001-com-ubuntu-server-focal",
+    "Sku": "20_04-lts-gen2",
     "OsDisk": {
       "SizeInGB": 32,
       "Type": "Premium_LRS"
