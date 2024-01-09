@@ -52,6 +52,12 @@
     "SkuName": "Standard_LRS"
   },
   "Observability": {
+    "ActionGroup": {
+      "ShortName": "aa-acg",
+      "EmailReceivers": "support@alfaadin.com",
+      "SmsReceivers": "",
+      "AzureAppPushReceivers": ""
+    },
     "DataCollectionEndpoint": {
       "PublicNetworkAccess": "Disabled"
     }

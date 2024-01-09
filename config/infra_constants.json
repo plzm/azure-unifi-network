@@ -4,6 +4,7 @@
   "NsgRulePriorityBase": 200,
   "NsgRulePriorityPlusTransient": 1000,
   "OrgName": "alfaadin",
+  "PrefixActionGroup": "acg",
   "PrefixAmpls": "pls",
   "PrefixAppInsights": "ais",
   "PrefixDataCollectionEndpoint": "dce",
