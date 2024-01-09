@@ -19,7 +19,7 @@ function Set-VariablesMain()
   plzm.Azure\Set-EnvVar2 -VarName "AA_GITHUB_RUNNER_PUBLIC_IP" -VarValue "$runnerIp"
 
   # Tags
-  #Set-EnvVarTags -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain
+  Set-EnvVarTags -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain
 
   # Resource Groups
   $rgNameMain = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixRsg -Suffix $ConfigMain.Suffix
@@ -232,7 +232,7 @@ function Set-EnvVarTags()
   Write-Debug -Debug:$debug -Message ("Set-EnvVarTags")
 
   $tagsForAzureCli = @()
-  #$tag1 = "foo=bar"
+  $tag1 = "foo=bar"
 
   #if ($ConfigConstants)
   #{
@@ -242,11 +242,11 @@ function Set-EnvVarTags()
   #}
   #else
   #{
-  #$tagsForAzureCli = @($tag1)
+  $tagsForAzureCli = @($tag1)
   #}
 
   $tagsObject = @{}
-  #$tagsObject['foo'] = "bar"
+  $tagsObject['foo'] = "bar"
 
   #if ($ConfigConstants)
   #{
