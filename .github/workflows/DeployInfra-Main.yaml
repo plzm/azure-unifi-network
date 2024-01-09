@@ -107,7 +107,7 @@ jobs:
             -ActionGroupName "${{ env.AA_ACG_NAME_MAIN }}" `
             -ActionGroupShortName $ConfigMain.Observability.ActionGroup.ShortName `
             -EmailReceivers $ConfigMain.Observability.ActionGroup.EmailReceivers `
-            -SmsReceivers $ConfigMain.Observability.ActionGroupSmsReceivers. `
+            -SmsReceivers $ConfigMain.Observability.ActionGroupSmsReceivers `
             -AzureAppPushReceivers $ConfigMain.Observability.ActionGroup.AzureAppPushReceivers `
             -Tags ${{ env.AA_TAGS_FOR_ARM }}
 
