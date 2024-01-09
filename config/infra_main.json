@@ -64,7 +64,7 @@
       "Alerts":
       [
         {
-          "Name": "Available Memory Bytes",
+          "Suffix": "avl-mem-bytes",
           "Severity": "3",
           "EvaluationFrequency": "PT5M",
           "WindowSize": "PT5M",
@@ -75,7 +75,7 @@
           "TimeAggregation": "Average"
         },
         {
-          "Name": "Data Disk IOPS Consumed Percentage",
+          "Suffix": "data-disk-iops-pct",
           "Severity": "3",
           "EvaluationFrequency": "PT5M",
           "WindowSize": "PT5M",
@@ -86,7 +86,7 @@
           "TimeAggregation": "Average"
         },
         {
-          "Name": "Network In Total",
+          "Suffix": "net-in-total",
           "Severity": "3",
           "EvaluationFrequency": "PT5M",
           "WindowSize": "PT5M",
@@ -97,7 +97,7 @@
           "TimeAggregation": "Total"
         },
         {
-          "Name": "Network Out Total",
+          "Suffix": "net-out-total",
           "Severity": "3",
           "EvaluationFrequency": "PT5M",
           "WindowSize": "PT5M",
@@ -108,7 +108,7 @@
           "TimeAggregation": "Total"
         },
         {
-          "Name": "OS Disk IOPS Consumed Percentage",
+          "Suffix": "os-disk-iops-pct",
           "Severity": "3",
           "EvaluationFrequency": "PT5M",
           "WindowSize": "PT5M",
@@ -119,7 +119,7 @@
           "TimeAggregation": "Average"
         },
         {
-          "Name": "Percentage CPU",
+          "Suffix": "pct-cpu",
           "Severity": "3",
           "EvaluationFrequency": "PT5M",
           "WindowSize": "PT5M",
@@ -130,7 +130,7 @@
           "TimeAggregation": "Average"
         },
         {
-          "Name": "VM Availability",
+          "Suffix": "vm-avl",
           "Severity": "3",
           "EvaluationFrequency": "PT5M",
           "WindowSize": "PT5M",
@@ -148,7 +148,7 @@
       "Alerts":
       [
         {
-          "Name": "DDoS Attack",
+          "Suffix": "ddos-attack",
           "Severity": "2",
           "EvaluationFrequency": "PT5M",
           "WindowSize": "PT5M",
