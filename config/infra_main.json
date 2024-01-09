@@ -58,6 +58,108 @@
       "SmsReceivers": "",
       "AzureAppPushReceivers": ""
     },
+    "MetricAlertsVM":
+    {
+      "TargetResourceType": "Microsoft.Compute/virtualMachines",
+      "Alerts":
+      [
+        {
+          "Name": "Available Memory Bytes",
+          "Severity": "3",
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Available Memory Bytes",
+          "Operator": "LessThan",
+          "Threshold": "64000000",
+          "TimeAggregation": "Average"
+        },
+        {
+          "Name": "Data Disk IOPS Consumed Percentage",
+          "Severity": "3",
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Data Disk IOPS Consumed Percentage",
+          "Operator": "GreaterThan",
+          "Threshold": "95",
+          "TimeAggregation": "Average"
+        },
+        {
+          "Name": "Network In Total",
+          "Severity": "3",
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Network In Total",
+          "Operator": "GreaterThan",
+          "Threshold": "500000000000",
+          "TimeAggregation": "Total"
+        },
+        {
+          "Name": "Network Out Total",
+          "Severity": "3",
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Network Out Total",
+          "Operator": "GreaterThan",
+          "Threshold": "200000000000",
+          "TimeAggregation": "Total"
+        },
+        {
+          "Name": "OS Disk IOPS Consumed Percentage",
+          "Severity": "3",
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "OS Disk IOPS Consumed Percentage",
+          "Operator": "GreaterThan",
+          "Threshold": "95",
+          "TimeAggregation": "Average"
+        },
+        {
+          "Name": "Percentage CPU",
+          "Severity": "3",
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Percentage CPU",
+          "Operator": "GreaterThan",
+          "Threshold": "80",
+          "TimeAggregation": "Average"
+        },
+        {
+          "Name": "VM Availability",
+          "Severity": "3",
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "VmAvailabilityMetric",
+          "Operator": "LessThan",
+          "Threshold": "1",
+          "TimeAggregation": "Average"
+        }
+      ]
+    },
+    "MetricAlertsIP":
+    {
+      "TargetResourceType": "Microsoft.Network/publicIPAddresses",
+      "Alerts":
+      [
+        {
+          "Name": "DDoS Attack",
+          "Severity": "2",
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Network/publicIPAddresses",
+          "MetricName": "IfUnderDDoSAttack",
+          "Operator": "GreaterThan",
+          "Threshold": "0",
+          "TimeAggregation": "Maximum"
+        }
+      ]
+    },
     "DataCollectionEndpoint": {
       "PublicNetworkAccess": "Disabled"
     }

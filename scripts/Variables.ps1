@@ -232,7 +232,7 @@ function Set-EnvVarTags()
   Write-Debug -Debug:$debug -Message ("Set-EnvVarTags")
 
   $tagsForAzureCli = @()
-  $tag1 = "foo=bar"
+  #$tag1 = "foo=bar"
 
   #if ($ConfigConstants)
   #{
@@ -242,11 +242,11 @@ function Set-EnvVarTags()
   #}
   #else
   #{
-  $tagsForAzureCli = @($tag1)
+  #$tagsForAzureCli = @($tag1)
   #}
 
   $tagsObject = @{}
-  $tagsObject['foo'] = "bar"
+  #$tagsObject['foo'] = "bar"
 
   #if ($ConfigConstants)
   #{

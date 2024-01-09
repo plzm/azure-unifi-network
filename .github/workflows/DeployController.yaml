@@ -767,6 +767,61 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
+      - name: Deploy Metric Alerts
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+          $metricAlerts = $ConfigMain.Observability.MetricAlertsVM
+
+          foreach ($alert in $metricAlerts.Alerts)
+          {
+            $output = plzm.Azure\Deploy-MetricAlert `
+              -SubscriptionID "$SubscriptionId" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.metric-alert.json") `
+              -MetricAlertName $alert.Name `
+              -Severity $alert.Severity `
+              -TargetResourceType $metricAlerts.TargetResourceType `
+              -TargetResourceId ${{ env.AA_VM_RESOURCE_ID_CONTROLLER }} `
+              -EvaluationFrequency $alert.EvaluationFrequency `
+              -WindowSize $alert.WindowSize `
+              -MetricNamespace $alert.MetricNamespace `
+              -MetricName $alert.MetricName `
+              -Operator $alert.Operator `
+              -Threshold $alert.Threshold `
+              -TimeAggregation $alert.TimeAggregation `
+              -ActionGroupId ${{ env.AA_ACG_RESOURCE_ID_MAIN }}
+          }
+
+          $metricAlerts = $ConfigMain.Observability.MetricAlertsIP
+
+          foreach ($alert in $metricAlerts.Alerts)
+          {
+            $output = plzm.Azure\Deploy-MetricAlert `
+              -SubscriptionID "$SubscriptionId" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.metric-alert.json") `
+              -MetricAlertName $alert.Name `
+              -Severity $alert.Severity `
+              -TargetResourceType $metricAlerts.TargetResourceType `
+              -TargetResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER }} `
+              -EvaluationFrequency $alert.EvaluationFrequency `
+              -WindowSize $alert.WindowSize `
+              -MetricNamespace $alert.MetricNamespace `
+              -MetricName $alert.MetricName `
+              -Operator $alert.Operator `
+              -Threshold $alert.Threshold `
+              -TimeAggregation $alert.TimeAggregation `
+              -ActionGroupId ${{ env.AA_ACG_RESOURCE_ID_MAIN }}
+          }
+
       - name: Azure logout
         if: always()
         uses: azure/CLI@v1
