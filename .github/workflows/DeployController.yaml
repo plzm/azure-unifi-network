@@ -562,7 +562,6 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-
       - name: Add transient NSG rules for GitHub runner and Certbot access to Controller VM
         if: success()
         shell: pwsh
@@ -766,6 +765,67 @@ jobs:
             -NSGRuleName $nsgRuleName
 
           Write-Debug -Debug:$true -Message "$output"
+
+      - name: Deploy Metric Alerts
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+          $metricAlerts = $ConfigMain.Observability.MetricAlertsVM
+
+          foreach ($alert in $metricAlerts.Alerts)
+          {
+            $metricAlertName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixMetricAlert -Sequence $ConfigController.IdForNaming -Suffix $alert.Suffix
+
+            $output = plzm.Azure\Deploy-MetricAlert `
+              -SubscriptionID "$SubscriptionId" `
+              -ResourceGroupName "${{ env.AA_RG_NAME_CONTROLLER }}" `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.metric-alert.json") `
+              -MetricAlertName "$metricAlertName" `
+              -Severity $($alert.Severity) `
+              -TargetResourceType "$($metricAlerts.TargetResourceType)" `
+              -TargetResourceId "${{ env.AA_VM_RESOURCE_ID_CONTROLLER }}" `
+              -EvaluationFrequency "$($alert.EvaluationFrequency)" `
+              -WindowSize "$($alert.WindowSize)" `
+              -MetricNamespace "$($alert.MetricNamespace)" `
+              -MetricName "$($alert.MetricName)" `
+              -Operator "$($alert.Operator)"`
+              -Threshold $alert.Threshold `
+              -TimeAggregation "$($alert.TimeAggregation)" `
+              -ActionGroupId "${{ env.AA_ACG_RESOURCE_ID_MAIN }}" `
+              -Tags "$($alert.Tags)"
+          }
+
+          $metricAlerts = $ConfigMain.Observability.MetricAlertsIP
+
+          foreach ($alert in $metricAlerts.Alerts)
+          {
+            $metricAlertName = Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixMetricAlert -Sequence $ConfigController.IdForNaming -Suffix $alert.Suffix
+
+            $output = plzm.Azure\Deploy-MetricAlert `
+              -SubscriptionID "$SubscriptionId" `
+              -ResourceGroupName "${{ env.AA_RG_NAME_CONTROLLER }}" `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.metric-alert.json") `
+              -MetricAlertName "$metricAlertName" `
+              -Severity $($alert.Severity) `
+              -TargetResourceType "$($metricAlerts.TargetResourceType)" `
+              -TargetResourceId "${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER }}" `
+              -EvaluationFrequency "$($alert.EvaluationFrequency)" `
+              -WindowSize "$($alert.WindowSize)" `
+              -MetricNamespace "$($alert.MetricNamespace)" `
+              -MetricName "$($alert.MetricName)" `
+              -Operator "$($alert.Operator)"`
+              -Threshold $alert.Threshold `
+              -TimeAggregation "$($alert.TimeAggregation)" `
+              -ActionGroupId "${{ env.AA_ACG_RESOURCE_ID_MAIN }}" `
+              -Tags "$($alert.Tags)"
+          }
 
       - name: Azure logout
         if: always()

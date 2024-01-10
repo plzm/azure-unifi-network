@@ -26,6 +26,13 @@ function Set-VariablesMain()
 
   plzm.Azure\Set-EnvVar2 -VarName "AA_RG_NAME_MAIN" -VarValue "$rgNameMain"
 
+  # Action Group
+  $actionGroupName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixActionGroup -Sequence $ConfigMain.Suffix
+  $actionGroupResourceId = plzm.Azure\Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.Insights" -ResourceTypeName "actionGroups" -ResourceName $actionGroupName
+
+  plzm.Azure\Set-EnvVar2 -VarName "AA_ACG_NAME_MAIN" -VarValue "$actionGroupName"
+  plzm.Azure\Set-EnvVar2 -VarName "AA_ACG_RESOURCE_ID_MAIN" -VarValue "$actionGroupResourceId"
+
   # User Assigned Identity
   $uaiNameMain = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixUai -Suffix $ConfigMain.Suffix
   $uaiResourceIdMain = plzm.Azure\Get-ResourceId -SubscriptionId $SubscriptionId -ResourceGroupName "$rgNameMain" -ResourceProviderName "Microsoft.ManagedIdentity" -ResourceTypeName "userAssignedIdentities" -ResourceName $uaiNameMain
@@ -98,6 +105,8 @@ function Set-VariablesMain()
   # AA_TAGS_FOR_CLI
   # AA_TAGS_FOR_ARM
   # AA_RG_NAME_MAIN
+  # AA_ACG_NAME_MAIN
+  # AA_ACG_RESOURCE_ID_MAIN
   # AA_UAI_NAME_MAIN
   # AA_UAI_RESOURCE_ID_MAIN
   # AA_UAI_CLIENT_ID_MAIN - set later

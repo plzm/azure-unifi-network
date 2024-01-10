@@ -35,16 +35,6 @@ jobs:
           . ./scripts/Module.ps1
           Get-PlzmAzureModule -UrlRoot "$urlRoot"
 
-
-      - name: Register RPs
-        if: success()
-        shell: pwsh
-        run: |
-          $output = az provider register --namespace "Microsoft.ChangeAnalysis" --accept-terms --consent-to-permissions --wait | ConvertFrom-Json
-
-          Write-Debug -Debug:$true -Message "$output"
-
-
       - name: Set Config File Paths to Environment
         if: success()
         shell: pwsh
@@ -53,7 +43,6 @@ jobs:
 
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
           plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
-
 
       - name: Set Variables and write to Environment - Main
         if: success()
@@ -72,6 +61,14 @@ jobs:
             -ConfigMain $ConfigMain `
             -SubscriptionId $SubscriptionId
 
+
+      - name: Register RPs
+        if: success()
+        shell: pwsh
+        run: |
+          $output = az provider register --namespace "Microsoft.ChangeAnalysis" --accept-terms --consent-to-permissions --wait | ConvertFrom-Json
+
+          Write-Debug -Debug:$true -Message "$output"
 
       - name: Create Resource Groups
         if: success()
@@ -92,6 +89,29 @@ jobs:
             -n "$rgNameMain" `
             --tags ${{ env.AA_TAGS_FOR_CLI }} `
             | ConvertFrom-Json
+
+      - name: Deploy Action Group
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+
+          Write-Debug -Debug:$true -Message "Deploy Action Group ${{ env.AA_ACG_NAME_MAIN }}"
+          $output = plzm.Azure\Deploy-ActionGroup `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.action-group.json") `
+            -ActionGroupName "${{ env.AA_ACG_NAME_MAIN }}" `
+            -ActionGroupShortName $ConfigMain.Observability.ActionGroup.ShortName `
+            -EmailReceivers $ConfigMain.Observability.ActionGroup.EmailReceivers `
+            -SmsReceivers $ConfigMain.Observability.ActionGroupSmsReceivers `
+            -AzureAppPushReceivers $ConfigMain.Observability.ActionGroup.AzureAppPushReceivers `
+            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+
+          Write-Debug -Debug:$true -Message "$output"
 
 
       - name: Deploy User Assigned Identity

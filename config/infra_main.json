@@ -52,6 +52,114 @@
     "SkuName": "Standard_LRS"
   },
   "Observability": {
+    "ActionGroup": {
+      "ShortName": "aa-acg",
+      "EmailReceivers": "support@alfaadin.com",
+      "SmsReceivers": "",
+      "AzureAppPushReceivers": ""
+    },
+    "MetricAlertsVM":
+    {
+      "TargetResourceType": "Microsoft.Compute/virtualMachines",
+      "Alerts":
+      [
+        {
+          "Suffix": "avl-mem-bytes",
+          "Severity": 3,
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Available Memory Bytes",
+          "Operator": "LessThan",
+          "Threshold": 64000000,
+          "TimeAggregation": "Average"
+        },
+        {
+          "Suffix": "data-disk-iops-pct",
+          "Severity": 3,
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Data Disk IOPS Consumed Percentage",
+          "Operator": "GreaterThan",
+          "Threshold": 95,
+          "TimeAggregation": "Average"
+        },
+        {
+          "Suffix": "net-in-total",
+          "Severity": 3,
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Network In Total",
+          "Operator": "GreaterThan",
+          "Threshold": 500000000000,
+          "TimeAggregation": "Total"
+        },
+        {
+          "Suffix": "net-out-total",
+          "Severity": 3,
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Network Out Total",
+          "Operator": "GreaterThan",
+          "Threshold": 200000000000,
+          "TimeAggregation": "Total"
+        },
+        {
+          "Suffix": "os-disk-iops-pct",
+          "Severity": 3,
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "OS Disk IOPS Consumed Percentage",
+          "Operator": "GreaterThan",
+          "Threshold": 95,
+          "TimeAggregation": "Average"
+        },
+        {
+          "Suffix": "pct-cpu",
+          "Severity": 3,
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "Percentage CPU",
+          "Operator": "GreaterThan",
+          "Threshold": 80,
+          "TimeAggregation": "Average"
+        },
+        {
+          "Suffix": "vm-avl",
+          "Severity": 3,
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Compute/virtualMachines",
+          "MetricName": "VmAvailabilityMetric",
+          "Operator": "LessThan",
+          "Threshold": 1,
+          "TimeAggregation": "Average"
+        }
+      ]
+    },
+    "MetricAlertsIP":
+    {
+      "TargetResourceType": "Microsoft.Network/publicIPAddresses",
+      "Alerts":
+      [
+        {
+          "Suffix": "ddos-attack",
+          "Severity": 2,
+          "EvaluationFrequency": "PT5M",
+          "WindowSize": "PT5M",
+          "MetricNamespace": "Microsoft.Network/publicIPAddresses",
+          "MetricName": "IfUnderDDoSAttack",
+          "Operator": "GreaterThan",
+          "Threshold": 0,
+          "TimeAggregation": "Maximum"
+        }
+      ]
+    },
     "DataCollectionEndpoint": {
       "PublicNetworkAccess": "Disabled"
     }
