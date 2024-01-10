@@ -87,7 +87,6 @@ jobs:
             --subscription "$SubscriptionId" `
             -l $ConfigMain.Location `
             -n "$rgNameMain" `
-            --tags ${{ env.AA_TAGS_FOR_CLI }} `
             | ConvertFrom-Json
 
       - name: Deploy Action Group
@@ -108,8 +107,7 @@ jobs:
             -ActionGroupShortName $ConfigMain.Observability.ActionGroup.ShortName `
             -EmailReceivers $ConfigMain.Observability.ActionGroup.EmailReceivers `
             -SmsReceivers $ConfigMain.Observability.ActionGroupSmsReceivers `
-            -AzureAppPushReceivers $ConfigMain.Observability.ActionGroup.AzureAppPushReceivers `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -AzureAppPushReceivers $ConfigMain.Observability.ActionGroup.AzureAppPushReceivers
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -130,8 +128,7 @@ jobs:
             -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
             -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
-            -UAIName "${{ env.AA_UAI_NAME_MAIN }}" `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -UAIName "${{ env.AA_UAI_NAME_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -251,8 +248,7 @@ jobs:
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.log-analytics-workspace.json") `
-            -WorkspaceName "${{ env.AA_LAW_NAME_MAIN }}" `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -WorkspaceName "${{ env.AA_LAW_NAME_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -292,8 +288,7 @@ jobs:
             -VNetName ${{ env.AA_VNET_NAME }} `
             -VNetResourceId ${{ env.AA_VNET_RESOURCE_ID }} `
             -LogAnalyticsWorkspaceName "${{ env.AA_LAW_NAME_MAIN }}" `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}"
 
 
       - name: Deploy Private DNS zones
@@ -311,8 +306,7 @@ jobs:
             -ConfigMain $ConfigMain `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -VNetName ${{ env.AA_VNET_NAME }} `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -VNetName ${{ env.AA_VNET_NAME }}
 
 
       - name: Deploy Azure Monitor Private Link Scope
@@ -333,8 +327,7 @@ jobs:
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.json") `
-            -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }} `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }}
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -359,8 +352,7 @@ jobs:
             -ProtectedWorkloadSubResource "azuremonitor" `
             -PrivateEndpointName $privateEndpointName `
             -NetworkInterfaceName $privateLinkScopeNicName `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }} `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }}
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -412,8 +404,7 @@ jobs:
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-endpoint.json") `
             -DataCollectionEndpointName ${{ env.AA_DCE_NAME }} `
             -DataCollectionEndpointKind "Linux" `
-            -PublicNetworkAccess $ConfigMain.Observability.DataCollectionEndpoint.PublicNetworkAccess `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -PublicNetworkAccess $ConfigMain.Observability.DataCollectionEndpoint.PublicNetworkAccess
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -435,8 +426,7 @@ jobs:
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule.linux.json") `
             -DataCollectionRuleName ${{ env.AA_DCR_NAME }} `
             -LogAnalyticsWorkspaceName ${{ env.AA_LAW_NAME_MAIN }} `
-            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }} `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -LogAnalyticsWorkspaceResourceId ${{ env.AA_LAW_RESOURCE_ID_MAIN }}
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -482,8 +472,7 @@ jobs:
             -PublicNetworkAccess "Enabled" `
             -DefaultAction "Deny" `
             -AllowedIpAddressRangesCsv "" `
-            -AllowedSubnetResourceIdsCsv "$subnetResourceIdsCsv" `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -AllowedSubnetResourceIdsCsv "$subnetResourceIdsCsv"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -511,8 +500,7 @@ jobs:
             -ProtectedWorkloadSubResource "vault" `
             -PrivateEndpointName $privateEndpointName `
             -NetworkInterfaceName $keyVaultNicName `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }} `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }}
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -584,8 +572,7 @@ jobs:
             -SkuName $ConfigMain.Storage.SkuName `
             -AllowedSubnetResourceIdsCsv "$subnetResourceIdsCsv" `
             -AllowedIpAddressRangesCsv "" `
-            -DefaultAction "Deny" `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -DefaultAction "Deny"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -612,8 +599,7 @@ jobs:
             -ProtectedWorkloadSubResource "blob" `
             -PrivateEndpointName $privateEndpointNameBlob `
             -NetworkInterfaceName $storageAccountNicNameBlob `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }} `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }}
 
           Write-Debug -Debug:$true -Message "$output"
 
