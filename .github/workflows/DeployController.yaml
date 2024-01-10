@@ -91,7 +91,6 @@ jobs:
             --subscription "$SubscriptionId" `
             -l $ConfigController.Location `
             -n "$rgNameController" `
-            --tags ${{ env.AA_TAGS_FOR_CLI }} `
             | ConvertFrom-Json
 
       - name: Deploy User Assigned Identity
@@ -111,8 +110,7 @@ jobs:
             -ResourceGroupName ${{ env.AA_RG_NAME_CONTROLLER }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
             -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
-            -UAIName "${{ env.AA_UAI_NAME_CONTROLLER }}" `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -UAIName "${{ env.AA_UAI_NAME_CONTROLLER }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -393,8 +391,7 @@ jobs:
             -PublicIpAddressName ${{ env.AA_VM_PIP_NAME_CONTROLLER }} `
             -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
             -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
-            -HostName ${{ env.AA_VM_HOSTNAME_CONTROLLER}} `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -HostName ${{ env.AA_VM_HOSTNAME_CONTROLLER}}
 
 
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
@@ -420,8 +417,7 @@ jobs:
             -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN}} `
             -EnableAcceleratedNetworking $ConfigController.Network.Nic.EnableAcceleratedNetworking `
             -PublicIpResourceId ${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER}} `
-            -IpConfigName $ConfigController.Network.Nic.IpConfigurationName `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -IpConfigName $ConfigController.Network.Nic.IpConfigurationName
 
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "$SubscriptionId" `
@@ -460,8 +456,7 @@ jobs:
             -VmAutoShutdownTime "9999" `
             -NetworkInterfaceResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
             -EnableBootDiagnostics $true `
-            -BootDiagnosticsStorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}" `
-            -Tags ${{ env.AA_TAGS_FOR_ARM }}
+            -BootDiagnosticsStorageAccountName "${{ env.AA_STORAGE_ACCOUNT_NAME_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 

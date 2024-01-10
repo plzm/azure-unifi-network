@@ -18,9 +18,6 @@ function Set-VariablesMain()
   $runnerIp = plzm.Azure\Get-MyCurrentPublicIpAddress
   plzm.Azure\Set-EnvVar2 -VarName "AA_GITHUB_RUNNER_PUBLIC_IP" -VarValue "$runnerIp"
 
-  # Tags
-  Set-EnvVarTags -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain
-
   # Resource Groups
   $rgNameMain = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixRsg -Suffix $ConfigMain.Suffix
 
@@ -102,8 +99,6 @@ function Set-VariablesMain()
 
   # Env vars listed here for convenience
   # AA_GITHUB_RUNNER_PUBLIC_IP
-  # AA_TAGS_FOR_CLI
-  # AA_TAGS_FOR_ARM
   # AA_RG_NAME_MAIN
   # AA_ACG_NAME_MAIN
   # AA_ACG_RESOURCE_ID_MAIN
@@ -214,54 +209,4 @@ function Set-VariablesController()
   # AA_VM_NIC_RESOURCE_ID_CONTROLLER
   # AA_VM_ADMIN_USERNAME
   # AA_VM_SSH_PATH
-}
-
-function Set-EnvVarTags()
-{
-  [CmdletBinding()]
-  param
-  (
-    [Parameter(Mandatory = $false)]
-    [object]
-    $ConfigConstants = $null,
-    [Parameter(Mandatory = $false)]
-    [object]
-    $ConfigMain = $null
-  )
-
-  Write-Debug -Debug:$debug -Message ("Set-EnvVarTags")
-
-  $tagsForAzureCli = @()
-  $tag1 = "foo=bar"
-
-  #if ($ConfigConstants)
-  #{
-  #  $tag2 = "baz=bam"
-
-  #  $tagsForAzureCli = @($tag1, $tag2)
-  #}
-  #else
-  #{
-  $tagsForAzureCli = @($tag1)
-  #}
-
-  $tagsObject = @{}
-  $tagsObject['foo'] = "bar"
-
-  #if ($ConfigConstants)
-  #{
-  #  $tagsObject['baz'] ="bam"
-  #}
-
-  # The following manipulations are needed to get through separate un-escaping by Powershell AND by Azure CLI, 
-  # and to get CLI to correctly see the tags as a JSON string passed into ARM templates as an object type.
-  $tagsForArm = ConvertTo-Json -InputObject $tagsObject -Compress
-  $tagsForArm = $tagsForArm.Replace('"', '''')
-  $tagsForArm = "`"$tagsForArm`""
-
-  # Set the env vars
-  # Tags for straight CLI commands
-  plzm.Azure\Set-EnvVar2 -VarName "AA_TAGS_FOR_CLI" -VarValue "$tagsForAzureCli"
-  # Tags for ARM template tags parameter - do not quote the variable for this, breaks ARM template tags
-  plzm.Azure\Set-EnvVar2 -VarName "AA_TAGS_FOR_ARM" -VarValue $tagsForArm
 }
