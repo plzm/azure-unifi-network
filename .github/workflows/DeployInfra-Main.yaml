@@ -248,7 +248,9 @@ jobs:
             -Location $ConfigMain.Location `
             -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.log-analytics-workspace.json") `
-            -WorkspaceName "${{ env.AA_LAW_NAME_MAIN }}"
+            -WorkspaceName "${{ env.AA_LAW_NAME_MAIN }}" `
+            -PublicNetworkAccessForIngestion "Enabled" `
+            -PublicNetworkAccessForQuery "Enabled"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -300,13 +302,20 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Deploy private DNS zones"
-          plzm.Azure\Deploy-NetworkPrivateDnsZones `
-            -ConfigConstants $ConfigConstants `
-            -ConfigMain $ConfigMain `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -VNetName ${{ env.AA_VNET_NAME }}
+          if ($ConfigMain.Network.UsePrivateNetworking)
+          {
+            Write-Debug -Debug:$true -Message "Deploy private DNS zones"
+            plzm.Azure\Deploy-NetworkPrivateDnsZones `
+              -ConfigConstants $ConfigConstants `
+              -ConfigMain $ConfigMain `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -VNetName ${{ env.AA_VNET_NAME }}
+          }
+          else
+          {
+            Write-Debug -Debug:$true -Message "Private networking not configured. Skipping private DNS zones deployment."
+          }
 
 
       - name: Deploy Azure Monitor Private Link Scope
@@ -318,74 +327,81 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
 
-          $privateEndpointName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumAmpls
-          $privateLinkScopeNicName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumAmpls
-          $privateLinkScopeNicResourceId = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $privateLinkScopeNicName
+          if ($ConfigMain.Network.UsePrivateNetworking)
+          {
+            $privateEndpointName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumAmpls
+            $privateLinkScopeNicName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumAmpls
+            $privateLinkScopeNicResourceId = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $privateLinkScopeNicName
 
-          Write-Debug -Debug:$true -Message "Deploy AMPLS"
-          $output = plzm.Azure\Deploy-MonitorPrivateLinkScope `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.json") `
-            -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }}
+            Write-Debug -Debug:$true -Message "Deploy AMPLS"
+            $output = plzm.Azure\Deploy-MonitorPrivateLinkScope `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.json") `
+              -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }}
 
-          Write-Debug -Debug:$true -Message "$output"
+            Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy LAW-AMPLS connection"
-          $output = plzm.Azure\Deploy-MonitorPrivateLinkScopeResourceConnection `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
-            -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }} `
-            -ScopedResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
-            -ScopedResourceName "${{ env.AA_LAW_NAME_MAIN }}"
+            Write-Debug -Debug:$true -Message "Deploy LAW-AMPLS connection"
+            $output = plzm.Azure\Deploy-MonitorPrivateLinkScopeResourceConnection `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
+              -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }} `
+              -ScopedResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
+              -ScopedResourceName "${{ env.AA_LAW_NAME_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+            Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy AMPLS Private Endpoint and NIC"
-          $output = plzm.Azure\Deploy-NetworkPrivateEndpointAndNic `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $ConfigMain.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
-            -ProtectedWorkloadResourceId ${{ env.AA_AMPLS_RESOURCE_ID_MAIN }} `
-            -ProtectedWorkloadSubResource "azuremonitor" `
-            -PrivateEndpointName $privateEndpointName `
-            -NetworkInterfaceName $privateLinkScopeNicName `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }}
+            Write-Debug -Debug:$true -Message "Deploy AMPLS Private Endpoint and NIC"
+            $output = plzm.Azure\Deploy-NetworkPrivateEndpointAndNic `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -Location $ConfigMain.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
+              -ProtectedWorkloadResourceId ${{ env.AA_AMPLS_RESOURCE_ID_MAIN }} `
+              -ProtectedWorkloadSubResource "azuremonitor" `
+              -PrivateEndpointName $privateEndpointName `
+              -NetworkInterfaceName $privateLinkScopeNicName `
+              -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }}
 
-          Write-Debug -Debug:$true -Message "$output"
+            Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
-          $output = plzm.Azure\Deploy-DiagnosticsSetting `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-            -ResourceId $privateLinkScopeNicResourceId `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
-            -SendLogs $false `
-            -SendMetrics $true
+            Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
+            $output = plzm.Azure\Deploy-DiagnosticsSetting `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+              -ResourceId $privateLinkScopeNicResourceId `
+              -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
+              -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
+              -SendLogs $false `
+              -SendMetrics $true
 
-          Write-Debug -Debug:$true -Message "$output"
+            Write-Debug -Debug:$true -Message "$output"
 
-          # Private Endpoint DNS Zone Group
-          Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group"
-          $privateDnsZoneResourceId = plzm.Azure\Get-ResourceId `
-            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
-            -ResourceProviderName "Microsoft.Network" `
-            -ResourceTypeName "privateDnsZones" `
-            -ResourceName $ConfigConstants.PrivateDnsZoneNameMonitor
+            # Private Endpoint DNS Zone Group
+            Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group"
+            $privateDnsZoneResourceId = plzm.Azure\Get-ResourceId `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
+              -ResourceProviderName "Microsoft.Network" `
+              -ResourceTypeName "privateDnsZones" `
+              -ResourceName $ConfigConstants.PrivateDnsZoneNameMonitor
 
-          plzm.Azure\Deploy-NetworkPrivateEndpointPrivateDnsZoneGroup `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
-            -PrivateEndpointName $privateEndpointName `
-            -PrivateDnsZoneName $ConfigConstants.PrivateDnsZoneNameMonitor `
-            -PrivateDnsZoneGroupName "default" `
-            -PrivateDnsZoneResourceId $privateDnsZoneResourceId
+            plzm.Azure\Deploy-NetworkPrivateEndpointPrivateDnsZoneGroup `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
+              -PrivateEndpointName $privateEndpointName `
+              -PrivateDnsZoneName $ConfigConstants.PrivateDnsZoneNameMonitor `
+              -PrivateDnsZoneGroupName "default" `
+              -PrivateDnsZoneResourceId $privateDnsZoneResourceId
+          }
+          else
+          {
+            Write-Debug -Debug:$true -Message "Private networking not configured. Skipping AMPLS deployment."
+          }
 
 
       - name: Deploy Data Collection Endpoint and Rules
@@ -404,20 +420,27 @@ jobs:
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-endpoint.json") `
             -DataCollectionEndpointName ${{ env.AA_DCE_NAME }} `
             -DataCollectionEndpointKind "Linux" `
-            -PublicNetworkAccess $ConfigMain.Observability.DataCollectionEndpoint.PublicNetworkAccess
+            -PublicNetworkAccess !($ConfigMain.Network.UsePrivateNetworking)
 
           Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy DCE-AMPLS connection"
-          $output = plzm.Azure\Deploy-MonitorPrivateLinkScopeResourceConnection `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
-            -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }} `
-            -ScopedResourceId "${{ env.AA_DCE_RESOURCE_ID }}" `
-            -ScopedResourceName "${{ env.AA_DCE_NAME }}"
+          if ($ConfigMain.Network.UsePrivateNetworking)
+          {
+            Write-Debug -Debug:$true -Message "Deploy DCE-AMPLS connection"
+            $output = plzm.Azure\Deploy-MonitorPrivateLinkScopeResourceConnection `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.private-link-scope.scoped-resource.json") `
+              -PrivateLinkScopeName ${{ env.AA_AMPLS_NAME_MAIN }} `
+              -ScopedResourceId "${{ env.AA_DCE_RESOURCE_ID }}" `
+              -ScopedResourceName "${{ env.AA_DCE_NAME }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+            Write-Debug -Debug:$true -Message "$output"
+          }
+          else
+          {
+            Write-Debug -Debug:$true -Message "Private networking not configured. Skipping DCE-AMPLS connection."
+          }
 
           $output = plzm.Azure\Deploy-MonitorDataCollectionRule `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
@@ -450,10 +473,6 @@ jobs:
 
           $subnetResourceIdsCsv = $($subnetResourceIds -join ",")
           Write-Debug -Debug:$true -Message "$subnetResourceIdsCsv"
-
-          $privateEndpointName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumKeyVault
-          $keyVaultNicName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumKeyVault
-          $keyVaultNicResourceId = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $keyVaultNicName
 
           Write-Debug -Debug:$true -Message "Deploy Key Vault"
           $output = plzm.Azure\Deploy-KeyVault `
@@ -490,51 +509,62 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Private Endpoint and NIC"
-          $output = plzm.Azure\Deploy-NetworkPrivateEndpointAndNic `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $ConfigMain.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
-            -ProtectedWorkloadResourceId "${{ env.AA_KEYVAULT_RESOURCE_ID_MAIN}}" `
-            -ProtectedWorkloadSubResource "vault" `
-            -PrivateEndpointName $privateEndpointName `
-            -NetworkInterfaceName $keyVaultNicName `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }}
+          if ($ConfigMain.Network.UsePrivateNetworking)
+          {
+            $privateEndpointName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumKeyVault
+            $keyVaultNicName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumKeyVault
+            $keyVaultNicResourceId = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $keyVaultNicName
 
-          Write-Debug -Debug:$true -Message "$output"
+            Write-Debug -Debug:$true -Message "Deploy Private Endpoint and NIC"
+            $output = plzm.Azure\Deploy-NetworkPrivateEndpointAndNic `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -Location $ConfigMain.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
+              -ProtectedWorkloadResourceId "${{ env.AA_KEYVAULT_RESOURCE_ID_MAIN}}" `
+              -ProtectedWorkloadSubResource "vault" `
+              -PrivateEndpointName $privateEndpointName `
+              -NetworkInterfaceName $keyVaultNicName `
+              -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }}
 
-          # NIC Diagnostics
-          Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
-          $output = plzm.Azure\Deploy-DiagnosticsSetting `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-            -ResourceId $keyVaultNicResourceId `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
-            -SendLogs $false `
-            -SendMetrics $true
+            Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "$output"
+            # NIC Diagnostics
+            Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
+            $output = plzm.Azure\Deploy-DiagnosticsSetting `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+              -ResourceId $keyVaultNicResourceId `
+              -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
+              -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
+              -SendLogs $false `
+              -SendMetrics $true
 
-          # Private Endpoint DNS Zone Group
-          Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group"
-          $privateDnsZoneResourceId = plzm.Azure\Get-ResourceId `
-            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
-            -ResourceProviderName "Microsoft.Network" `
-            -ResourceTypeName "privateDnsZones" `
-            -ResourceName $ConfigConstants.PrivateDnsZoneNameKeyVault
+            Write-Debug -Debug:$true -Message "$output"
 
-          plzm.Azure\Deploy-NetworkPrivateEndpointPrivateDnsZoneGroup `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
-            -PrivateEndpointName $privateEndpointName `
-            -PrivateDnsZoneName $ConfigConstants.PrivateDnsZoneNameKeyVault `
-            -PrivateDnsZoneGroupName "default" `
-            -PrivateDnsZoneResourceId $privateDnsZoneResourceId
+            # Private Endpoint DNS Zone Group
+            Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group"
+            $privateDnsZoneResourceId = plzm.Azure\Get-ResourceId `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
+              -ResourceProviderName "Microsoft.Network" `
+              -ResourceTypeName "privateDnsZones" `
+              -ResourceName $ConfigConstants.PrivateDnsZoneNameKeyVault
+
+            plzm.Azure\Deploy-NetworkPrivateEndpointPrivateDnsZoneGroup `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
+              -PrivateEndpointName $privateEndpointName `
+              -PrivateDnsZoneName $ConfigConstants.PrivateDnsZoneNameKeyVault `
+              -PrivateDnsZoneGroupName "default" `
+              -PrivateDnsZoneResourceId $privateDnsZoneResourceId
+          }
+          else
+          {
+            Write-Debug -Debug:$true -Message "Private networking not configured. Skipping Key Vault Private Endpoint deployment."
+          }
 
 
       - name: Deploy Storage
@@ -556,11 +586,6 @@ jobs:
 
           $subnetResourceIdsCsv = $($subnetResourceIds -join ",")
           Write-Debug -Debug:$true -Message "$subnetResourceIdsCsv"
-
-          # Blob
-          $privateEndpointNameBlob = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumStorage -Suffix "blob"
-          $storageAccountNicNameBlob = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumStorage -Suffix "blob"
-          $storageAccountNicResourceIdBlob = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $storageAccountNicNameBlob
 
           Write-Debug -Debug:$true -Message "Deploy Storage Account"
           $output = plzm.Azure\Deploy-StorageAccount `
@@ -588,52 +613,64 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-          # Deploy Storage Private Endpoint and NIC - Blob
-          Write-Debug -Debug:$true -Message "Deploy Private Endpoint and NIC"
-          $output = plzm.Azure\Deploy-NetworkPrivateEndpointAndNic `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $ConfigMain.Location `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
-            -ProtectedWorkloadResourceId "${{ env.AA_STORAGE_ACCOUNT_RESOURCE_ID_MAIN }}" `
-            -ProtectedWorkloadSubResource "blob" `
-            -PrivateEndpointName $privateEndpointNameBlob `
-            -NetworkInterfaceName $storageAccountNicNameBlob `
-            -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }}
+          if ($ConfigMain.Network.UsePrivateNetworking)
+          {
+            # Blob
+            $privateEndpointNameBlob = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumStorage -Suffix "blob"
+            $storageAccountNicNameBlob = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumStorage -Suffix "blob"
+            $storageAccountNicResourceIdBlob = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $storageAccountNicNameBlob
 
-          Write-Debug -Debug:$true -Message "$output"
+            # Deploy Storage Private Endpoint and NIC - Blob
+            Write-Debug -Debug:$true -Message "Deploy Private Endpoint and NIC"
+            $output = plzm.Azure\Deploy-NetworkPrivateEndpointAndNic `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -Location $ConfigMain.Location `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.json") `
+              -ProtectedWorkloadResourceId "${{ env.AA_STORAGE_ACCOUNT_RESOURCE_ID_MAIN }}" `
+              -ProtectedWorkloadSubResource "blob" `
+              -PrivateEndpointName $privateEndpointNameBlob `
+              -NetworkInterfaceName $storageAccountNicNameBlob `
+              -SubnetResourceId ${{ env.AA_SUBNET_RESOURCE_ID_MAIN }}
 
-          # NIC Diagnostics - Blob
-          Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
-          $output = plzm.Azure\Deploy-DiagnosticsSetting `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-            -ResourceId $storageAccountNicResourceIdBlob `
-            -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
-            -SendLogs $false `
-            -SendMetrics $true
+            Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "$output"
+            # NIC Diagnostics - Blob
+            Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
+            $output = plzm.Azure\Deploy-DiagnosticsSetting `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+              -ResourceId $storageAccountNicResourceIdBlob `
+              -DiagnosticsSettingName ("diag-" + "${{ env.AA_LAW_NAME_MAIN }}") `
+              -LogAnalyticsWorkspaceResourceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
+              -SendLogs $false `
+              -SendMetrics $true
 
-          # Private Endpoint DNS Zone Group
-          Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group - Blob"
-          $privateDnsZoneResourceId = plzm.Azure\Get-ResourceId `
-            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
-            -ResourceProviderName "Microsoft.Network" `
-            -ResourceTypeName "privateDnsZones" `
-            -ResourceName $ConfigConstants.PrivateDnsZoneNameStorageBlob
+            Write-Debug -Debug:$true -Message "$output"
 
-          plzm.Azure\Deploy-NetworkPrivateEndpointPrivateDnsZoneGroup `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
-            -PrivateEndpointName $privateEndpointNameBlob `
-            -PrivateDnsZoneName $ConfigConstants.PrivateDnsZoneNameStorageBlob `
-            -PrivateDnsZoneGroupName "default" `
-            -PrivateDnsZoneResourceId $privateDnsZoneResourceId
+            # Private Endpoint DNS Zone Group
+            Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group - Blob"
+            $privateDnsZoneResourceId = plzm.Azure\Get-ResourceId `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}" `
+              -ResourceProviderName "Microsoft.Network" `
+              -ResourceTypeName "privateDnsZones" `
+              -ResourceName $ConfigConstants.PrivateDnsZoneNameStorageBlob
+
+            plzm.Azure\Deploy-NetworkPrivateEndpointPrivateDnsZoneGroup `
+              -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
+              -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.private-endpoint.private-dns-zone-group.json") `
+              -PrivateEndpointName $privateEndpointNameBlob `
+              -PrivateDnsZoneName $ConfigConstants.PrivateDnsZoneNameStorageBlob `
+              -PrivateDnsZoneGroupName "default" `
+              -PrivateDnsZoneResourceId $privateDnsZoneResourceId
+          }
+          else
+          {
+            Write-Debug -Debug:$true -Message "Private networking not configured. Skipping Storage Private Endpoint deployment."
+          }
 
 
       - name: Azure logout

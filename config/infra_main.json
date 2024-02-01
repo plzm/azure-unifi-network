@@ -4,6 +4,7 @@
   "LocationShort": "eus2",
   "Suffix": "main",
   "Network": {
+    "UsePrivateNetworking": false,
     "NSG": {
       "Rules": [
         {
