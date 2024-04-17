@@ -557,7 +557,7 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-      - name: Add transient NSG rules for GitHub runner and Certbot access to Controller VM
+      - name: Add transient NSG rule for GitHub runner access to Controller VM
         if: success()
         shell: pwsh
         run: |
@@ -572,34 +572,6 @@ jobs:
 
           $controllerVmPrivateIp = "${{ env.AX_VM_PRIVATE_IP_ADDRESS }}"
           Write-Debug -Debug:$true -Message "controllerVmPrivateIp: $controllerVmPrivateIp"
-
-
-          # Certbot to Controller VM
-          $index = 0
-          $nsgRule = $ConfigControllerSsh.Network.NSG.Rules[$index]
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgRuleNameCertbotAccess
-          $priority = ($ConfigConstants.NsgRulePriorityBase + $ConfigConstants.NsgRulePriorityPlusTransient + $ConfigController.Id + $index)
-          Write-Debug -Debug:$true -Message "$nsgRuleName priority: $priority"
-
-          $output = plzm.Azure\Deploy-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.nsg.rule.json") `
-            -NSGName ${{ env.AX_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName `
-            -Description $nsgRule.Description `
-            -Priority $priority `
-            -Direction $nsgRule.Direction `
-            -Access $nsgRule.Access `
-            -Protocol "*" `
-            -SourceAddressPrefix $nsgRule.SourceAddressPrefix `
-            -SourcePortRange $nsgRule.SourcePortRange `
-            -DestinationAddressPrefix $controllerVmPrivateIp `
-            -DestinationPortRange $nsgRule.DestinationPortRange `
-            -DestinationPortRanges $nsgRule.DestinationPortRanges
-
-          Write-Debug -Debug:$true -Message "$output"
-
 
           # GHA runner SSH to Controller VM
           $index = 1
@@ -730,7 +702,7 @@ jobs:
           # Delete known_hosts if exist
           if (Test-Path $filePathKnownHosts) { Remove-Item -Path $filePathKnownHosts -Force }
 
-      - name: Remove transient NSG rules for GitHub runner and Certbot access to Controller VM
+      - name: Remove transient NSG rule for GitHub runner access to Controller VM
         if: always()
         shell: pwsh
         run: |
@@ -740,16 +712,6 @@ jobs:
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-
-          $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgRuleNameCertbotAccess
-
-          $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
-            -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AX_NSG_NAME }} `
-            -NSGRuleName $nsgRuleName
-
-          Write-Debug -Debug:$true -Message "$output"
 
           $nsgRuleName = $ConfigController.IdForNaming + $ConfigConstants.SuffixNsgRuleNameGhaAccess
 
