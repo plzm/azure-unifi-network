@@ -28,7 +28,7 @@ function Get-PlzmAzureModule()
 
   Import-Module "$localFolderPath" -Force
 
-  plzm.Azure\Set-EnvVar2 -VarName "AA_MODULE_PATH_PLZM_AZURE" -VarValue "$localFolderPath"
+  plzm.Azure\Set-EnvVar2 -VarName "AX_MODULE_PATH_PLZM_AZURE" -VarValue "$localFolderPath"
 
   Write-Debug -Debug:$true -Message "Module $moduleName imported with version $((Get-Module $moduleName).Version)"
   plzm.Azure\Get-Timestamp

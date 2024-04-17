@@ -39,21 +39,21 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
-          plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
+          plzm.Azure\Set-EnvVar2 -VarName "AX_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
+          plzm.Azure\Set-EnvVar2 -VarName "AX_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
 
       - name: Set Variables and write to Environment - Main
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
           . ./scripts/Variables.ps1
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           Set-VariablesMain `
@@ -65,21 +65,21 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
           plzm.Azure\Remove-DiagnosticsSettingsForAllResources `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}"
+            -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}"
 
       - name: Delete UAI Role Assignments
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $uaiName = "${{ env.AA_UAI_NAME_MAIN }}"
+          $uaiName = "${{ env.AX_UAI_NAME_MAIN }}"
           Write-Debug -Debug:$true -Message "Get UAI $uaiName"
-          $uai = "$(az identity show -g ${{ env.AA_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
+          $uai = "$(az identity show -g ${{ env.AX_RG_NAME_MAIN }} -n $uaiName)" | ConvertFrom-Json
 
           Write-Debug -Debug:$true -Message "Remove sub-level role assignments"
           $output = plzm.Azure\Remove-RoleAssignments `
@@ -92,20 +92,20 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $configConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $configConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $configMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
 
           $rgExists = plzm.Azure\Test-ResourceGroupExists `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName "${{ env.AA_RG_NAME_MAIN }}"
+            -ResourceGroupName "${{ env.AX_RG_NAME_MAIN }}"
 
           if ($rgExists)
           {
             az group delete -y `
               --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-              -n "${{ env.AA_RG_NAME_MAIN }}"
+              -n "${{ env.AX_RG_NAME_MAIN }}"
           }
 
       - name: Azure logout
