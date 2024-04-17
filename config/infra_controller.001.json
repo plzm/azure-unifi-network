@@ -14,7 +14,7 @@
           "Access": "Allow",
           "Protocol": "*",
           "SourceAddressPrefix": "",
-          "SourceAddressPrefixes": "70.20.47.72,70.20.52.219,70.20.53.53,70.20.59.82,73.89.169.63,73.89.169.110,174.169.174.30",
+          "SourceAddressPrefixes": "73.89.169.63,73.89.169.110,174.169.174.30,70.20.32.0/19",
           "SourcePortRange": "*",
           "SourcePortRanges": "",
           "DestinationAddressPrefix": "",
