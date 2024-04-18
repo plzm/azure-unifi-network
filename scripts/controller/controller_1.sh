@@ -28,10 +28,10 @@ sudo wget -O /etc/apt/trusted.gpg.d/unifi-repo.gpg https://dl.ubnt.com/unifi/uni
 echo "deb http://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
 sudo wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
 
-sudo apt update -y
-sudo apt upgrade -y
+sudo apt-get update -y
+sudo apt-get upgrade -y
 
-sudo apt install unifi -y
+sudo apt-get install unifi -y
 
 sudo systemctl enable unifi.service
 sudo systemctl enable mongodb.service

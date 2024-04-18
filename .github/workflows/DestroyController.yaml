@@ -39,25 +39,25 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
-          plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
-          plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
-          plzm.Azure\Set-EnvVar2 -VarName "AA_CONFIG_FILE_INFRA_CONTROLLER_SSH" -VarValue ("./config/infra_controller_ssh.json")
+          plzm.Azure\Set-EnvVar2 -VarName "AX_CONFIG_FILE_INFRA_CONSTANTS" -VarValue "./config/infra_constants.json"
+          plzm.Azure\Set-EnvVar2 -VarName "AX_CONFIG_FILE_INFRA_MAIN" -VarValue ("./config/infra_main.json")
+          plzm.Azure\Set-EnvVar2 -VarName "AX_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
+          plzm.Azure\Set-EnvVar2 -VarName "AX_CONFIG_FILE_INFRA_CONTROLLER_SSH" -VarValue ("./config/infra_controller_ssh.json")
 
       - name: Set Variables
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
           . ./scripts/Variables.ps1
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
-          $ConfigControllerSsh = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER_SSH }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigControllerSsh = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER_SSH }}"
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           Set-VariablesMain `
@@ -76,11 +76,11 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
           $nsgRule = $ConfigController.Network.NSG.Rules[0]
 
@@ -89,119 +89,119 @@ jobs:
 
           $output = plzm.Azure\Remove-NetworkSecurityGroupRule `
             -SubscriptionID "$SubscriptionId" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -NSGName ${{ env.AA_NSG_NAME }} `
+            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+            -NSGName ${{ env.AX_NSG_NAME }} `
             -NSGRuleName $nsgRuleName
 
       - name: Delete Diagnostics Settings
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
           # PIP
           plzm.Azure\Remove-DiagnosticsSettingsForResource `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
-            -ResourceId "${{ env.AA_VM_PIP_RESOURCE_ID_CONTROLLER }}" `
-            -ResourceName "${{ env.AA_VM_PIP_NAME_CONTROLLER }}"
+            -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
+            -ResourceId "${{ env.AX_VM_PIP_RESOURCE_ID_CONTROLLER }}" `
+            -ResourceName "${{ env.AX_VM_PIP_NAME_CONTROLLER }}"
 
           # NIC
           plzm.Azure\Remove-DiagnosticsSettingsForResource `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
-            -ResourceId "${{ env.AA_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
-            -ResourceName "${{ env.AA_VM_NIC_NAME_CONTROLLER }}"
+            -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
+            -ResourceId "${{ env.AX_VM_NIC_RESOURCE_ID_CONTROLLER }}" `
+            -ResourceName "${{ env.AX_VM_NIC_NAME_CONTROLLER }}"
 
           # VM
           plzm.Azure\Remove-DiagnosticsSettingsForResource `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -LogAnalyticsWorkspaceId "${{ env.AA_LAW_RESOURCE_ID_MAIN }}" `
-            -ResourceId "${{ env.AA_VM_RESOURCE_ID_CONTROLLER }}" `
-            -ResourceName "${{ env.AA_VM_NAME_CONTROLLER }}"
+            -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
+            -ResourceId "${{ env.AX_VM_RESOURCE_ID_CONTROLLER }}" `
+            -ResourceName "${{ env.AX_VM_NAME_CONTROLLER }}"
 
       - name: Open Key Vault access for GitHub runner
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
           Write-Debug -Debug:$true -Message "Enable Key Vault public network access with default action Deny since we will explicitly add runner IP"
           plzm.Azure\Set-KeyVaultNetworkSettings `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
             -PublicNetworkAccess "Enabled" `
             -DefaultAction "Deny"
 
           Write-Debug -Debug:$true -Message "Add runner IP to KV network rules"
           plzm.Azure\New-KeyVaultNetworkRuleForIpAddressOrRange `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
+            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+            -IpAddressOrRange ${{ env.AX_GITHUB_RUNNER_PUBLIC_IP }}
 
       - name: Delete Key Vault secrets
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-          $secretNameAdminUserName = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-admin-username"
-          $secretNameSshKeyName = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-keyname"
-          $secretNameSshPublicKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-public-key"
-          $secretNameSshPrivateKey = "${{ env.AA_VM_NAME_CONTROLLER }}-ssh-private-key"
+          $secretNameAdminUserName = "${{ env.AX_VM_NAME_CONTROLLER }}-ssh-admin-username"
+          $secretNameSshKeyName = "${{ env.AX_VM_NAME_CONTROLLER }}-ssh-keyname"
+          $secretNameSshPublicKey = "${{ env.AX_VM_NAME_CONTROLLER }}-ssh-public-key"
+          $secretNameSshPrivateKey = "${{ env.AX_VM_NAME_CONTROLLER }}-ssh-private-key"
 
           plzm.Azure\Remove-KeyVaultSecret `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
               -SecretName "$secretNameAdminUserName"
 
           plzm.Azure\Remove-KeyVaultSecret `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
               -SecretName "$secretNameSshKeyName"
 
           plzm.Azure\Remove-KeyVaultSecret `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
               -SecretName "$secretNameSshPublicKey"
 
           plzm.Azure\Remove-KeyVaultSecret `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-              -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
               -SecretName "$secretNameSshPrivateKey"
 
       - name: Close Key Vault access from GitHub runner
         if: always()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
-          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
           Write-Debug -Debug:$true -Message "Remove runner IP from KV network rules"
           plzm.Azure\Remove-KeyVaultNetworkRuleForIpAddressOrRange `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
-            -IpAddressOrRange ${{ env.AA_GITHUB_RUNNER_PUBLIC_IP }}
+            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+            -IpAddressOrRange ${{ env.AX_GITHUB_RUNNER_PUBLIC_IP }}
 
           Write-Debug -Debug:$true -Message "Disable Key Vault public network access with default action Deny"
           plzm.Azure\Set-KeyVaultNetworkSettings `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AA_RG_NAME_MAIN }} `
-            -KeyVaultName "${{ env.AA_KEYVAULT_NAME_MAIN }}" `
+            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
             -PublicNetworkAccess "Disabled" `
             -DefaultAction "Deny"
 
@@ -210,11 +210,11 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $uaiName = "${{ env.AA_UAI_NAME_CONTROLLER }}"
+          $uaiName = "${{ env.AX_UAI_NAME_CONTROLLER }}"
           Write-Debug -Debug:$true -Message "Get UAI $uaiName"
-          $uai = "$(az identity show -g ${{ env.AA_RG_NAME_CONTROLLER }} -n $uaiName)" | ConvertFrom-Json
+          $uai = "$(az identity show -g ${{ env.AX_RG_NAME_CONTROLLER }} -n $uaiName)" | ConvertFrom-Json
 
           Write-Debug -Debug:$true -Message "Remove sub-level role assignments"
           $output = plzm.Azure\Remove-RoleAssignments `
@@ -227,7 +227,7 @@ jobs:
 
           $output = plzm.Azure\Remove-RoleAssignments `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName "${{ env.AA_RG_NAME_CONTROLLER }}" `
+            -ResourceGroupName "${{ env.AX_RG_NAME_CONTROLLER }}" `
             -PrincipalId $uai.principalId
   
           Write-Debug -Debug:$true -Message "$output"
@@ -236,20 +236,20 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AA_MODULE_PATH_PLZM_AZURE }}" -Force
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $configConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $configMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AA_CONFIG_FILE_INFRA_MAIN }}"
+          $configConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $configMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
 
           $rgExists = plzm.Azure\Test-ResourceGroupExists `
             -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName "${{ env.AA_RG_NAME_CONTROLLER }}"
+            -ResourceGroupName "${{ env.AX_RG_NAME_CONTROLLER }}"
 
           if ($rgExists)
           {
             az group delete -y `
               --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-              -n "${{ env.AA_RG_NAME_CONTROLLER }}"
+              -n "${{ env.AX_RG_NAME_CONTROLLER }}"
           }
 
       - name: Azure logout

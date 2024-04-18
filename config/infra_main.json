@@ -1,14 +1,15 @@
 {
-  "ContactEmail": "support@alfaadin.com",
+  "ContactEmail": "support@axon10.com",
   "Location": "eastus2",
   "LocationShort": "eus2",
   "Suffix": "main",
   "Network": {
+    "UsePrivateNetworking": false,
     "NSG": {
       "Rules": [
         {
-          "Name": "AAAccess",
-          "Description": "ALFAADIN Access",
+          "Name": "AXON10Access",
+          "Description": "AXON10 Access",
           "Priority": 100,
           "Direction": "Inbound",
           "Access": "Allow",
@@ -53,8 +54,8 @@
   },
   "Observability": {
     "ActionGroup": {
-      "ShortName": "aa-acg",
-      "EmailReceivers": "support@alfaadin.com",
+      "ShortName": "acg1",
+      "EmailReceivers": "support@axon10.com",
       "SmsReceivers": "",
       "AzureAppPushReceivers": ""
     },
