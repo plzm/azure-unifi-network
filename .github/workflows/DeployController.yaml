@@ -132,7 +132,6 @@ jobs:
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Monitoring Metrics Publisher"
           $output = plzm.Azure\Deploy-RoleAssignmentSub `
             -Location $ConfigMain.Location `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
@@ -152,13 +151,13 @@ jobs:
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-          Write-Debug -Debug:$true -Message "Enable Key Vault public network access with default action Deny since we will explicitly add runner IP"
-          plzm.Azure\Set-KeyVaultNetworkSettings `
-            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
-            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-            -PublicNetworkAccess "Enabled" `
-            -DefaultAction "Deny"
+          #Write-Debug -Debug:$true -Message "Enable Key Vault public network access with default action Deny since we will explicitly add runner IP"
+          #plzm.Azure\Set-KeyVaultNetworkSettings `
+          #  -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+          #  -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+          #  -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+          #  -PublicNetworkAccess "Enabled" `
+          #  -DefaultAction "Deny"
 
           Write-Debug -Debug:$true -Message "Add runner IP to KV network rules"
           plzm.Azure\New-KeyVaultNetworkRuleForIpAddressOrRange `
@@ -360,13 +359,13 @@ jobs:
             -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
             -IpAddressOrRange ${{ env.AX_GITHUB_RUNNER_PUBLIC_IP }}
 
-          Write-Debug -Debug:$true -Message "Disable Key Vault public network access with default action Deny"
-          plzm.Azure\Set-KeyVaultNetworkSettings `
-            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
-            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-            -PublicNetworkAccess "Disabled" `
-            -DefaultAction "Deny"
+          #Write-Debug -Debug:$true -Message "Disable Key Vault public network access with default action Deny"
+          #plzm.Azure\Set-KeyVaultNetworkSettings `
+          #  -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+          #  -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+          #  -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+          #  -PublicNetworkAccess "Disabled" `
+          #  -DefaultAction "Deny"
 
       - name: Deploy Controller VM and PIP and NIC and DCE/DCR association
         if: success()
