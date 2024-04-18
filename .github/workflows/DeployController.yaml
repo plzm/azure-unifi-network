@@ -283,7 +283,7 @@ jobs:
               " -t " + $ConfigConstants.SshKeyAlgorithm + `
               " -b " + $ConfigConstants.SshKeySize + `
               " -C " + "${{ env.AX_VM_ADMIN_USERNAME }}" + `
-              " -N """""""""
+              " -N ''"
 
             Write-Debug -Debug:$true -Message "cmd ==="
             Write-Debug -Debug:$true -Message "$cmd"
