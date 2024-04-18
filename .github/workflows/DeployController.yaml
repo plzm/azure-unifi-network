@@ -400,7 +400,7 @@ jobs:
             -ResourceId ${{ env.AX_VM_PIP_RESOURCE_ID_CONTROLLER }} `
             -DiagnosticsSettingName ("diag-" + "${{ env.AX_VM_PIP_NAME_CONTROLLER }}") `
             -LogAnalyticsWorkspaceId ${{ env.AX_LAW_RESOURCE_ID_MAIN }} `
-            -SendLogs $true `
+            -SendAllLogs $true `
             -SendMetrics $true
 
           Write-Debug -Debug:$true -Message "$output"
@@ -425,7 +425,7 @@ jobs:
             -ResourceId ${{ env.AX_VM_NIC_RESOURCE_ID_CONTROLLER }} `
             -DiagnosticsSettingName ("diag-" + "${{ env.AX_VM_NIC_NAME_CONTROLLER }}") `
             -LogAnalyticsWorkspaceId ${{ env.AX_LAW_RESOURCE_ID_MAIN }} `
-            -SendLogs $false `
+            -SendAllLogs $false `
             -SendMetrics $true
 
           Write-Debug -Debug:$true -Message "$output"
@@ -469,7 +469,7 @@ jobs:
             -ResourceId ${{ env.AX_VM_RESOURCE_ID_CONTROLLER }} `
             -DiagnosticsSettingName ("diag-" + "${{ env.AX_VM_NAME_CONTROLLER }}") `
             -LogAnalyticsWorkspaceId ${{ env.AX_LAW_RESOURCE_ID_MAIN }} `
-            -SendLogs $false `
+            -SendAllLogs $false `
             -SendMetrics $true
 
           Write-Debug -Debug:$true -Message "$output"
