@@ -103,7 +103,6 @@ jobs:
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-          Write-Debug -Debug:$true -Message "Deploy UAI ${{ env.AX_UAI_NAME_CONTROLLER }}"
           $output = plzm.Azure\Deploy-UserAssignedIdentity `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $ConfigMain.Location `
