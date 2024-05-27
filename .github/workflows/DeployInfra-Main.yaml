@@ -156,7 +156,7 @@ jobs:
             -Location $ConfigMain.Location `
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
             -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
-            -PrincipalId "${{ secrets.AZURE_SP_AX_INFRA_PRINCIPAL_ID }}"
+            -PrincipalId "${{ secrets.AZURE_SP_AX_UI_PRINCIPAL_ID }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
