@@ -61,7 +61,7 @@ function Deploy-Network()
       -ResourceId $NSGResourceId `
       -DiagnosticsSettingName ("diag-" + "$LogAnalyticsWorkspaceName") `
       -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId `
-      -SendLogs $true `
+      -SendAllLogs $true `
       -SendMetrics $false
     
     Write-Debug -Debug:$debug -Message "$output"
@@ -114,7 +114,7 @@ function Deploy-Network()
       -ResourceId $VNetResourceId `
       -DiagnosticsSettingName ("diag-" + "$LogAnalyticsWorkspaceName") `
       -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId `
-      -SendLogs $true `
+      -SendAllLogs $true `
       -SendMetrics $true
 
     Write-Debug -Debug:$debug -Message "$output"

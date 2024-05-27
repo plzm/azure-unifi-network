@@ -262,7 +262,7 @@ jobs:
             -ResourceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
             -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
             -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
-            -SendLogs $true `
+            -SendAllLogs $true `
             -SendMetrics $true
 
           Write-Debug -Debug:$true -Message "$output"
@@ -375,7 +375,7 @@ jobs:
               -ResourceId $privateLinkScopeNicResourceId `
               -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
               -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
-              -SendLogs $false `
+              -SendAllLogs $false `
               -SendMetrics $true
 
             Write-Debug -Debug:$true -Message "$output"
@@ -504,7 +504,7 @@ jobs:
             -ResourceId "${{ env.AX_KEYVAULT_RESOURCE_ID_MAIN}}" `
             -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
             -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
-            -SendLogs $true `
+            -SendAllLogs $true `
             -SendMetrics $true
 
           Write-Debug -Debug:$true -Message "$output"
@@ -538,7 +538,7 @@ jobs:
               -ResourceId $keyVaultNicResourceId `
               -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
               -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
-              -SendLogs $false `
+              -SendAllLogs $false `
               -SendMetrics $true
 
             Write-Debug -Debug:$true -Message "$output"
@@ -644,7 +644,7 @@ jobs:
               -ResourceId $storageAccountNicResourceIdBlob `
               -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
               -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
-              -SendLogs $false `
+              -SendAllLogs $false `
               -SendMetrics $true
 
             Write-Debug -Debug:$true -Message "$output"
