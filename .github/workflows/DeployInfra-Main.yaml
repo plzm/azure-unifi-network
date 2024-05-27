@@ -142,95 +142,95 @@ jobs:
           plzm.Azure\Set-EnvVar2 -VarName "AX_UAI_PRINCIPAL_ID_MAIN" -VarValue $uai.principalId
 
 
-      - name: Deploy Role Assignments
-        if: success()
-        shell: pwsh
-        run: |
-          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      #- name: Deploy Role Assignments
+      #  if: success()
+      #  shell: pwsh
+      #  run: |
+      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | Deploy SP | KV Secrets Officer"
-          $output = plzm.Azure\Deploy-RoleAssignmentSub `
-            -Location $ConfigMain.Location `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
-            -PrincipalId "${{ secrets.AZURE_SP_AX_UI_PRINCIPAL_ID }}"
+      #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | Deploy SP | KV Secrets Officer"
+      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
+      #      -Location $ConfigMain.Location `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
+      #      -PrincipalId "${{ secrets.AZURE_SP_AX_UI_PRINCIPAL_ID }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Certificates Officer"
-          $output = plzm.Azure\Deploy-RoleAssignmentSub `
-            -Location $ConfigMain.Location `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultCertificatesOfficer `
-            -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
+      #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Certificates Officer"
+      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
+      #      -Location $ConfigMain.Location `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultCertificatesOfficer `
+      #      -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Crypto Officer"
-          $output = plzm.Azure\Deploy-RoleAssignmentSub `
-            -Location $ConfigMain.Location `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultCryptoOfficer `
-            -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
+      #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Crypto Officer"
+      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
+      #      -Location $ConfigMain.Location `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultCryptoOfficer `
+      #      -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Secrets Officer"
-          $output = plzm.Azure\Deploy-RoleAssignmentSub `
-            -Location $ConfigMain.Location `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
-            -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
+      #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | KV Secrets Officer"
+      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
+      #      -Location $ConfigMain.Location `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsOfficer `
+      #      -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Monitoring Metrics Publisher"
-          $output = plzm.Azure\Deploy-RoleAssignmentSub `
-            -Location $ConfigMain.Location `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdMonitoringMetricsPublisher `
-            -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
+      #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Monitoring Metrics Publisher"
+      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
+      #      -Location $ConfigMain.Location `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdMonitoringMetricsPublisher `
+      #      -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Storage Blob Data Contributor"
-          $output = plzm.Azure\Deploy-RoleAssignmentSub `
-            -Location $ConfigMain.Location `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdStorageBlobDataContributor `
-            -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
+      #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Storage Blob Data Contributor"
+      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
+      #      -Location $ConfigMain.Location `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdStorageBlobDataContributor `
+      #      -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Storage Blob Queue Contributor"
-          $output = plzm.Azure\Deploy-RoleAssignmentSub `
-            -Location $ConfigMain.Location `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdStorageQueueDataContributor `
-            -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
+      #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | UAI | Storage Blob Queue Contributor"
+      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
+      #      -Location $ConfigMain.Location `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdStorageQueueDataContributor `
+      #      -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | App Services RP App Reg | Key Vault Secrets User"
-          $output = plzm.Azure\Deploy-RoleAssignmentSub `
-            -Location $ConfigMain.Location `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsUser `
-            -PrincipalId $ConfigConstants.PrincipalIdAppServicesRp
+      #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | App Services RP App Reg | Key Vault Secrets User"
+      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
+      #      -Location $ConfigMain.Location `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsUser `
+      #      -PrincipalId $ConfigConstants.PrincipalIdAppServicesRp
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Role Assignment | Diagnostic Services Trusted Storage Access | Storage Blob Data Contributor"
-          $output = plzm.Azure\Deploy-RoleAssignmentSub `
-            -Location $ConfigMain.Location `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsUser `
-            -PrincipalId $ConfigConstants.PrincipalIdDiagnosticServicesTrustedStorageAccess
+      #    Write-Debug -Debug:$true -Message "Deploy Role Assignment | Diagnostic Services Trusted Storage Access | Storage Blob Data Contributor"
+      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
+      #      -Location $ConfigMain.Location `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdKeyVaultSecretsUser `
+      #      -PrincipalId $ConfigConstants.PrincipalIdDiagnosticServicesTrustedStorageAccess
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
 
       - name: Deploy Observability
@@ -261,7 +261,7 @@ jobs:
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
             -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
+            -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
             -SendLogs $true `
             -SendMetrics $true
 
@@ -290,7 +290,7 @@ jobs:
             -VNetName ${{ env.AX_VNET_NAME }} `
             -VNetResourceId ${{ env.AX_VNET_RESOURCE_ID }} `
             -LogAnalyticsWorkspaceName "${{ env.AX_LAW_NAME_MAIN }}" `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}"
+            -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}"
 
 
       - name: Deploy Private DNS zones
@@ -374,7 +374,7 @@ jobs:
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
               -ResourceId $privateLinkScopeNicResourceId `
               -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
-              -LogAnalyticsWorkspaceResourceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
+              -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
               -SendLogs $false `
               -SendMetrics $true
 
@@ -449,7 +449,7 @@ jobs:
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.data-collection-rule.linux.json") `
             -DataCollectionRuleName ${{ env.AX_DCR_NAME }} `
             -LogAnalyticsWorkspaceName ${{ env.AX_LAW_NAME_MAIN }} `
-            -LogAnalyticsWorkspaceResourceId ${{ env.AX_LAW_RESOURCE_ID_MAIN }}
+            -LogAnalyticsWorkspaceId ${{ env.AX_LAW_RESOURCE_ID_MAIN }}
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -503,7 +503,7 @@ jobs:
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
             -ResourceId "${{ env.AX_KEYVAULT_RESOURCE_ID_MAIN}}" `
             -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
+            -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
             -SendLogs $true `
             -SendMetrics $true
 
@@ -537,7 +537,7 @@ jobs:
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
               -ResourceId $keyVaultNicResourceId `
               -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
-              -LogAnalyticsWorkspaceResourceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
+              -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
               -SendLogs $false `
               -SendMetrics $true
 
@@ -609,7 +609,7 @@ jobs:
             -TemplateUri ($ConfigConstants.TemplateUriPrefix + "storage.diagnostic-settings.json") `
             -ResourceId "${{ env.AX_STORAGE_ACCOUNT_RESOURCE_ID_MAIN }}" `
             -DiagnosticsSettingName ("diag-" + "${{ env.AX_STORAGE_ACCOUNT_NAME_MAIN }}") `
-            -LogAnalyticsWorkspaceResourceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}"
+            -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}"
 
           Write-Debug -Debug:$true -Message "$output"
 
@@ -643,7 +643,7 @@ jobs:
               -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
               -ResourceId $storageAccountNicResourceIdBlob `
               -DiagnosticsSettingName ("diag-" + "${{ env.AX_LAW_NAME_MAIN }}") `
-              -LogAnalyticsWorkspaceResourceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
+              -LogAnalyticsWorkspaceId "${{ env.AX_LAW_RESOURCE_ID_MAIN }}" `
               -SendLogs $false `
               -SendMetrics $true
 

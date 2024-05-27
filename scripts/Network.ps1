@@ -32,7 +32,7 @@ function Deploy-Network()
     $LogAnalyticsWorkspaceName = "",
     [Parameter(Mandatory = $false)]
     [string]
-    $LogAnalyticsWorkspaceResourceId = "",
+    $LogAnalyticsWorkspaceId = "",
     [Parameter(Mandatory = $false)]
     [string]
     $Tags = ""
@@ -52,7 +52,7 @@ function Deploy-Network()
 
   Write-Debug -Debug:$debug -Message "$output"
 
-  if ($LogAnalyticsWorkspaceName -and $LogAnalyticsWorkspaceResourceId)
+  if ($LogAnalyticsWorkspaceName -and $LogAnalyticsWorkspaceId)
   {
     $output = plzm.Azure\Deploy-DiagnosticsSetting `
       -SubscriptionID "$SubscriptionId" `
@@ -60,7 +60,7 @@ function Deploy-Network()
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
       -ResourceId $NSGResourceId `
       -DiagnosticsSettingName ("diag-" + "$LogAnalyticsWorkspaceName") `
-      -LogAnalyticsWorkspaceResourceId $LogAnalyticsWorkspaceResourceId `
+      -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId `
       -SendLogs $true `
       -SendMetrics $false
     
@@ -105,7 +105,7 @@ function Deploy-Network()
 
   Write-Debug -Debug:$debug -Message "$output"
 
-  if ($LogAnalyticsWorkspaceName -and $LogAnalyticsWorkspaceResourceId)
+  if ($LogAnalyticsWorkspaceName -and $LogAnalyticsWorkspaceId)
   {
     $output = plzm.Azure\Deploy-DiagnosticsSetting `
       -SubscriptionID "$SubscriptionId" `
@@ -113,7 +113,7 @@ function Deploy-Network()
       -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
       -ResourceId $VNetResourceId `
       -DiagnosticsSettingName ("diag-" + "$LogAnalyticsWorkspaceName") `
-      -LogAnalyticsWorkspaceResourceId $LogAnalyticsWorkspaceResourceId `
+      -LogAnalyticsWorkspaceId $LogAnalyticsWorkspaceId `
       -SendLogs $true `
       -SendMetrics $true
 
