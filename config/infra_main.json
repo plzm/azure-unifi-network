@@ -32,6 +32,18 @@
           "DestinationAddressPrefix": "VirtualNetwork",
           "DestinationPortRange": "8843",
           "DestinationPortRanges": ""
+        },
+        {
+          "Name": "CertbotAccess",
+          "Description": "Certbot Access",
+          "Priority": 102,
+          "Direction": "Inbound",
+          "Access": "Allow",
+          "Protocol": "*",
+          "SourceAddressPrefix": "*",
+          "SourcePortRange": "*",
+          "DestinationAddressPrefix": "VirtualNetwork",
+          "DestinationPortRanges": "80,443"
         }
       ]
     },
