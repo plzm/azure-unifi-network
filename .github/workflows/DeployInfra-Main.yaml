@@ -62,84 +62,82 @@ jobs:
             -SubscriptionId $SubscriptionId
 
 
-      - name: Register RPs
-        if: success()
-        shell: pwsh
-        run: |
-          $output = az provider register --namespace "Microsoft.ChangeAnalysis" --accept-terms --consent-to-permissions --wait | ConvertFrom-Json
+      #- name: Register RPs
+      #  if: success()
+      #  shell: pwsh
+      #  run: |
+      #    $output = az provider register --namespace "Microsoft.ChangeAnalysis" --accept-terms --consent-to-permissions --wait | ConvertFrom-Json
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-      - name: Create Resource Groups
-        if: success()
-        shell: pwsh
-        run: |
-          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      #- name: Create Resource Groups
+      #  if: success()
+      #  shell: pwsh
+      #  run: |
+      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
 
-          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-          $rgNameMain = "${{ env.AX_RG_NAME_MAIN }}"
+      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+      #    $rgNameMain = "${{ env.AX_RG_NAME_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Create RG $rgNameMain"
-          $output = az group create `
-            --subscription "$SubscriptionId" `
-            -l $ConfigMain.Location `
-            -n "$rgNameMain" `
-            | ConvertFrom-Json
+      #    Write-Debug -Debug:$true -Message "Create RG $rgNameMain"
+      #    $output = az group create `
+      #      --subscription "$SubscriptionId" `
+      #      -l $ConfigMain.Location `
+      #      -n "$rgNameMain" `
+      #      | ConvertFrom-Json
 
-      - name: Deploy Action Group
-        if: success()
-        shell: pwsh
-        run: |
-          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      #- name: Deploy Action Group
+      #  if: success()
+      #  shell: pwsh
+      #  run: |
+      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Deploy Action Group ${{ env.AX_ACG_NAME_MAIN }}"
-          $output = plzm.Azure\Deploy-ActionGroup `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -ResourceGroupName "${{ env.AX_RG_NAME_MAIN }}" `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.action-group.json") `
-            -ActionGroupName "${{ env.AX_ACG_NAME_MAIN }}" `
-            -ActionGroupShortName $ConfigMain.Observability.ActionGroup.ShortName `
-            -EmailReceivers $ConfigMain.Observability.ActionGroup.EmailReceivers `
-            -SmsReceivers $ConfigMain.Observability.ActionGroupSmsReceivers `
-            -AzureAppPushReceivers $ConfigMain.Observability.ActionGroup.AzureAppPushReceivers
+      #    $output = plzm.Azure\Deploy-ActionGroup `
+      #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+      #      -ResourceGroupName "${{ env.AX_RG_NAME_MAIN }}" `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "monitor.action-group.json") `
+      #      -ActionGroupName "${{ env.AX_ACG_NAME_MAIN }}" `
+      #      -ActionGroupShortName $ConfigMain.Observability.ActionGroup.ShortName `
+      #      -EmailReceivers $ConfigMain.Observability.ActionGroup.EmailReceivers `
+      #      -SmsReceivers $ConfigMain.Observability.ActionGroupSmsReceivers `
+      #      -AzureAppPushReceivers $ConfigMain.Observability.ActionGroup.AzureAppPushReceivers
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
 
-      - name: Deploy User Assigned Identity
-        if: success()
-        shell: pwsh
-        run: |
-          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      #- name: Deploy User Assigned Identity
+      #  if: success()
+      #  shell: pwsh
+      #  run: |
+      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Deploy UAI ${{ env.AX_UAI_NAME_MAIN }}"
-          $output = plzm.Azure\Deploy-UserAssignedIdentity `
-            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-            -Location $ConfigMain.Location `
-            -ResourceGroupName "${{ env.AX_RG_NAME_MAIN }}" `
-            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
-            -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
-            -UAIName "${{ env.AX_UAI_NAME_MAIN }}"
+      #    $output = plzm.Azure\Deploy-UserAssignedIdentity `
+      #      -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+      #      -Location $ConfigMain.Location `
+      #      -ResourceGroupName "${{ env.AX_RG_NAME_MAIN }}" `
+      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
+      #      -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
+      #      -UAIName "${{ env.AX_UAI_NAME_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "$output"
+      #    Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Sleep to allow UAI deploy to complete"
-          Start-Sleep -s 60
+      #    Write-Debug -Debug:$true -Message "Sleep to allow UAI deploy to complete"
+      #    Start-Sleep -s 60
 
-          Write-Debug -Debug:$true -Message "Get UAI ${{ env.AX_UAI_NAME_MAIN }}"
-          $uai = "$(az identity show -g ${{ env.AX_RG_NAME_MAIN }} -n ${{ env.AX_UAI_NAME_MAIN }})" | ConvertFrom-Json
+      #    Write-Debug -Debug:$true -Message "Get UAI ${{ env.AX_UAI_NAME_MAIN }}"
+      #    $uai = "$(az identity show -g ${{ env.AX_RG_NAME_MAIN }} -n ${{ env.AX_UAI_NAME_MAIN }})" | ConvertFrom-Json
 
-          plzm.Azure\Set-EnvVar2 -VarName "AX_UAI_CLIENT_ID_MAIN" -VarValue $uai.clientId
-          plzm.Azure\Set-EnvVar2 -VarName "AX_UAI_PRINCIPAL_ID_MAIN" -VarValue $uai.principalId
+      #    plzm.Azure\Set-EnvVar2 -VarName "AX_UAI_CLIENT_ID_MAIN" -VarValue $uai.clientId
+      #    plzm.Azure\Set-EnvVar2 -VarName "AX_UAI_PRINCIPAL_ID_MAIN" -VarValue $uai.principalId
 
 
       #- name: Deploy Role Assignments
@@ -242,7 +240,6 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Deploy LAW ${{ env.AX_LAW_NAME_MAIN }}"
           $output = plzm.Azure\Deploy-LogAnalyticsWorkspace `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -Location $ConfigMain.Location `
@@ -254,7 +251,6 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-          Write-Debug -Debug:$true -Message "Deploy Diagnostics"
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
@@ -279,7 +275,6 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Deploy Network"
           Deploy-Network `
             -ConfigConstants $ConfigConstants `
             -ConfigMain $ConfigMain `
@@ -297,14 +292,13 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
-
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
-
           if ($ConfigMain.Network.UsePrivateNetworking)
           {
-            Write-Debug -Debug:$true -Message "Deploy private DNS zones"
+            Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+
             plzm.Azure\Deploy-NetworkPrivateDnsZones `
               -ConfigConstants $ConfigConstants `
               -ConfigMain $ConfigMain `
@@ -322,18 +316,17 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
-
-          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
-
           if ($ConfigMain.Network.UsePrivateNetworking)
           {
+            Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+
+            $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+            $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+
             $privateEndpointName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixPrivateEndpoint -Sequence $ConfigConstants.SeqNumAmpls
             $privateLinkScopeNicName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumAmpls
             $privateLinkScopeNicResourceId = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AX_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $privateLinkScopeNicName
 
-            Write-Debug -Debug:$true -Message "Deploy AMPLS"
             $output = plzm.Azure\Deploy-MonitorPrivateLinkScope `
               -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
@@ -342,7 +335,6 @@ jobs:
 
             Write-Debug -Debug:$true -Message "$output"
 
-            Write-Debug -Debug:$true -Message "Deploy LAW-AMPLS connection"
             $output = plzm.Azure\Deploy-MonitorPrivateLinkScopeResourceConnection `
               -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
@@ -353,7 +345,6 @@ jobs:
 
             Write-Debug -Debug:$true -Message "$output"
 
-            Write-Debug -Debug:$true -Message "Deploy AMPLS Private Endpoint and NIC"
             $output = plzm.Azure\Deploy-NetworkPrivateEndpointAndNic `
               -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -Location $ConfigMain.Location `
@@ -367,7 +358,6 @@ jobs:
 
             Write-Debug -Debug:$true -Message "$output"
 
-            Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
             $output = plzm.Azure\Deploy-DiagnosticsSetting `
               -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
@@ -381,7 +371,6 @@ jobs:
             Write-Debug -Debug:$true -Message "$output"
 
             # Private Endpoint DNS Zone Group
-            Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group"
             $privateDnsZoneResourceId = plzm.Azure\Get-ResourceId `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -ResourceGroupName "${{ env.AX_RG_NAME_MAIN }}" `
@@ -463,7 +452,6 @@ jobs:
           $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
 
-          Write-Debug -Debug:$true -Message "Get subnets for Key Vault network access rules"
           $subnetResourceIds = plzm.Azure\Get-NetworkSubnetResourceIds `
             -ConfigConstants $ConfigConstants `
             -ConfigMain $ConfigMain `
@@ -474,7 +462,6 @@ jobs:
           $subnetResourceIdsCsv = $($subnetResourceIds -join ",")
           Write-Debug -Debug:$true -Message "$subnetResourceIdsCsv"
 
-          Write-Debug -Debug:$true -Message "Deploy Key Vault"
           $output = plzm.Azure\Deploy-KeyVault `
             -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
@@ -496,7 +483,6 @@ jobs:
           Write-Debug -Debug:$true -Message "$output"
 
           # Key Vault Diagnostics
-          Write-Debug -Debug:$true -Message "Deploy Diagnostics"
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
             -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
@@ -515,7 +501,6 @@ jobs:
             $keyVaultNicName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixNic -Sequence $ConfigConstants.SeqNumKeyVault
             $keyVaultNicResourceId = plzm.Azure\Get-ResourceId -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -ResourceGroupName "${{ env.AX_RG_NAME_MAIN }}" -ResourceProviderName "Microsoft.Network" -ResourceTypeName "networkInterfaces" -ResourceName $keyVaultNicName
 
-            Write-Debug -Debug:$true -Message "Deploy Private Endpoint and NIC"
             $output = plzm.Azure\Deploy-NetworkPrivateEndpointAndNic `
               -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -Location $ConfigMain.Location `
@@ -530,7 +515,6 @@ jobs:
             Write-Debug -Debug:$true -Message "$output"
 
             # NIC Diagnostics
-            Write-Debug -Debug:$true -Message "Deploy NIC Diagnostics"
             $output = plzm.Azure\Deploy-DiagnosticsSetting `
               -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
@@ -544,7 +528,6 @@ jobs:
             Write-Debug -Debug:$true -Message "$output"
 
             # Private Endpoint DNS Zone Group
-            Write-Debug -Debug:$true -Message "Deploy Private Endpoint DNS Zone Group"
             $privateDnsZoneResourceId = plzm.Azure\Get-ResourceId `
               -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
               -ResourceGroupName "${{ env.AX_RG_NAME_MAIN }}" `
