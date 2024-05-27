@@ -1,5 +1,5 @@
 {
-  "NamePrefix": "aa",
+  "NamePrefix": "ax",
   "NameInfix": "ui",
   "NsgRulePriorityBase": 200,
   "NsgRulePriorityPlusTransient": 1000,

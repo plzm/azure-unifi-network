@@ -5,16 +5,16 @@ set -eux
 # Debug to let world know "this was here"
 touch ~/controller_1.txt
 
-sudo apt update -y
-sudo apt upgrade -y
+sudo apt-get update -y
+sudo apt-get upgrade -y
 
-sudo apt install fail2ban -y
-sudo apt install debconf-utils -y
-sudo apt install haveged -y
-sudo apt install apache2 -y
+sudo apt-get install fail2ban -y
+sudo apt-get install debconf-utils -y
+sudo apt-get install haveged -y
+sudo apt-get install apache2 -y
 
 # Unattended upgrades
-sudo apt install unattended-upgrades apt-listchanges -y
+sudo apt-get install unattended-upgrades apt-listchanges -y
 # sudo debconf-get-selections | grep ^unattended-upgrades
 echo "unattended-upgrades     unattended-upgrades/enable_auto_updates boolean true" | sudo debconf-set-selections
 sudo dpkg-reconfigure -plow unattended-upgrades -fnoninteractive
