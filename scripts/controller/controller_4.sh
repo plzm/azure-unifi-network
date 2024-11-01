@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Define the service name and timer name
-SERVICE_NAME="daily_task.service"
-TIMER_NAME="daily_task.timer"
+SERVICE_NAME="ubnt_import_updated_certbot_cert.service"
+TIMER_NAME="ubnt_import_updated_certbot_cert.timer"
 
 # Create the service file
 cat <<EOL | sudo tee /etc/systemd/system/$SERVICE_NAME
 [Unit]
-Description=Daily Task
+Description=Daily Task for UBNT to import updated certbot cert
 
 [Service]
 Type=oneshot
@@ -17,7 +17,7 @@ EOL
 # Create the timer file
 cat <<EOL | sudo tee /etc/systemd/system/$TIMER_NAME
 [Unit]
-Description=Runs daily_task.service daily
+Description=Runs $SERVICE_NAME daily
 
 [Timer]
 OnCalendar=*-*-* 11:00:00 UTC
