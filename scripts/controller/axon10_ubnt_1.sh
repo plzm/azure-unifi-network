@@ -3,7 +3,7 @@
 set -eux
 
 # Debug to let world know "this was here"
-touch ~/controller_1.txt
+touch ~/axon10_ubnt_1.txt
 
 sudo apt-get update -y
 sudo apt-get upgrade -y

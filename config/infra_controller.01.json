@@ -1,8 +1,8 @@
 {
-  "Id": 0,
-  "IdForNaming": "000",
+  "Id": 1,
+  "IdForNaming": "01",
   "HostNamePrefix": "ui",
-  "DomainName": "alfaadin.com",
+  "DomainName": "axon10.com",
   "Location": "eastus2",
   "LocationShort": "eus2",
   "Network": {
@@ -13,8 +13,8 @@
           "Direction": "Inbound",
           "Access": "Allow",
           "Protocol": "*",
-          "SourceAddressPrefix": "75.68.47.183",
-          "SourceAddressPrefixes": "",
+          "SourceAddressPrefix": "",
+          "SourceAddressPrefixes": "70.20.32.0/19,73.167.173.106,98.217.170.61",
           "SourcePortRange": "*",
           "SourcePortRanges": "",
           "DestinationAddressPrefix": "",
@@ -35,7 +35,7 @@
   },
   "Vm": {
     "AdminUserName": "vmadmin",
-    "Size": "Standard_B1ms",
+    "Size": "Standard_B2ms",
     "Publisher": "Canonical",
     "Offer": "0001-com-ubuntu-server-focal",
     "Sku": "20_04-lts-gen2",
