@@ -9,7 +9,7 @@
 # https://github.com/stevejenkins/unifi-linux-utils
 
 # Debug to let world know "this was here"
-touch ~/controller_3.txt
+touch ~/axon10_ubnt_3.txt
 
 # CONFIGURATION OPTIONS
 UNIFI_HOSTNAME={{VM_FQDN}}

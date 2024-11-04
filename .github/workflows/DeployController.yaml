@@ -46,6 +46,8 @@ jobs:
           plzm.Azure\Set-EnvVar2 -VarName "AX_CONFIG_FILE_INFRA_CONTROLLER" -VarValue ("./config/infra_controller.json")
           plzm.Azure\Set-EnvVar2 -VarName "AX_CONFIG_FILE_INFRA_CONTROLLER_SSH" -VarValue ("./config/infra_controller_ssh.json")
 
+          plzm.Azure\Set-EnvVar2 -VarName "AX_CONTROLLER_SH_PREFIX" -VarValue "axon10_ubnt_"
+
       - name: Set Variables
         if: success()
         shell: pwsh
@@ -612,14 +614,14 @@ jobs:
           $contactEmail = $ConfigMain.ContactEmail
 
           Write-Debug -Debug:$true -Message "Updating Certbot script file with Controller FQDN $controllerFqdn and Contact Email $contactEmail"
-          $configScript = Get-Content -Path "./scripts/controller/controller_2.sh" -Raw
+          $configScript = Get-Content -Path "./scripts/controller/${{ env.AX_CONTROLLER_SH_PREFIX }}2.sh" -Raw
           $configScript = $configScript.Replace("{{VM_FQDN}}", "$controllerFqdn").Replace("{{CONTACT_EMAIL}}", "$contactEmail")
-          Set-Content -Path "./scripts/controller/controller_2.sh" -Value $configScript
+          Set-Content -Path "./scripts/controller/${{ env.AX_CONTROLLER_SH_PREFIX }}2.sh" -Value $configScript
 
           Write-Debug -Debug:$true -Message "Updating Certificate import script file with Controller FQDN $controllerFqdn"
-          $certScript = Get-Content -Path "./scripts/controller/controller_3.sh" -Raw
+          $certScript = Get-Content -Path "./scripts/controller/${{ env.AX_CONTROLLER_SH_PREFIX }}3.sh" -Raw
           $certScript = $certScript.Replace("{{VM_FQDN}}", "$controllerFqdn")
-          Set-Content -Path "./scripts/controller/controller_3.sh" -Value $certScript
+          Set-Content -Path "./scripts/controller/${{ env.AX_CONTROLLER_SH_PREFIX }}3.sh" -Value $certScript
 
       - name: Add SSH Key to SSH Agent on GitHub Runner
         if: success()
@@ -638,7 +640,7 @@ jobs:
         run: |
           scp -r -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} -o StrictHostKeyChecking=no ./scripts/controller/ ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }}:~
 
-          sshCmd="ssh ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'chmod +x ~/controller/controller_*.sh; sudo mv ~/controller/controller_*.sh /usr/local/bin/; rm -rf ./controller'"
+          sshCmd="ssh ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'chmod +x ~/controller/${{ env.AX_CONTROLLER_SH_PREFIX }}*.sh; sudo mv ~/controller/${{ env.AX_CONTROLLER_SH_PREFIX }}*.sh /usr/local/bin/; rm -rf ./controller'"
           echo "$sshCmd"
           eval $sshCmd
 
@@ -646,7 +648,7 @@ jobs:
         if: success()
         shell: bash
         run: |
-          sshCmd="ssh ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/controller_1.sh'"
+          sshCmd="ssh ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/${{ env.AX_CONTROLLER_SH_PREFIX }}1.sh'"
           echo "$sshCmd"
           eval $sshCmd
 
@@ -654,7 +656,7 @@ jobs:
         if: success()
         shell: bash
         run: |
-          sshCmd="ssh ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/controller_2.sh'"
+          sshCmd="ssh ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/${{ env.AX_CONTROLLER_SH_PREFIX }}2.sh'"
           echo "$sshCmd"
           eval $sshCmd
 
@@ -662,7 +664,15 @@ jobs:
         if: success()
         shell: bash
         run: |
-          sshCmd="ssh ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/controller_3.sh'"
+          sshCmd="ssh ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/${{ env.AX_CONTROLLER_SH_PREFIX }}3.sh'"
+          echo "$sshCmd"
+          eval $sshCmd
+
+      - name: Run script 4 on Controller VM
+        if: success()
+        shell: bash
+        run: |
+          sshCmd="ssh ${{ env.AX_VM_ADMIN_USERNAME }}@${{ env.AX_VM_PUBLIC_IP_ADDRESS }} -i ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }} 'sudo bash /usr/local/bin/${{ env.AX_CONTROLLER_SH_PREFIX }}4.sh'"
           echo "$sshCmd"
           eval $sshCmd
 

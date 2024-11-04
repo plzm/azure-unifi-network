@@ -1,6 +1,6 @@
 {
-  "Id": 1,
-  "IdForNaming": "01",
+  "Id": 99,
+  "IdForNaming": "99",
   "HostNamePrefix": "ui",
   "DomainName": "axon10.com",
   "Location": "eastus2",
@@ -35,7 +35,7 @@
   },
   "Vm": {
     "AdminUserName": "vmadmin",
-    "Size": "Standard_B2ms",
+    "Size": "Standard_B1ms",
     "Publisher": "Canonical",
     "Offer": "0001-com-ubuntu-server-focal",
     "Sku": "20_04-lts-gen2",

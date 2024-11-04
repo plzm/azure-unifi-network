@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Debug to let world know "this was here"
-touch ~/controller_2.txt
+touch ~/axon10_ubnt_2.txt
 
 # TLS Certificate
 # Ensure DNS CNAME record already exists

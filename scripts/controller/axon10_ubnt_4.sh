@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Debug to let world know "this was here"
+touch ~/axon10_ubnt_4.txt
+
 # Define the service name and timer name
 SERVICE_NAME="ubnt_import_updated_certbot_cert.service"
 TIMER_NAME="ubnt_import_updated_certbot_cert.timer"
@@ -11,7 +14,7 @@ Description=Daily Task for UBNT to import updated certbot cert
 
 [Service]
 Type=oneshot
-ExecStart=/path/to/your/script.sh
+ExecStart=/usr/local/bin/axon10_ubnt_3.sh
 EOL
 
 # Create the timer file
