@@ -1,6 +1,6 @@
 {
-  "Id": 1,
-  "IdForNaming": "01",
+  "Id": 0,
+  "IdForNaming": "00",
   "HostNamePrefix": "ui",
   "DomainName": "axon10.com",
   "Location": "eastus2",
