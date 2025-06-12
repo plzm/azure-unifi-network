@@ -10,6 +10,7 @@ sudo apt-get upgrade -y
 
 # Enable firewall and configure ports for Unifi
 echo "y" | sudo ufw enable
+sudo ufw allow 22
 sudo ufw allow 80
 sudo ufw allow 443
 sudo ufw allow 3478/udp
