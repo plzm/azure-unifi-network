@@ -433,7 +433,6 @@ jobs:
 
 
           # Deploy VM
-
           $output = plzm.Azure\Deploy-Vm `
             -SubscriptionID "$SubscriptionId" `
             -Location $ConfigController.Location `
@@ -462,7 +461,6 @@ jobs:
 
 
           # Deploy Diagnostics Setting
-
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "$SubscriptionId" `
             -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
@@ -476,7 +474,6 @@ jobs:
           Write-Debug -Debug:$true -Message "$output"
 
           # Deploy Azure Monitor Agent
-
           $output = plzm.Azure\Deploy-VmAmaLinux `
             -SubscriptionID "$SubscriptionId" `
             -Location $ConfigController.Location `
@@ -487,7 +484,6 @@ jobs:
           Write-Debug -Debug:$true -Message "$output"
 
           # Deploy Azure Data Collection Rule and Endpoint Association
-
           $output = Deploy-MonitorDataCollectionRuleAssociation `
             -SubscriptionID "$SubscriptionId" `
             -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `

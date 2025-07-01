@@ -26,8 +26,8 @@ Key Points:
 In general, the network architecture uses least privilege principles both for persistent Controller VM access (from customer's premises for managed network equipment traffic) and for transient access added, and then removed, during GitHub Actions workflow execution.
 
 Additional Notes:
-- The Unifi NAC requires MongoDB > >= 3.6.0 and < 5.0.0. The MongoDB version used in this repo is 4.4, because it is the most recent version below 5.0.0.
-- MongoDB versions < 5.0.0 are not supported on Ubuntu 22.04. That is why Ubuntu 20.04 is used in this repo for Controller VMs at this time.
+- The Unifi NAC prior to 9.0.0 required MongoDB >= 3.6.0 and < 5.0.0. The MongoDB version previously used in this repo was 4.4, because that was the most recent version below 5.0.0. With the move to Unifi NAC 9.0.0, the MongoDB version has been updated to 8.0.0 since Unifi NAC now supports MongoDB 8.0.0.
+- MongoDB versions < 5.0.0 were not supported on Ubuntu 22.04. That is why Ubuntu 20.04 was used in this repo for Controller VMs. With the move to Unifi NAC 9.0.0, the Controller VMs have been updated to use Ubuntu 24.04, which supports MongoDB 8.0.0.
 
 ## GitHub Actions Workflows
 
