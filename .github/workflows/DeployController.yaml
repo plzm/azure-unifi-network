@@ -12,6 +12,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Downgrade to Azure CLI 2.72 to avoid CLI bug
+        if: success()
+        run: |
+            sudo apt remove azure-cli
+
+            # Reference
+            # https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt
+
+            sudo apt-get update -y
+            sudo apt-get install apt-transport-https ca-certificates curl gnupg lsb-release
+
+            sudo mkdir -p /etc/apt/keyrings
+            curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/microsoft.gpg > /dev/null
+            sudo chmod go+r /etc/apt/keyrings/microsoft.gpg
+
+            AZ_DIST=$(lsb_release -cs)
+            echo "Types: deb
+            URIs: https://packages.microsoft.com/repos/azure-cli/
+            Suites: ${AZ_DIST}
+            Components: main
+            Architectures: $(dpkg --print-architecture)
+            Signed-by: /etc/apt/keyrings/microsoft.gpg" | sudo tee /etc/apt/sources.list.d/azure-cli.sources
+
+            sudo apt-get update
+
+            apt-cache policy azure-cli
+
+            # Obtain the currently installed distribution
+            AZ_DIST=$(lsb_release -cs)
+
+            # Store an Azure CLI version of choice
+            AZ_VER=2.72.0
+
+            # Install a specific version
+            sudo apt-get install azure-cli=${AZ_VER}-1~${AZ_DIST}
+        shell: bash
+
       - name: Set Azure CLI extensions to auto-install
         if: success()
         run: |
@@ -141,7 +178,6 @@ jobs:
             -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_CONTROLLER }}"
 
           Write-Debug -Debug:$true -Message "$output"
-
 
       - name: Open Key Vault access for GitHub runner
         if: success()
@@ -369,7 +405,7 @@ jobs:
             -PublicNetworkAccess "Disabled" `
             -DefaultAction "Deny"
 
-      - name: Deploy Controller VM and PIP and NIC and DCE/DCR association
+      - name: Deploy Controller VM Public IP
         if: success()
         shell: pwsh
         run: |
@@ -379,8 +415,6 @@ jobs:
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-
-          $osDiskName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
 
           # Deploy PIP
           $output = plzm.Azure\Deploy-NetworkPublicIp `
@@ -392,7 +426,6 @@ jobs:
             -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
             -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
             -HostName ${{ env.AX_VM_HOSTNAME_CONTROLLER}}
-
 
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "$SubscriptionId" `
@@ -406,6 +439,16 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
+      - name: Deploy Controller VM NIC
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           # Deploy NIC
           $output = plzm.Azure\Deploy-NetworkNic `
@@ -431,9 +474,20 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
+      - name: Deploy Controller VM
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+          $osDiskName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
 
           # Deploy VM
-
           $output = plzm.Azure\Deploy-Vm `
             -SubscriptionID "$SubscriptionId" `
             -Location $ConfigController.Location `
@@ -460,9 +514,7 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-
           # Deploy Diagnostics Setting
-
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "$SubscriptionId" `
             -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
@@ -475,8 +527,18 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-          # Deploy Azure Monitor Agent
+      - name: Deploy Controller VM DCE/DCR association
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+          # Deploy Azure Monitor Agent
           $output = plzm.Azure\Deploy-VmAmaLinux `
             -SubscriptionID "$SubscriptionId" `
             -Location $ConfigController.Location `
@@ -487,7 +549,6 @@ jobs:
           Write-Debug -Debug:$true -Message "$output"
 
           # Deploy Azure Data Collection Rule and Endpoint Association
-
           $output = Deploy-MonitorDataCollectionRuleAssociation `
             -SubscriptionID "$SubscriptionId" `
             -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
@@ -498,7 +559,7 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-      - name: Set Controller IP addresses to Env Vars
+      - name: Set Controller VM IP addresses to Env Vars
         if: success()
         shell: pwsh
         run: |
