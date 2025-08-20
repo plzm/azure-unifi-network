@@ -369,7 +369,7 @@ jobs:
             -PublicNetworkAccess "Disabled" `
             -DefaultAction "Deny"
 
-      - name: Deploy Controller VM and PIP and NIC and DCE/DCR association
+      - name: Deploy Controller VM Public IP
         if: success()
         shell: pwsh
         run: |
@@ -379,8 +379,6 @@ jobs:
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
           $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-
-          $osDiskName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
 
           # Deploy PIP
           $output = plzm.Azure\Deploy-NetworkPublicIp `
@@ -392,7 +390,6 @@ jobs:
             -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
             -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
             -HostName ${{ env.AX_VM_HOSTNAME_CONTROLLER}}
-
 
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "$SubscriptionId" `
@@ -406,6 +403,16 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
+      - name: Deploy Controller VM NIC
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           # Deploy NIC
           $output = plzm.Azure\Deploy-NetworkNic `
@@ -431,6 +438,18 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
+      - name: Deploy Controller VM and DCE/DCR association
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+          $osDiskName = plzm.Azure\Get-ResourceName -ConfigConstants $ConfigConstants -ConfigMain $ConfigMain -Prefix $ConfigConstants.PrefixOsDisk -Sequence $ConfigController.IdForNaming
 
           # Deploy VM
           $output = plzm.Azure\Deploy-Vm `
@@ -459,7 +478,6 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-
           # Deploy Diagnostics Setting
           $output = plzm.Azure\Deploy-DiagnosticsSetting `
             -SubscriptionID "$SubscriptionId" `
@@ -472,6 +490,17 @@ jobs:
             -SendMetrics $true
 
           Write-Debug -Debug:$true -Message "$output"
+
+      - name: Deploy Controller VM DCE/DCR association
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
           # Deploy Azure Monitor Agent
           $output = plzm.Azure\Deploy-VmAmaLinux `
@@ -494,7 +523,7 @@ jobs:
 
           Write-Debug -Debug:$true -Message "$output"
 
-      - name: Set Controller IP addresses to Env Vars
+      - name: Set Controller VM IP addresses to Env Vars
         if: success()
         shell: pwsh
         run: |
