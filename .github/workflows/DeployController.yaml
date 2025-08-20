@@ -179,231 +179,231 @@ jobs:
 
       #    Write-Debug -Debug:$true -Message "$output"
 
-      #- name: Open Key Vault access for GitHub runner
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      - name: Open Key Vault access for GitHub runner
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-      #    Write-Debug -Debug:$true -Message "Enable Key Vault public network access with default action Deny since we will explicitly add runner IP"
-      #    plzm.Azure\Set-KeyVaultNetworkSettings `
-      #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
-      #      -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #      -PublicNetworkAccess "Enabled" `
-      #      -DefaultAction "Deny"
+          Write-Debug -Debug:$true -Message "Enable Key Vault public network access with default action Deny since we will explicitly add runner IP"
+          plzm.Azure\Set-KeyVaultNetworkSettings `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+            -PublicNetworkAccess "Enabled" `
+            -DefaultAction "Deny"
 
-      #    Write-Debug -Debug:$true -Message "Add runner IP to KV network rules"
-      #    plzm.Azure\New-KeyVaultNetworkRuleForIpAddressOrRange `
-      #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
-      #      -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #      -IpAddressOrRange ${{ env.AX_GITHUB_RUNNER_PUBLIC_IP }}
+          Write-Debug -Debug:$true -Message "Add runner IP to KV network rules"
+          plzm.Azure\New-KeyVaultNetworkRuleForIpAddressOrRange `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+            -IpAddressOrRange ${{ env.AX_GITHUB_RUNNER_PUBLIC_IP }}
 
-      #- name: Create SSH folder
-      #  if: success()
-      #  shell: bash
-      #  run: |
-      #    if [[ ! -d "${{ env.AX_VM_SSH_PATH }}" ]]
-      #    then
-      #      echo "Create ${{ env.AX_VM_SSH_PATH }} directory"
-      #      mkdir -p ${{ env.AX_VM_SSH_PATH }}
-      #    fi
+      - name: Create SSH folder
+        if: success()
+        shell: bash
+        run: |
+          if [[ ! -d "${{ env.AX_VM_SSH_PATH }}" ]]
+          then
+            echo "Create ${{ env.AX_VM_SSH_PATH }} directory"
+            mkdir -p ${{ env.AX_VM_SSH_PATH }}
+          fi
 
-      #    sudo chmod 700 ${{ env.AX_VM_SSH_PATH }}
+          sudo chmod 700 ${{ env.AX_VM_SSH_PATH }}
 
-      #    ls -la ~
-      #    ls -la ${{ env.AX_VM_SSH_PATH }}
+          ls -la ~
+          ls -la ${{ env.AX_VM_SSH_PATH }}
 
-      #- name: Prepare SSH Keys to/from KV and to .ssh folder
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      - name: Prepare SSH Keys to/from KV and to .ssh folder
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-      #    # Secret names
-      #    $suffixSshAdminUserName = $ConfigConstants.SuffixSecretNameSshAdminUserName
-      #    $suffixSshKeyName = $ConfigConstants.SuffixSecretNameSshKeyName
-      #    $suffixSshPublicKey = $ConfigConstants.SuffixSecretNameSshPublicKey
-      #    $suffixSshPrivateKey = $ConfigConstants.SuffixSecretNameSshPrivateKey
+          # Secret names
+          $suffixSshAdminUserName = $ConfigConstants.SuffixSecretNameSshAdminUserName
+          $suffixSshKeyName = $ConfigConstants.SuffixSecretNameSshKeyName
+          $suffixSshPublicKey = $ConfigConstants.SuffixSecretNameSshPublicKey
+          $suffixSshPrivateKey = $ConfigConstants.SuffixSecretNameSshPrivateKey
 
-      #    $secretNameAdminUserName = "${{ env.AX_VM_NAME_CONTROLLER }}" + "$suffixSshAdminUsername"
-      #    $secretNameSshKeyName = "${{ env.AX_VM_NAME_CONTROLLER }}" + "$suffixSshKeyName"
-      #    $secretNameSshPublicKey = "${{ env.AX_VM_NAME_CONTROLLER }}" + "$suffixSshPublicKey"
-      #    $secretNameSshPrivateKey = "${{ env.AX_VM_NAME_CONTROLLER }}" + "$suffixSshPrivateKey"
+          $secretNameAdminUserName = "${{ env.AX_VM_NAME_CONTROLLER }}" + "$suffixSshAdminUsername"
+          $secretNameSshKeyName = "${{ env.AX_VM_NAME_CONTROLLER }}" + "$suffixSshKeyName"
+          $secretNameSshPublicKey = "${{ env.AX_VM_NAME_CONTROLLER }}" + "$suffixSshPublicKey"
+          $secretNameSshPrivateKey = "${{ env.AX_VM_NAME_CONTROLLER }}" + "$suffixSshPrivateKey"
 
-      #    $secretValueAdminUserName = ""
-      #    $secretValueSshKeyName = ""
-      #    $secretValueSshPublicKey = ""
-      #    $secretValueSshPrivateKey = ""
-
-
-      #    # Key filenames
-      #    $filePathPrivate = Join-Path -Path "${{ env.AX_VM_SSH_PATH }}" -ChildPath "${{ env.AX_SSH_KEY_NAME_CONTROLLER }}"
-      #    $filePathPublic = Join-Path -Path "${{ env.AX_VM_SSH_PATH }}" -ChildPath ("${{ env.AX_SSH_KEY_NAME_CONTROLLER }}" + $ConfigConstants.SshPublicKeyFileExtension)
-
-      #    Write-Debug -Debug:$true -Message "filePathPrivate: $filePathPrivate"
-      #    Write-Debug -Debug:$true -Message "filePathPublic: $filePathPublic"
-
-      #    # Delete key files if already exist - should not exist on a GitHub-hosted GHA runner, but just to make sure
-      #    if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
-      #    if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
+          $secretValueAdminUserName = ""
+          $secretValueSshKeyName = ""
+          $secretValueSshPublicKey = ""
+          $secretValueSshPrivateKey = ""
 
 
-      #    # Check if the Controller VM already exists (meaning, this is a re-deploy run)
-      #    # If so, we also check if the SSH secrets already exist in the Key Vault
-      #    # If VM exists and SSH secrets exist, we will use the existing SSH key values from KV secrets
+          # Key filenames
+          $filePathPrivate = Join-Path -Path "${{ env.AX_VM_SSH_PATH }}" -ChildPath "${{ env.AX_SSH_KEY_NAME_CONTROLLER }}"
+          $filePathPublic = Join-Path -Path "${{ env.AX_VM_SSH_PATH }}" -ChildPath ("${{ env.AX_SSH_KEY_NAME_CONTROLLER }}" + $ConfigConstants.SshPublicKeyFileExtension)
 
-      #    $vmExists = plzm.Azure\Test-ResourceExists `
-      #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
-      #      -ResourceType "Microsoft.Compute/virtualMachines" `
-      #      -ResourceName "${{ env.AX_VM_NAME_CONTROLLER }}"
+          Write-Debug -Debug:$true -Message "filePathPrivate: $filePathPrivate"
+          Write-Debug -Debug:$true -Message "filePathPublic: $filePathPublic"
 
-      #    Write-Debug -Debug:$true -Message "vmExists: $vmExists"
-
-      #    if ($vmExists)
-      #    {
-      #      # Get the values of the SSH secrets from the Key Vault
-
-      #      $secretValueAdminUserName = plzm.Azure\Get-KeyVaultSecret `
-      #        -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #        -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #        -SecretName "$secretNameAdminUserName"
-
-      #      $secretValueSshKeyName = plzm.Azure\Get-KeyVaultSecret `
-      #        -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #        -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #        -SecretName "$secretNameSshKeyName"
-
-      #      $secretValueSshPublicKey = plzm.Azure\Get-KeyVaultSecret `
-      #        -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #        -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #        -SecretName "$secretNameSshPublicKey"
-
-      #      $secretValueSshPrivateKey = plzm.Azure\Get-KeyVaultSecret `
-      #        -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #        -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #        -SecretName "$secretNameSshPrivateKey"
-      #    }
-
-      #    $secretsExist = ($secretValueAdminUserName -and $secretValueSshKeyName -and $secretValueSshPublicKey -and $secretValueSshPrivateKey)
-
-      #    if ($secretsExist)
-      #    {
-      #      Write-Debug -Debug:$true -Message "Secrets found in Key Vault. Writing to files."
-
-      #      Set-Content -Path "$filePathPublic" -Value $secretValueSshPublicKey
-      #      Set-Content -Path "$filePathPrivate" -Value $secretValueSshPrivateKey
-      #    }
-      #    else
-      #    {
-      #      Write-Debug -Debug:$true -Message "Secrets NOT found in Key Vault!"
-
-      #      $secretValueAdminUserName = "${{ env.AX_VM_ADMIN_USERNAME }}"
-      #      $secretValueSshKeyName = "${{ env.AX_SSH_KEY_NAME_CONTROLLER }}"
-
-      #      # Create SSH key pair
-      #      Write-Debug -Debug:$true -Message "Run ssh-keygen"
-      #      $cmd = `
-      #        "ssh-keygen -v -q " + `
-      #        " -m " + $ConfigConstants.SshKeyFormat + `
-      #        " -f $filePathPrivate" + `
-      #        " -t " + $ConfigConstants.SshKeyAlgorithm + `
-      #        " -b " + $ConfigConstants.SshKeySize + `
-      #        " -C " + "${{ env.AX_VM_ADMIN_USERNAME }}" + `
-      #        " -N ''"
-
-      #      Write-Debug -Debug:$true -Message "cmd ==="
-      #      Write-Debug -Debug:$true -Message "$cmd"
-      #      Invoke-Expression -Command $cmd
-
-      #      # Get generated key values
-      #      $secretValueSshPublicKey = Get-Content -Path "$filePathPublic" -Raw
-      #      $secretValueSshPrivateKey = Get-Content -Path "$filePathPrivate" -Raw
+          # Delete key files if already exist - should not exist on a GitHub-hosted GHA runner, but just to make sure
+          if (Test-Path $filePathPrivate) { Remove-Item -Path $filePathPrivate -Force }
+          if (Test-Path $filePathPublic) { Remove-Item -Path $filePathPublic -Force }
 
 
-      #      # Write admin username, SSH key name, public SSH key, and private SSH key to Key Vault
-      #      # Admin username
-      #      plzm.Azure\Set-KeyVaultSecret `
-      #        -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #        -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #        -SecretName "$secretNameAdminUserName" `
-      #        -SecretValue "$secretValueAdminUserName"
+          # Check if the Controller VM already exists (meaning, this is a re-deploy run)
+          # If so, we also check if the SSH secrets already exist in the Key Vault
+          # If VM exists and SSH secrets exist, we will use the existing SSH key values from KV secrets
 
-      #      # SSH key name
-      #      plzm.Azure\Set-KeyVaultSecret `
-      #        -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #        -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #        -SecretName "$secretNameSshKeyName" `
-      #        -SecretValue "$secretValueSshKeyName"
+          $vmExists = plzm.Azure\Test-ResourceExists `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
+            -ResourceType "Microsoft.Compute/virtualMachines" `
+            -ResourceName "${{ env.AX_VM_NAME_CONTROLLER }}"
 
-      #      # SSH public key
-      #      plzm.Azure\Set-KeyVaultSecret `
-      #        -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #        -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #        -SecretName "$secretNameSshPublicKey" `
-      #        -SecretValue $secretValueSshPublicKey
+          Write-Debug -Debug:$true -Message "vmExists: $vmExists"
 
-      #      # SSH private key
-      #      plzm.Azure\Set-KeyVaultSecret `
-      #        -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #        -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #        -SecretName "$secretNameSshPrivateKey" `
-      #        -SecretValue $secretValueSshPrivateKey
-      #    }
+          if ($vmExists)
+          {
+            # Get the values of the SSH secrets from the Key Vault
 
-      #    Write-Debug -Debug:$true -Message "Public key: $secretValueSshPublicKey"
+            $secretValueAdminUserName = plzm.Azure\Get-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameAdminUserName"
 
-      #    # Write key filenames and values to env vars for later use
-      #    plzm.Azure\Set-EnvVar2 -VarName "AX_VM_SSH_PUBLIC_KEY_FILE_PATH" -VarValue "$filePathPublic"
-      #    plzm.Azure\Set-EnvVar2 -VarName "AX_VM_SSH_PRIVATE_KEY_FILE_PATH" -VarValue "$filePathPrivate"
-      #    plzm.Azure\Set-EnvVar2 -VarName "AX_VM_SSH_PUBLIC_KEY" -VarValue "$secretValueSshPublicKey"
-      #    #plzm.Azure\Set-EnvVar2 -VarName "AX_VM_SSH_PRIVATE_KEY" -VarValue ("""" + $secretValueSshPrivateKey + """")
+            $secretValueSshKeyName = plzm.Azure\Get-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshKeyName"
 
-      #- name: Set SSH folder and file permission, and list files in SSH folder
-      #  if: success()
-      #  shell: bash
-      #  run: |
-      #    sudo chmod 700 ${{ env.AX_VM_SSH_PATH }}
-      #    sudo chmod 600 ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }}*
-      #    sudo chmod 644 ${{ env.AX_VM_SSH_PUBLIC_KEY_FILE_PATH }}
+            $secretValueSshPublicKey = plzm.Azure\Get-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPublicKey"
 
-      #    ls -la ~
-      #    ls -la ${{ env.AX_VM_SSH_PATH }}
+            $secretValueSshPrivateKey = plzm.Azure\Get-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPrivateKey"
+          }
 
-      #- name: Close Key Vault access from GitHub runner
-      #  if: always()
-      #  shell: pwsh
-      #  run: |
-      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+          $secretsExist = ($secretValueAdminUserName -and $secretValueSshKeyName -and $secretValueSshPublicKey -and $secretValueSshPrivateKey)
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          if ($secretsExist)
+          {
+            Write-Debug -Debug:$true -Message "Secrets found in Key Vault. Writing to files."
 
-      #    Write-Debug -Debug:$true -Message "Remove runner IP from KV network rules"
-      #    plzm.Azure\Remove-KeyVaultNetworkRuleForIpAddressOrRange `
-      #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
-      #      -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #      -IpAddressOrRange ${{ env.AX_GITHUB_RUNNER_PUBLIC_IP }}
+            Set-Content -Path "$filePathPublic" -Value $secretValueSshPublicKey
+            Set-Content -Path "$filePathPrivate" -Value $secretValueSshPrivateKey
+          }
+          else
+          {
+            Write-Debug -Debug:$true -Message "Secrets NOT found in Key Vault!"
 
-      #    Write-Debug -Debug:$true -Message "Disable Key Vault public network access with default action Deny"
-      #    plzm.Azure\Set-KeyVaultNetworkSettings `
-      #      -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-      #      -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
-      #      -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
-      #      -PublicNetworkAccess "Disabled" `
-      #      -DefaultAction "Deny"
+            $secretValueAdminUserName = "${{ env.AX_VM_ADMIN_USERNAME }}"
+            $secretValueSshKeyName = "${{ env.AX_SSH_KEY_NAME_CONTROLLER }}"
+
+            # Create SSH key pair
+            Write-Debug -Debug:$true -Message "Run ssh-keygen"
+            $cmd = `
+              "ssh-keygen -v -q " + `
+              " -m " + $ConfigConstants.SshKeyFormat + `
+              " -f $filePathPrivate" + `
+              " -t " + $ConfigConstants.SshKeyAlgorithm + `
+              " -b " + $ConfigConstants.SshKeySize + `
+              " -C " + "${{ env.AX_VM_ADMIN_USERNAME }}" + `
+              " -N ''"
+
+            Write-Debug -Debug:$true -Message "cmd ==="
+            Write-Debug -Debug:$true -Message "$cmd"
+            Invoke-Expression -Command $cmd
+
+            # Get generated key values
+            $secretValueSshPublicKey = Get-Content -Path "$filePathPublic" -Raw
+            $secretValueSshPrivateKey = Get-Content -Path "$filePathPrivate" -Raw
+
+
+            # Write admin username, SSH key name, public SSH key, and private SSH key to Key Vault
+            # Admin username
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameAdminUserName" `
+              -SecretValue "$secretValueAdminUserName"
+
+            # SSH key name
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshKeyName" `
+              -SecretValue "$secretValueSshKeyName"
+
+            # SSH public key
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPublicKey" `
+              -SecretValue $secretValueSshPublicKey
+
+            # SSH private key
+            plzm.Azure\Set-KeyVaultSecret `
+              -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+              -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+              -SecretName "$secretNameSshPrivateKey" `
+              -SecretValue $secretValueSshPrivateKey
+          }
+
+          Write-Debug -Debug:$true -Message "Public key: $secretValueSshPublicKey"
+
+          # Write key filenames and values to env vars for later use
+          plzm.Azure\Set-EnvVar2 -VarName "AX_VM_SSH_PUBLIC_KEY_FILE_PATH" -VarValue "$filePathPublic"
+          plzm.Azure\Set-EnvVar2 -VarName "AX_VM_SSH_PRIVATE_KEY_FILE_PATH" -VarValue "$filePathPrivate"
+          plzm.Azure\Set-EnvVar2 -VarName "AX_VM_SSH_PUBLIC_KEY" -VarValue "$secretValueSshPublicKey"
+          #plzm.Azure\Set-EnvVar2 -VarName "AX_VM_SSH_PRIVATE_KEY" -VarValue ("""" + $secretValueSshPrivateKey + """")
+
+      - name: Set SSH folder and file permission, and list files in SSH folder
+        if: success()
+        shell: bash
+        run: |
+          sudo chmod 700 ${{ env.AX_VM_SSH_PATH }}
+          sudo chmod 600 ${{ env.AX_VM_SSH_PRIVATE_KEY_FILE_PATH }}*
+          sudo chmod 644 ${{ env.AX_VM_SSH_PUBLIC_KEY_FILE_PATH }}
+
+          ls -la ~
+          ls -la ${{ env.AX_VM_SSH_PATH }}
+
+      - name: Close Key Vault access from GitHub runner
+        if: always()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+
+          Write-Debug -Debug:$true -Message "Remove runner IP from KV network rules"
+          plzm.Azure\Remove-KeyVaultNetworkRuleForIpAddressOrRange `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+            -IpAddressOrRange ${{ env.AX_GITHUB_RUNNER_PUBLIC_IP }}
+
+          Write-Debug -Debug:$true -Message "Disable Key Vault public network access with default action Deny"
+          plzm.Azure\Set-KeyVaultNetworkSettings `
+            -SubscriptionId "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -ResourceGroupName ${{ env.AX_RG_NAME_MAIN }} `
+            -KeyVaultName "${{ env.AX_KEYVAULT_NAME_MAIN }}" `
+            -PublicNetworkAccess "Disabled" `
+            -DefaultAction "Deny"
 
       #- name: Deploy Controller VM Public IP
       #  if: success()
