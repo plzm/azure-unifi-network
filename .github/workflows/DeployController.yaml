@@ -15,8 +15,38 @@ jobs:
       - name: Downgrade to Azure CLI 2.72 to avoid CLI bug
         if: success()
         run: |
-            brew uninstall azure-cli
-            pip3 install azure-cli==2.72.0
+            sudo apt remove azure-cli
+
+            # Reference
+            # https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt
+
+            sudo apt-get update -y
+            sudo apt-get install apt-transport-https ca-certificates curl gnupg lsb-release
+
+            sudo mkdir -p /etc/apt/keyrings
+            curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/microsoft.gpg > /dev/null
+            sudo chmod go+r /etc/apt/keyrings/microsoft.gpg
+
+            AZ_DIST=$(lsb_release -cs)
+            echo "Types: deb
+            URIs: https://packages.microsoft.com/repos/azure-cli/
+            Suites: ${AZ_DIST}
+            Components: main
+            Architectures: $(dpkg --print-architecture)
+            Signed-by: /etc/apt/keyrings/microsoft.gpg" | sudo tee /etc/apt/sources.list.d/azure-cli.sources
+
+            sudo apt-get update
+
+            apt-cache policy azure-cli
+
+            # Obtain the currently installed distribution
+            AZ_DIST=$(lsb_release -cs)
+
+            # Store an Azure CLI version of choice
+            AZ_VER=2.72.0
+
+            # Install a specific version
+            sudo apt-get install azure-cli=${AZ_VER}-1~${AZ_DIST}
         shell: bash
 
       - name: Set Azure CLI extensions to auto-install
