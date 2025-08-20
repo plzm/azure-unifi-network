@@ -112,25 +112,25 @@ jobs:
             -ConfigControllerSsh $ConfigControllerSsh `
             -SubscriptionId $SubscriptionId
 
-      #- name: Create Resource Group
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      - name: Create Resource Group
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-      #    $rgNameController = "${{ env.AX_RG_NAME_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $rgNameController = "${{ env.AX_RG_NAME_CONTROLLER }}"
 
-      #    Write-Debug -Debug:$true -Message "Create RG $rgNameController"
-      #    $output = az group create `
-      #      --subscription "$SubscriptionId" `
-      #      -l $ConfigController.Location `
-      #      -n "$rgNameController" `
-      #      | ConvertFrom-Json
+          Write-Debug -Debug:$true -Message "Create RG $rgNameController"
+          $output = az group create `
+            --subscription "$SubscriptionId" `
+            -l $ConfigController.Location `
+            -n "$rgNameController" `
+            | ConvertFrom-Json
 
       - name: Deploy User Assigned Identity
         if: success()
@@ -142,18 +142,18 @@ jobs:
           $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
           $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-          #$output = plzm.Azure\Deploy-UserAssignedIdentity `
-          #  -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
-          #  -Location $ConfigMain.Location `
-          #  -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
-          #  -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
-          #  -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
-          #  -UAIName "${{ env.AX_UAI_NAME_CONTROLLER }}"
+          $output = plzm.Azure\Deploy-UserAssignedIdentity `
+            -SubscriptionID "${{ secrets.AZURE_SUBSCRIPTION_ID }}" `
+            -Location $ConfigMain.Location `
+            -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "identity.user-assigned-identity.json") `
+            -TenantId "${{ secrets.AZURE_TENANT_ID }}" `
+            -UAIName "${{ env.AX_UAI_NAME_CONTROLLER }}"
 
-          #Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
-          #Write-Debug -Debug:$true -Message "Sleep to allow UAI deploy to complete"
-          #Start-Sleep -s 60
+          Write-Debug -Debug:$true -Message "Sleep to allow UAI deploy to complete"
+          Start-Sleep -s 60
 
           Write-Debug -Debug:$true -Message "Get UAI ${{ env.AX_UAI_NAME_CONTROLLER }}"
           $uai = "$(az identity show -g ${{ env.AX_RG_NAME_CONTROLLER }} -n ${{ env.AX_UAI_NAME_CONTROLLER }})" | ConvertFrom-Json
@@ -161,23 +161,23 @@ jobs:
           plzm.Azure\Set-EnvVar2 -VarName "AX_UAI_CLIENT_ID_CONTROLLER" -VarValue $uai.clientId
           plzm.Azure\Set-EnvVar2 -VarName "AX_UAI_PRINCIPAL_ID_CONTROLLER" -VarValue $uai.principalId
 
-      #- name: Deploy Role Assignments
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      - name: Deploy Role Assignments
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
 
-      #    $output = plzm.Azure\Deploy-RoleAssignmentSub `
-      #      -Location $ConfigMain.Location `
-      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
-      #      -RoleDefinitionId $ConfigConstants.RoleDefinitionIdMonitoringMetricsPublisher `
-      #      -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_CONTROLLER }}"
+          $output = plzm.Azure\Deploy-RoleAssignmentSub `
+            -Location $ConfigMain.Location `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "authorization.role-assignment.sub.json") `
+            -RoleDefinitionId $ConfigConstants.RoleDefinitionIdMonitoringMetricsPublisher `
+            -PrincipalId "${{ env.AX_UAI_PRINCIPAL_ID_CONTROLLER }}"
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
       - name: Open Key Vault access for GitHub runner
         if: success()
@@ -405,74 +405,74 @@ jobs:
             -PublicNetworkAccess "Disabled" `
             -DefaultAction "Deny"
 
-      #- name: Deploy Controller VM Public IP
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      - name: Deploy Controller VM Public IP
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
-      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      #    # Deploy PIP
-      #    $output = plzm.Azure\Deploy-NetworkPublicIp `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -Location $ConfigController.Location `
-      #      -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
-      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.public-ip.json") `
-      #      -PublicIpAddressName ${{ env.AX_VM_PIP_NAME_CONTROLLER }} `
-      #      -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
-      #      -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
-      #      -HostName ${{ env.AX_VM_HOSTNAME_CONTROLLER}}
+          # Deploy PIP
+          $output = plzm.Azure\Deploy-NetworkPublicIp `
+            -SubscriptionID "$SubscriptionId" `
+            -Location $ConfigController.Location `
+            -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.public-ip.json") `
+            -PublicIpAddressName ${{ env.AX_VM_PIP_NAME_CONTROLLER }} `
+            -PublicIpAddressType $ConfigController.Network.PublicIp.Type `
+            -PublicIpAddressSku $ConfigController.Network.PublicIp.Sku `
+            -HostName ${{ env.AX_VM_HOSTNAME_CONTROLLER}}
 
-      #    $output = plzm.Azure\Deploy-DiagnosticsSetting `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
-      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-      #      -ResourceId ${{ env.AX_VM_PIP_RESOURCE_ID_CONTROLLER }} `
-      #      -DiagnosticsSettingName ("diag-" + "${{ env.AX_VM_PIP_NAME_CONTROLLER }}") `
-      #      -LogAnalyticsWorkspaceId ${{ env.AX_LAW_RESOURCE_ID_MAIN }} `
-      #      -SendAllLogs $true `
-      #      -SendMetrics $true
+          $output = plzm.Azure\Deploy-DiagnosticsSetting `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+            -ResourceId ${{ env.AX_VM_PIP_RESOURCE_ID_CONTROLLER }} `
+            -DiagnosticsSettingName ("diag-" + "${{ env.AX_VM_PIP_NAME_CONTROLLER }}") `
+            -LogAnalyticsWorkspaceId ${{ env.AX_LAW_RESOURCE_ID_MAIN }} `
+            -SendAllLogs $true `
+            -SendMetrics $true
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
-      #- name: Deploy Controller VM NIC
-      #  if: success()
-      #  shell: pwsh
-      #  run: |
-      #    Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
+      - name: Deploy Controller VM NIC
+        if: success()
+        shell: pwsh
+        run: |
+          Import-Module "${{ env.AX_MODULE_PATH_PLZM_AZURE }}" -Force
 
-      #    $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
-      #    $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
-      #    $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
-      #    $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $ConfigConstants = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONSTANTS }}"
+          $ConfigMain = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_MAIN }}"
+          $ConfigController = plzm.Azure\Get-ConfigFromFile -ConfigFilePath "${{ env.AX_CONFIG_FILE_INFRA_CONTROLLER }}"
+          $SubscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      #    # Deploy NIC
-      #    $output = plzm.Azure\Deploy-NetworkNic `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -Location $ConfigController.Location `
-      #      -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
-      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.network-interface.json") `
-      #      -NicName ${{ env.AX_VM_NIC_NAME_CONTROLLER }} `
-      #      -SubnetResourceId ${{ env.AX_SUBNET_RESOURCE_ID_MAIN}} `
-      #      -EnableAcceleratedNetworking $ConfigController.Network.Nic.EnableAcceleratedNetworking `
-      #      -PublicIpResourceId ${{ env.AX_VM_PIP_RESOURCE_ID_CONTROLLER}} `
-      #      -IpConfigName $ConfigController.Network.Nic.IpConfigurationName
+          # Deploy NIC
+          $output = plzm.Azure\Deploy-NetworkNic `
+            -SubscriptionID "$SubscriptionId" `
+            -Location $ConfigController.Location `
+            -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "net.network-interface.json") `
+            -NicName ${{ env.AX_VM_NIC_NAME_CONTROLLER }} `
+            -SubnetResourceId ${{ env.AX_SUBNET_RESOURCE_ID_MAIN}} `
+            -EnableAcceleratedNetworking $ConfigController.Network.Nic.EnableAcceleratedNetworking `
+            -PublicIpResourceId ${{ env.AX_VM_PIP_RESOURCE_ID_CONTROLLER}} `
+            -IpConfigName $ConfigController.Network.Nic.IpConfigurationName
 
-      #    $output = plzm.Azure\Deploy-DiagnosticsSetting `
-      #      -SubscriptionID "$SubscriptionId" `
-      #      -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
-      #      -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
-      #      -ResourceId ${{ env.AX_VM_NIC_RESOURCE_ID_CONTROLLER }} `
-      #      -DiagnosticsSettingName ("diag-" + "${{ env.AX_VM_NIC_NAME_CONTROLLER }}") `
-      #      -LogAnalyticsWorkspaceId ${{ env.AX_LAW_RESOURCE_ID_MAIN }} `
-      #      -SendAllLogs $false `
-      #      -SendMetrics $true
+          $output = plzm.Azure\Deploy-DiagnosticsSetting `
+            -SubscriptionID "$SubscriptionId" `
+            -ResourceGroupName ${{ env.AX_RG_NAME_CONTROLLER }} `
+            -TemplateUri ($ConfigConstants.TemplateUriPrefix + "diagnostic-settings.json") `
+            -ResourceId ${{ env.AX_VM_NIC_RESOURCE_ID_CONTROLLER }} `
+            -DiagnosticsSettingName ("diag-" + "${{ env.AX_VM_NIC_NAME_CONTROLLER }}") `
+            -LogAnalyticsWorkspaceId ${{ env.AX_LAW_RESOURCE_ID_MAIN }} `
+            -SendAllLogs $false `
+            -SendMetrics $true
 
-      #    Write-Debug -Debug:$true -Message "$output"
+          Write-Debug -Debug:$true -Message "$output"
 
       - name: Deploy Controller VM
         if: success()
